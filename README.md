@@ -72,6 +72,10 @@ A rule consists of a name, optional description, and conditions:
 }
 ```
 
+
+### Workflow and Usage
+![Diagrama](docs/d1.svg)
+
 ### Available Operators
 
 The rule engine supports various operators for different data types:
@@ -447,6 +451,10 @@ This complex rule checks that:
 1. Create a new class that inherits from `Condition` in `rule_engine/conditions/base.py`
 2. Implement the required methods: `evaluate`, `to_dict`, and `from_dict`
 3. Register the condition type in the `ConditionFactory.create_condition` method
+
+
+### Rule Engine in Microservices Architecture
+![Diagrama](docs/d2.svg)
 
 ## Testing
 
