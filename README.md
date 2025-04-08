@@ -515,6 +515,9 @@ The rule engine supports checking if a value exists in a predefined list, which 
 
 These tests ensure the rule engine correctly evaluates both simple and complex rules, properly identifies failing elements, and handles all operators and path expressions according to specification.
 
+
+
+
 ## Contributing
 
 For Contributions please add the story: example: story/7424522-add-new-operator by AT
