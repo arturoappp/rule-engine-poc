@@ -4,7 +4,7 @@ SET UP NEW VENV FOR PYTHON PROJECT
 python -m venv venv
 
 #Activete venv
-venv\Scripts\activate
+.\venv\Scripts\activate
 
 #install requirements.txt
 pip install -r requirements.txt
