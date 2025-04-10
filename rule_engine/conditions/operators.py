@@ -56,6 +56,10 @@ class Operator:
 
             # Device Rules
             'role_device': Operator.role_device,
+
+            # Length operators
+            'max_length': Operator.max_length,
+            'exact_length': Operator.exact_length,
         }
 
         if operator_name not in operators:
@@ -163,3 +167,17 @@ class Operator:
             return str(role[expected]) == actual[-3][0]
         except (IndexError, TypeError):
             return False
+
+    @staticmethod
+    def max_length(actual: Any, expected: int) -> bool:
+        """Check if the length of a value is less than or equal to the expected value."""
+        if not isinstance(actual, (str, list, dict, tuple)):
+            return False
+        return len(actual) <= expected
+
+    @staticmethod
+    def exact_length(actual: Any, expected: int) -> bool:
+        """Check if the length of a value is exactly equal to the expected value."""
+        if not isinstance(actual, (str, list, dict, tuple)):
+            return False
+        return len(actual) == expected

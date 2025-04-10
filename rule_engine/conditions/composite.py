@@ -2,9 +2,10 @@
 Composite conditions for building complex logical expressions.
 """
 
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Tuple, Optional
 
 from rule_engine.conditions.base import Condition
+from rule_engine.core.failure_info import FailureInfo
 
 
 class All(Condition):
@@ -21,17 +22,29 @@ class All(Condition):
         """
         self.conditions = conditions
 
-    def evaluate(self, entity: Dict) -> bool:
+    def evaluate_with_details(self, entity: Dict) -> Tuple[bool, Optional[List[FailureInfo]]]:
         """
-        Evaluate the condition against an entity.
+        Evaluate the condition against an entity and provide details about failures.
 
         Args:
             entity: Entity dictionary to evaluate against
 
         Returns:
-            True if all sub-conditions are met, False otherwise
+            Tuple of (success, failure_info):
+            - success: True if all sub-conditions are met, False otherwise
+            - failure_info: List of FailureInfo objects describing the failures, or None if successful
         """
-        return all(condition.evaluate(entity) for condition in self.conditions)
+        all_failures = []
+
+        for condition in self.conditions:
+            success, failures = condition.evaluate_with_details(entity)
+            if not success and failures:
+                all_failures.extend(failures)
+
+        if all_failures:
+            return False, all_failures
+
+        return True, None
 
     def to_dict(self) -> Dict:
         """
@@ -74,17 +87,28 @@ class Any(Condition):
         """
         self.conditions = conditions
 
-    def evaluate(self, entity: Dict) -> bool:
+    def evaluate_with_details(self, entity: Dict) -> Tuple[bool, Optional[List[FailureInfo]]]:
         """
-        Evaluate the condition against an entity.
+        Evaluate the condition against an entity and provide details about failures.
 
         Args:
             entity: Entity dictionary to evaluate against
 
         Returns:
-            True if any sub-condition is met, False otherwise
+            Tuple of (success, failure_info):
+            - success: True if any sub-condition is met, False otherwise
+            - failure_info: List of FailureInfo objects describing the failures, or None if successful
         """
-        return any(condition.evaluate(entity) for condition in self.conditions)
+        all_failures = []
+
+        for condition in self.conditions:
+            success, failures = condition.evaluate_with_details(entity)
+            if success:
+                return True, None
+            if failures:
+                all_failures.extend(failures)
+
+        return False, all_failures
 
     def to_dict(self) -> Dict:
         """
@@ -127,17 +151,25 @@ class None_(Condition):
         """
         self.conditions = conditions
 
-    def evaluate(self, entity: Dict) -> bool:
+    def evaluate_with_details(self, entity: Dict) -> Tuple[bool, Optional[List[FailureInfo]]]:
         """
-        Evaluate the condition against an entity.
+        Evaluate the condition against an entity and provide details about failures.
 
         Args:
             entity: Entity dictionary to evaluate against
 
         Returns:
-            True if none of the sub-conditions are met, False otherwise
+            Tuple of (success, failure_info):
+            - success: True if none of the sub-conditions are met, False otherwise
+            - failure_info: List of FailureInfo objects describing the failures, or None if successful
         """
-        return not any(condition.evaluate(entity) for condition in self.conditions)
+        for condition in self.conditions:
+            success, _ = condition.evaluate_with_details(entity)
+            if success:
+                # If any condition is met, this None_ condition fails
+                return False, [FailureInfo(operator="none", path="composite")]
+
+        return True, None
 
     def to_dict(self) -> Dict:
         """
@@ -180,17 +212,24 @@ class Not(Condition):
         """
         self.condition = condition
 
-    def evaluate(self, entity: Dict) -> bool:
+    def evaluate_with_details(self, entity: Dict) -> Tuple[bool, Optional[List[FailureInfo]]]:
         """
-        Evaluate the condition against an entity.
+        Evaluate the condition against an entity and provide details about failures.
 
         Args:
             entity: Entity dictionary to evaluate against
 
         Returns:
-            True if the sub-condition is not met, False otherwise
+            Tuple of (success, failure_info):
+            - success: True if the sub-condition is not met, False otherwise
+            - failure_info: List of FailureInfo objects describing the failures, or None if successful
         """
-        return not self.condition.evaluate(entity)
+        success, _ = self.condition.evaluate_with_details(entity)
+
+        if not success:
+            return True, None
+
+        return False, [FailureInfo(operator="not", path="composite")]
 
     def to_dict(self) -> Dict:
         """

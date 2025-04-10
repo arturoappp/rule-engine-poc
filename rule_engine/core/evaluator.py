@@ -3,10 +3,10 @@ Module containing the rule evaluation logic.
 """
 
 import logging
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 
 from rule_engine.conditions.conditions_factory import ConditionFactory
-from rule_engine.core.rule_result import RuleResult
+from rule_engine.core.rule_result import RuleResult, FailureInfo
 from rule_engine.utils.path_utils import PathUtils
 
 # Logging configuration
@@ -17,7 +17,7 @@ class RuleEvaluator:
     """Class responsible for evaluating rules against data."""
 
     @staticmethod
-    def evaluate_rule_for_entities(entities: List[Dict], rule: Dict) -> Tuple[bool, List[Dict]]:
+    def evaluate_rule_for_entities(entities: List[Dict], rule: Dict) -> Tuple[bool, List[Dict], List[FailureInfo]]:
         """
         Evaluate a rule for a list of entities.
 
@@ -26,34 +26,37 @@ class RuleEvaluator:
             rule: Rule dictionary
 
         Returns:
-            Tuple (success, failing_entities):
+            Tuple (success, failing_entities, failure_details):
             - success: True if the rule is fulfilled, False otherwise
             - failing_entities: List of entities that failed the rule
+            - failure_details: List of FailureInfo objects describing the failures
         """
         if 'conditions' not in rule:
             logger.warning(f"Rule '{rule.get('name', 'Unnamed')}' has no conditions")
-            return False, entities
+            return False, entities, [FailureInfo(operator="missing", path="conditions")]
 
         conditions_data = rule['conditions']
         failing_entities = []
+        all_failures = []
 
         # Create the root condition
         root_condition = ConditionFactory.create_condition(conditions_data)
         if root_condition is None:
             logger.warning(f"Invalid conditions in rule '{rule.get('name', 'Unnamed')}'")
-            return False, entities
+            return False, entities, [FailureInfo(operator="invalid", path="conditions")]
 
         for entity in entities:
-            # Evaluate the conditions for this entity
-            entity_passes = root_condition.evaluate(entity)
+            # Evaluate the conditions for this entity with details
+            entity_passes, failures = root_condition.evaluate_with_details(entity)
 
             # If the entity doesn't pass, add it to the list of failures
-            if not entity_passes:
+            if not entity_passes and failures:
                 failing_entities.append(entity)
+                all_failures.extend(failures)
 
         # The rule passes if all entities pass (none fail)
         success = len(failing_entities) == 0
-        return success, failing_entities
+        return success, failing_entities, all_failures
 
     @staticmethod
     def evaluate_data(data: Dict, rules: List[Dict], entity_type: str) -> List[RuleResult]:
@@ -83,7 +86,7 @@ class RuleEvaluator:
 
             try:
                 # Evaluate the rule for all entities
-                success, failing_entities = RuleEvaluator.evaluate_rule_for_entities(entities, rule)
+                success, failing_entities, failure_details = RuleEvaluator.evaluate_rule_for_entities(entities, rule)
 
                 # Create result message
                 if success:
@@ -97,7 +100,8 @@ class RuleEvaluator:
                     success=success,
                     message=message,
                     input_data=rule,
-                    failing_elements=failing_entities
+                    failing_elements=failing_entities,
+                    failure_details=failure_details
                 )
 
                 results.append(result)
@@ -109,7 +113,8 @@ class RuleEvaluator:
                     rule_name=rule_name,
                     success=False,
                     message=f"Error evaluating rule: {str(e)}",
-                    input_data=rule
+                    input_data=rule,
+                    failure_details=[FailureInfo(operator="error", path=str(e))]
                 )
                 results.append(result)
 
