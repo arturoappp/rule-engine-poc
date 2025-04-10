@@ -1,0 +1,17 @@
+SET UP NEW VENV FOR PYTHON PROJECT
+
+# from root project
+python -m venv venv
+
+#Activete venv
+venv\Scripts\activate
+
+#install requirements.txt
+pip install requirements.txt
+
+
+
+RECREATE REQUIREMENTS.TXT
+
+#For create requirements.txt
+pip freeze > requirements.txt
