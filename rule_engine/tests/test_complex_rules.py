@@ -4,7 +4,7 @@ Tests for complex rule evaluations with nested logical operators.
 
 import unittest
 
-from core.engine import RuleEngine
+from rule_engine.core.engine import RuleEngine
 
 
 class ComplexRulesTest(unittest.TestCase):

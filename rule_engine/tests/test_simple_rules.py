@@ -3,9 +3,8 @@ Tests for simple rule evaluations.
 """
 
 import unittest
-import json
 
-from core.engine import RuleEngine
+from rule_engine.core.engine import RuleEngine
 
 
 class SimpleRulesTest(unittest.TestCase):

@@ -4,7 +4,7 @@ Tests for the path utilities in the rule engine.
 
 import unittest
 
-from utils.path_utils import PathUtils
+from rule_engine.utils.path_utils import PathUtils
 
 
 class PathUtilsTest(unittest.TestCase):

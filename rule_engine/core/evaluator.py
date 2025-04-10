@@ -3,11 +3,11 @@ Module containing the rule evaluation logic.
 """
 
 import logging
-from typing import Dict, List, Tuple, Any
+from typing import Dict, List, Tuple
 
-from conditions.conditions_factory import ConditionFactory
-from core.rule_result import RuleResult
-from utils.path_utils import PathUtils
+from rule_engine.conditions.conditions_factory import ConditionFactory
+from rule_engine.core.rule_result import RuleResult
+from rule_engine.utils.path_utils import PathUtils
 
 # Logging configuration
 logger = logging.getLogger(__name__)

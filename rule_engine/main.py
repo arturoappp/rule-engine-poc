@@ -6,7 +6,7 @@ Example usage of the refactored rule engine.
 import json
 import logging
 
-from core.engine import RuleEngine
+from rule_engine.core.engine import RuleEngine
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')

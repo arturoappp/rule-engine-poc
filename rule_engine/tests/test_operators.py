@@ -3,9 +3,8 @@ Tests for all operator implementations in the rule engine.
 """
 
 import unittest
-import json
 
-from core.engine import RuleEngine
+from rule_engine.core.engine import RuleEngine
 
 
 class OperatorsTest(unittest.TestCase):

@@ -3,9 +3,8 @@ Tests for the role_device operator in the rule engine.
 """
 
 import unittest
-import json
 
-from core.engine import RuleEngine
+from rule_engine.core.engine import RuleEngine
 
 
 class RoleDeviceOperatorTest(unittest.TestCase):

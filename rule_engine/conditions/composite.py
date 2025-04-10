@@ -2,9 +2,9 @@
 Composite conditions for building complex logical expressions.
 """
 
-from typing import Dict, List, Any, Union, Type
+from typing import Dict, List, Any
 
-from conditions.base import Condition
+from rule_engine.conditions.base import Condition
 
 
 class All(Condition):

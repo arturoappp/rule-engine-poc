@@ -4,11 +4,11 @@ Module containing the main RuleEngine class.
 
 import json
 import logging
-from typing import Dict, List, Union, Any, Optional
+from typing import Dict, List, Union
 
-from core.evaluator import RuleEvaluator
-from core.rule_result import RuleResult
-from utils.json_loader import JsonLoader
+from rule_engine.core.evaluator import RuleEvaluator
+from rule_engine.core.rule_result import RuleResult
+from rule_engine.utils.json_loader import JsonLoader
 
 # Logging configuration
 logger = logging.getLogger(__name__)

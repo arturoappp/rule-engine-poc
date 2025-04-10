@@ -2,12 +2,12 @@
 Package for condition classes in the rule engine.
 """
 
-from typing import Dict, Any, Type, Optional
+from typing import Dict, Optional
 
-from conditions.base import Condition, ValueCondition
-from conditions.composite import All, Any, None_, Not
-from conditions.operators import Operator
-from utils.path_utils import PathUtils
+from rule_engine.conditions.base import Condition, ValueCondition
+from rule_engine.conditions.composite import All, Any, None_, Not
+from rule_engine.conditions.operators import Operator
+from rule_engine.utils.path_utils import PathUtils
 
 
 class StandardValueCondition(ValueCondition):
