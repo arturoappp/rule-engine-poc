@@ -94,7 +94,7 @@ if __name__ == "__main__":
             },
             {
                 "vendor": "Cisco Systems",
-                "osVersion": "17.3.6",  # This device should fail
+                "osVersion": "17.3.63",  # This device should fail
                 "mgmtIP": "192.168.1.3",
                 "hostname": "HUJ-AA-101",
             }

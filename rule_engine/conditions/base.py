@@ -3,7 +3,9 @@ Base classes for conditions in the rule engine.
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Tuple, Optional, List
+
+from rule_engine.core.failure_info import FailureInfo
 
 
 class Condition(ABC):
@@ -12,6 +14,20 @@ class Condition(ABC):
     """
 
     @abstractmethod
+    def evaluate_with_details(self, entity: Dict) -> Tuple[bool, Optional[List[FailureInfo]]]:
+        """
+        Evaluate the condition against an entity and provide details about failures.
+
+        Args:
+            entity: Entity dictionary to evaluate against
+
+        Returns:
+            Tuple of (success, failure_info):
+            - success: True if the condition is met, False otherwise
+            - failure_info: List of FailureInfo objects describing the failures, or None if successful
+        """
+        pass
+
     def evaluate(self, entity: Dict) -> bool:
         """
         Evaluate the condition against an entity.
@@ -22,7 +38,8 @@ class Condition(ABC):
         Returns:
             True if the condition is met, False otherwise
         """
-        pass
+        success, _ = self.evaluate_with_details(entity)
+        return success
 
     @abstractmethod
     def to_dict(self) -> Dict:
@@ -66,6 +83,38 @@ class ValueCondition(Condition):
         self.path = path
         self.operator = operator
         self.expected_value = expected_value
+
+    def evaluate_with_details(self, entity: Dict) -> Tuple[bool, Optional[List[FailureInfo]]]:
+        """
+        Evaluate the condition against an entity and provide details about failures.
+
+        Args:
+            entity: Entity dictionary to evaluate against
+
+        Returns:
+            Tuple of (success, failure_info):
+            - success: True if the condition is met, False otherwise
+            - failure_info: List of FailureInfo objects describing the failures, or None if successful
+        """
+        success = self.evaluate_internal(entity)
+
+        if success:
+            return True, None
+
+        return False, [FailureInfo(operator=self.operator, path=self.path)]
+
+    def evaluate_internal(self, entity: Dict) -> bool:
+        """
+        Internal implementation of condition evaluation.
+
+        Args:
+            entity: Entity dictionary to evaluate against
+
+        Returns:
+            True if the condition is met, False otherwise
+        """
+        # This method should be overridden by subclasses
+        return False
 
     def to_dict(self) -> Dict:
         """
