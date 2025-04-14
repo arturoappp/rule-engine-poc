@@ -19,6 +19,14 @@ class RuleEngine:
     Main rule engine class that manages rules and performs evaluations.
     """
 
+    _instance = None
+
+    @classmethod
+    def get_instance(cls):
+        if cls._instance is None:
+            cls._instance = cls()
+        return cls._instance
+
     def __init__(self):
         """Initialize an empty rule engine."""
         self.rules_by_entity = {}  # Dictionary of rules by entity type
