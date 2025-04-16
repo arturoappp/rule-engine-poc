@@ -16,12 +16,20 @@ A modular and flexible rule engine for evaluating conditions against data.
 
 ```bash
 # Clone the repository
-git clone <pending>
-cd RuleEnginePOC3
+git clone git@github.com:EMOrg-Prd/NDCv4-rules-ms.git
+cd NDCv4-rules-ms
 
-# Install the package
-pip install -e .
+# Install packages
+pip install -r requirements.txt
 ```
+
+For VS Code, in order for the source modules to be found, add the following to settings.json:
+
+"terminal.integrated.env.windows": {
+        "PYTHONPATH": "${workspaceFolder}"
+}
+
+If using Pycharm, adding to the PYTHONPATH is automatically done by the IDE
 
 ## Usage
 
