@@ -138,6 +138,8 @@ class RuleEngine:
         Returns:
             List of rules in the specified category
         """
+        # TODO: Correct this logic. Seems to have an extra outer level
+        # Fix the nulls, so only condtions that are NOT null show up
         if entity_type not in self.rules_by_entity:
             return []
 

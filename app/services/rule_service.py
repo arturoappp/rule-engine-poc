@@ -165,6 +165,69 @@ class RuleService:
         Returns:
             Dictionary of rules by entity type and category
         """
+        # TEMP for testing list_rules
+          # Complex rule with nested conditions
+        
+        equal_rule = """
+        [
+            {
+                "name": "Equal Rule",
+                "description": "Tests the 'equal' operator",
+                "conditions": {
+                    "all": [
+                        {
+                            "path": "$.items[*].value",
+                            "operator": "equal",
+                            "value": 10
+                        }
+                    ]
+                }
+            }
+        ]
+        """
+
+        complex_rule = """
+        [
+            {
+                "name": "Complex Device Rule",
+                "description": "Vendor must be Cisco with version 17.x, or non-Cisco with any version above 10.0",
+                "conditions": {
+                    "any": [
+                        {
+                            "all": [
+                                {
+                                    "path": "$.devices[*].vendor",
+                                    "operator": "equal",
+                                    "value": "Cisco Systems"
+                                },
+                                {
+                                    "path": "$.devices[*].osVersion",
+                                    "operator": "match",
+                                    "value": "^17\\\\."
+                                }
+                            ]
+                        },
+                        {
+                            "all": [
+                                {
+                                    "path": "$.devices[*].vendor",
+                                    "operator": "not_equal",
+                                    "value": "Cisco Systems"
+                                },
+                                {
+                                    "path": "$.devices[*].osVersion",
+                                    "operator": "match",
+                                    "value": "^[1-9][0-9]\\\\."
+                                }
+                            ]
+                        }
+                    ]
+                }
+            }
+        ]
+        """
+        self.engine.load_rules_from_json(equal_rule, entity_type="device", category="complex")
+
         result = {}
 
         # Get all entity types
