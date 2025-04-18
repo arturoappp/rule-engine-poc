@@ -57,7 +57,7 @@ async def store_rules(request: RuleStoreRequest, service: RuleService = Depends(
     }
 
 
-@router.get("/rules", response_model=RuleListResponse)
+@router.get("/rules", response_model=RuleListResponse, response_model_exclude_none=True)
 async def list_rules(service: RuleService = Depends(get_rule_service)):
     """List all rules in the engine."""
     rules_by_entity = service.get_rules()
@@ -69,23 +69,7 @@ async def list_rules(service: RuleService = Depends(get_rule_service)):
     # Get categories for each entity type
     for entity_type, categories_rules in rules_by_entity.items():
         categories[entity_type] = list(categories_rules.keys())
-    def exclude_none_recursive(model: BaseModel):
-        def recursive_exclude_none(data):
-            if isinstance(data, dict):
-                return {k: recursive_exclude_none(v) for k, v in data.items() if v is not None}
-            elif isinstance(data, list):
-                return [recursive_exclude_none(item) for item in data if item is not None]
-            else:
-                return data
-
-        return recursive_exclude_none(model.dict())
-
+   
     responseModel = RuleListResponse(entity_types=entity_types, categories=categories, rules=rules_by_entity)
-    model_dict_recursive = exclude_none_recursive(responseModel)
-    # responseDict = responseModel.model_dump(exclude_none=True)
-    return model_dict_recursive 
-    return {
-        "entity_types": entity_types,
-        "categories": categories,
-        "rules": rules_by_entity
-    }
+
+    return responseModel

@@ -66,7 +66,7 @@ class RuleCondition(BaseModel):
 
 
 # Forward reference resolution for recursive model
-RuleCondition.update_forward_refs()
+RuleCondition.model_rebuild()
 
 
 class Rule(BaseModel):
