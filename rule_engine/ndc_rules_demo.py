@@ -398,6 +398,12 @@ if __name__ == "__main__":
             for i, element in enumerate(result.failing_elements):
                 print(f"      {i + 1}. {json.dumps(element)}")
 
+
+
+
+
+
+
     # Scenario 3: Invalid field formats - should fail
     commission_can_run_data_3 = {
         "requests": [
@@ -424,7 +430,7 @@ if __name__ == "__main__":
     }
 
     print("\nScenario 3: Invalid field formats - should fail")
-    results = engine.evaluate_data(commission_can_run_data_3, entity_type="request", categories= ["CAN NDC COMMISSION REQUEST"])
+    results = engine.evaluate_data(data =commission_can_run_data_3, entity_type="request", categories= ["CAN NDC COMMISSION REQUEST"])
     for result in results:
         print(f"  - {result}")
         if not result.success and result.failing_elements:

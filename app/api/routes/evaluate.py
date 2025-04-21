@@ -127,12 +127,10 @@ async def evaluate_with_rules(request: EvaluationWithRulesRequest, service: Rule
             detail=f"Error evaluating data: {str(e)}"
         )
 
-# En app/api/routes/evaluate.py
 
 @router.get("/evaluate/stats", response_model=Dict[str, Any])
 async def get_evaluation_stats(service: RuleService = Depends(get_rule_service)):
     """Get statistics about rule evaluations."""
-    # Llamar al método del servicio en lugar de devolver datos estáticos
     return service.get_evaluation_stats()
 
 @router.get("/evaluate/failure-details/{rule_name}", response_model=Dict[str, Any])
@@ -142,5 +140,4 @@ async def get_rule_failure_details(
     service: RuleService = Depends(get_rule_service)
 ):
     """Get detailed information about failures for a specific rule."""
-    # Llamar al método del servicio con los parámetros
     return service.get_rule_failure_details(rule_name, entity_type)
