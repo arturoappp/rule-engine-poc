@@ -1,0 +1,90 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: deploy-template
+parameters:
+- description: "Application name"
+  name: APP_NAME
+- description: "Branch name slug, used in names and URLs"
+  name: ENV
+- description: "Namespace where the image will be pulled from / deployed to"
+  name: NAMESPACE
+  value: ndc-v4
+- description: "Image registry"
+  name: IMAGE_REGISTRY
+  value: image-registry.openshift-image-registry.svc:5000
+- description: Route URL in Openshift
+  name: URL
+objects:
+- apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    creationTimestamp: null
+    generation: 1
+    labels:
+      app: ${APP_NAME}-${ENV}
+    name: ${APP_NAME}-${ENV}
+  spec:
+    replicas: 1
+    revisionHistoryLimit: 10
+    selector:
+      matchLabels:
+        app: ${APP_NAME}-${ENV}
+    strategy:
+      activeDeadlineSeconds: 21600
+      resources: {}
+      rollingParams:
+        intervalSeconds: 1
+        maxSurge: 25%
+        maxUnavailable: 25%
+        timeoutSeconds: 600
+        updatePeriodSeconds: 1
+      type: RollingUpdate
+    template:
+      metadata:
+        annotations:
+          openshift.io/generated-by: OpenShiftNewApp
+        creationTimestamp: null
+        labels:
+          app: ${APP_NAME}-${ENV}
+      spec:
+        containers:
+        - image: ${IMAGE_REGISTRY}/${NAMESPACE}/${APP_NAME}-${ENV}
+          imagePullPolicy: Always
+          name: ${APP_NAME}-${ENV}
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+          resources:
+            limits:
+              cpu: 200m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+            initialDelaySeconds: 30
+            timeoutSeconds: 20
+            periodSeconds: 120
+            failureThreshold: 3
+            successThreshold: 1
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          env:
+            - name: URL
+              value: ${URL}
+            - name: ENVIRON
+              value: ${ENV}
+            - name: APP_NAME
+              value: ${APP_NAME}
+        dnsPolicy: ClusterFirst
+        restartPolicy: Always
+        schedulerName: default-scheduler
+        securityContext: {}
+        terminationGracePeriodSeconds: 30
+    test: false

@@ -1,0 +1,105 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: build-template
+parameters:
+- description: "Application name"
+  name: APP_NAME
+- description: "Branch name slug, used in names and URLs"
+  name: ENV
+- description: "Branch literal name, used for cloning the repository"
+  name: ENV_NAME
+- description: "Base image"
+  name: BASE_IMAGE
+  value: python3.12
+- description: "Project's URL to pull the code"
+  name: PROJECT_URL
+objects:
+- apiVersion: v1
+  kind: BuildConfig
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    labels:
+      app: ${APP_NAME}-${ENV}
+    name: ${APP_NAME}-${ENV}
+  spec:
+    failedBuildsHistoryLimit: 3
+    output:
+      to:
+        kind: ImageStreamTag
+        name: ${APP_NAME}-${ENV}:latest
+    postCommit: {}
+    resources:
+      limits:
+        cpu: '1'
+        memory: 512Mi
+      requests:
+        cpu: '500m'
+        memory: 256Mi
+    runPolicy: Serial
+    source:
+      git:
+        ref: ${ENV_NAME}
+        uri: '${PROJECT_URL}'
+      sourceSecret:
+        name: ${APP_NAME}-github-secret
+      type: Git
+    strategy:
+      dockerStrategy:
+        env:
+          - name: NEXUS_USER
+            valueFrom:
+              secretKeyRef:
+                key: username
+                name: nexus-ocp-auth
+          - name: NEXUS_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                key: password
+                name: nexus-ocp-auth
+          - name: PIP_INDEX
+            value: 'https://nexus-repo.ssg.xom.cloud/repository/pypi-proxy/'
+          - name: PIP_INDEX_URL
+            value: >-
+              https://$(NEXUS_USER):$(NEXUS_PASSWORD)@nexus-repo.apps.hp.ocp.na.xom.com/repository/pypi-group-branch/simple
+          - name: PIP_EXTRA_INDEX_URL
+            value: >-
+              https://$(NEXUS_USER):$(NEXUS_PASSWORD)@nexus-repo.apps.hp.ocp.na.xom.com/repository/pypi-group-branch/simple
+          - name: PIP_TRUSTED_HOST
+            value: nexus-repo.ssg.xom.cloud
+        from:
+          kind: ImageStreamTag
+          name: ${BASE_IMAGE}:latest
+          namespace: emit-found-inf-branch-auto
+      type: Source
+    successfulBuildsHistoryLimit: 5
+    triggers:
+    - type: ConfigChange
+    - imageChange: {}
+      type: ImageChange
+- apiVersion: v1
+  kind: ImageStream
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    generation: 1
+    labels:
+      app: ${APP_NAME}-${ENV}
+    name: ${APP_NAME}-${ENV}
+  spec:
+    lookupPolicy:
+      local: false
+    tags:
+    - annotations: null
+      from:
+        kind: DockerImage
+        name: image-registry.openshift-image-registry.svc:5000/emit-found-inf-branch-auto/${APP_NAME}-${ENV}:latest
+      generation: null
+      importPolicy: {}
+      name: latest
+      referencePolicy:
+        type: ""
