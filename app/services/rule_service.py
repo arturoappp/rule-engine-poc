@@ -280,79 +280,79 @@ class RuleService:
 
         return result
 
-    def store_rules(self, entity_type: str, rules: List[APIRule], category: str = "default") -> Tuple[bool, str, int]:
+    def store_rules(self, entity_type: str, rules: List[APIRule], default_category: str = "default") -> Tuple[
+        bool, str, int]:
         """
-        Store rules in the engine, overwriting duplicates with same name.
+        Store rules in the engine, overwriting duplicates with same name across all categories.
 
         Args:
             entity_type: Entity type
             rules: List of rules to store
-            category: Optional category
+            default_category: Default category for rules without specified categories
 
         Returns:
             Tuple of (success, message, stored_rules_count)
         """
         try:
-            # Obtener reglas existentes y mapearlas por nombre
-            existing_rules = self.engine.get_rules_by_category(entity_type, category)
-            existing_rules_dict = {r.get("name", ""): r for r in existing_rules}
+            # Map to track rules by name to avoid duplicates
+            rules_by_name = {}
 
-            # Contador para reglas nuevas vs sobreescritas
-            new_rule_count = 0
-            overwritten_rule_count = 0
-
-            # Lista para acumular todas las reglas (nuevas y actualizadas)
-            all_rules = []
-            processed_rule_names = set()
-
-            # Procesar las nuevas reglas
+            # Process all rules from request
             for rule in rules:
-                # Verificar si la regla ya existe
-                if rule.name in existing_rules_dict and rule.name not in processed_rule_names:
-                    overwritten_rule_count += 1
-                else:
-                    new_rule_count += 1
+                # Use the rule's categories if defined, otherwise use default_category
+                rule_categories = rule.categories if hasattr(rule, 'categories') and rule.categories else [
+                    default_category]
 
-                # Marcar esta regla como procesada
-                processed_rule_names.add(rule.name)
+                # Store rule by name (latest definition wins)
+                rules_by_name[rule.name] = {
+                    "rule": rule,
+                    "categories": rule_categories
+                }
 
-                # Añadir la regla a la lista de todas las reglas
-                all_rules.append(rule)
+            # Get all categories that need processing
+            all_categories = set()
+            for rule_info in rules_by_name.values():
+                all_categories.update(rule_info["categories"])
 
-            # Añadir reglas existentes que no se están actualizando
-            for name, existing_rule in existing_rules_dict.items():
-                if name not in processed_rule_names:
-                    # Convertir de dict a Rule para consistencia
-                    # Aquí usamos asumimos que existing_rule es un dict que podemos pasar a un modelo
-                    try:
-                        rule_model = APIRule(**existing_rule)
-                        all_rules.append(rule_model)
-                    except Exception as e:
-                        logger.warning(f"Error converting existing rule {name} to model: {e}")
+            # Process categories one by one
+            overwritten_count = 0
+            new_count = 0
 
-            # Convertir todas las reglas a JSON
-            rules_json = json.dumps([
-                rule.model_dump(by_alias=True, exclude_none=True)
-                for rule in all_rules
-            ])
+            # Track which rules have been added already
+            added_rules = set()
 
-            # Primero borrar todas las reglas existentes para esta categoría y tipo de entidad
-            # (Esto depende de cómo tu motor maneja la actualización de reglas)
-            # En una implementación real, podrías tener un método para borrar reglas específicas
+            for category in all_categories:
+                # Get existing rules for this category
+                existing_rules = self.engine.get_rules_by_category(entity_type, category)
+                existing_names = {r.get("name", ""): r for r in existing_rules}
 
-            # Cargar todas las reglas (las nuevas y las existentes no modificadas)
-            self.engine.load_rules_from_json(rules_json, entity_type=entity_type, category=category)
+                # Add rules from this request that belong to this category
+                for rule_name, rule_info in rules_by_name.items():
+                    if category in rule_info["categories"]:
+                        # Only count stats if we haven't processed this rule yet
+                        if rule_name not in added_rules:
+                            if rule_name in existing_names:
+                                overwritten_count += 1
+                            else:
+                                new_count += 1
 
-            # Crear mensaje de éxito
-            message = f"Successfully stored {len(rules)} rules: "
-            if new_rule_count > 0:
-                message += f"{new_rule_count} new"
-            if new_rule_count > 0 and overwritten_rule_count > 0:
-                message += ", "
-            if overwritten_rule_count > 0:
-                message += f"{overwritten_rule_count} overwritten"
+                            added_rules.add(rule_name)
 
-            return True, message, len(rules)
+                        # Create a copy of the rule for this category
+                        rule_copy = APIRule(**rule_info["rule"].model_dump())
+
+                        # Set the full categories list on the rule
+                        rule_copy.categories = rule_info["categories"]
+
+                        # Convert rule to JSON and load it
+                        rule_json = json.dumps([rule_copy.model_dump(by_alias=True, exclude_none=True)])
+                        self.engine.load_rules_from_json(rule_json, entity_type=entity_type, category=category)
+
+            # Create success message
+            message = f"Successfully stored rules: {new_count} new, {overwritten_count} overwritten across {len(all_categories)} categories"
+
+            # Return the total number of unique rules stored
+            return True, message, len(rules_by_name)
 
         except Exception as e:
             logger.error(f"Error storing rules: {e}")

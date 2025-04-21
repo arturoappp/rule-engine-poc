@@ -13,6 +13,7 @@ from rule_engine.utils.json_loader import JsonLoader
 # Logging configuration
 logger = logging.getLogger(__name__)
 
+OVERWRITE_DUPLICATE_RULES: bool = True
 
 class RuleEngine:
     """
@@ -78,7 +79,10 @@ class RuleEngine:
             self._ensure_entity_structure(entity_type)
 
             # Process and add the rules
-            self._add_rules(rules_data, entity_type, category)
+            normalized_rules = JsonLoader.normalize_rules_data(rules_data, category)
+
+            for rule in normalized_rules:
+                self._add_rule(rule, entity_type, category)
 
             logger.info(
                 f"Rules successfully loaded from JSON string for entity '{entity_type}', category '{category}'")
@@ -126,14 +130,42 @@ class RuleEngine:
             category: Category to organize the rule
         """
         entity_rules = self.rules_by_entity[entity_type]
+        rule_name = rule.get("name", "")
 
-        # Add the rule to the general list
-        entity_rules['rules'].append(rule)
+        # Check if overwrite is enabled in config
+        if OVERWRITE_DUPLICATE_RULES:
+            # Remove any existing rule with the same name from the general list
+            entity_rules['rules'] = [r for r in entity_rules['rules'] if r.get("name", "") != rule_name]
+
+            # Remove any existing rule with the same name from the category
+            if category in entity_rules['categories']:
+                entity_rules['categories'][category] = [
+                    r for r in entity_rules['categories'][category]
+                    if r.get("name", "") != rule_name
+                ]
+
+        # Make a copy of the rule to avoid modifying the original
+        rule_copy = rule.copy()
+
+        # Make sure rule has a categories list
+        if "categories" not in rule_copy:
+            rule_copy["categories"] = []
+
+        # Add current category to rule's categories if not already present
+        if category not in rule_copy["categories"]:
+            rule_copy["categories"].append(category)
+
+        # Add the rule to the general list (overwriting any previous version)
+        # First, remove any existing version of this rule
+        entity_rules['rules'] = [r for r in entity_rules['rules'] if r.get("name", "") != rule_name]
+        entity_rules['rules'].append(rule_copy)
 
         # Add the rule to the category
         if category not in entity_rules['categories']:
             entity_rules['categories'][category] = []
-        entity_rules['categories'][category].append(rule)
+
+        # Add to the category (with updated categories list)
+        entity_rules['categories'][category].append(rule_copy)
 
     def get_rules_by_category(self, entity_type: str, category: str = None) -> List[Dict]:
         """
