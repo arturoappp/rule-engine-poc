@@ -18,7 +18,7 @@ jobs:
     - name: Run pycodestyle.
       run: |
         source .venv/bin/activate
-        pycodestyle --ignore=E501,W503,E402 .
+        pycodestyle --ignore=E501,W503,E402 app rule_engine
   xenon:
     name: Xenon
     runs-on: ["self-hosted", "Linux", "org-runner"]
@@ -27,12 +27,13 @@ jobs:
       uses: actions/checkout@v4
     - name: Install dependencies.
       run: |
+        python -m venv .venv
         source .venv/bin/activate
         python -m pip install --upgrade pip xenon
     - name: Run xenon.
       run: |
         source .venv/bin/activate
-        xenon --max-absolute C --max-modules C --max-average B ./app/
+        xenon --max-absolute C --max-modules C --max-average B ./app/ ./rule_engine/
   build:
     name: Build Image
     needs: [pep8, xenon]
