@@ -49,7 +49,7 @@ jobs:
       - name: Build in Openshift
         shell: bash
         run: |
-          export "APP="${GITHUB_REPOSITORY#*/}
+          export APP=$(echo ${GITHUB_REPOSITORY#*/} | awk '{print tolower($0)}')
           export "BRANCH="${GITHUB_REF##*/}
           export SSH_REPOSITORY=git@github.com:${GITHUB_REPOSITORY}.git
           export APP_LABEL=$APP-$BRANCH
@@ -71,7 +71,7 @@ jobs:
       - name: Deploy in Openshift
         shell: bash
         run: |
-          export "APP="${GITHUB_REPOSITORY#*/}
+          export APP=$(echo ${GITHUB_REPOSITORY#*/} | awk '{print tolower($0)}')
           export "BRANCH="${GITHUB_REF##*/}
           export APP_LABEL=$APP-$BRANCH
           oc login "${{ secrets.OPENSHIFT_URL }}" --token="${{ secrets.OPENSHIFT_TOKEN }}" --insecure-skip-tls-verify
