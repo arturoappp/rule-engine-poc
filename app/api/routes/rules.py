@@ -2,7 +2,8 @@
 Endpoints for rule management.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Annotated
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.models.rules import (
     Rule,
@@ -55,9 +56,11 @@ async def store_rules(request: RuleStoreRequest, service: RuleService = Depends(
 
 
 @router.get("/rules", response_model=RuleListResponse, response_model_exclude_none=True)
-async def list_rules(entity_type: str | None = None, service: RuleService = Depends(get_rule_service)):
+async def list_rules(rule_list_request: Annotated[RuleListRequest, Query()], service: RuleService = Depends(get_rule_service)):
     """List all rules in the engine."""
-    rules_by_entity = service.get_rules()
+    entity_type = rule_list_request.entity_type
+    category = rule_list_request.category
+    rules_by_entity = service.get_rules(entity_type, category)
 
     # Format response
     entity_types = list(rules_by_entity.keys())

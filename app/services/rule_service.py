@@ -158,7 +158,7 @@ class RuleService:
             logger.error(f"Error storing rules: {e}")
             return False, f"Error storing rules: {str(e)}", 0
 
-    def get_rules(self) -> Dict[str, Dict[str, List[Dict]]]:
+    def get_rules(self, entity_type = None, category = None) -> Dict[str, Dict[str, List[Dict]]]:
         """
         Get all rules from the engine.
 
@@ -230,14 +230,20 @@ class RuleService:
 
         result = {}
 
-        # Get all entity types
-        entity_types = self.engine.get_entity_types()
+        if entity_type == None:
+            # Get all entity types
+            entity_types = self.engine.get_entity_types()
+        else:
+            entity_types = [entity_type]
 
         for entity_type in entity_types:
             result[entity_type] = {}
 
-            # Get all categories for this entity type
-            categories = self.engine.get_categories(entity_type)
+            if category == None:
+                # Get all categories for this entity type
+                categories = self.engine.get_categories(entity_type)
+            else:
+                categories = [category]
 
             for category in categories:
                 # Get rules for this category
