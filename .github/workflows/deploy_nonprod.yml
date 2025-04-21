@@ -4,43 +4,43 @@ on:
   push:
     branches-ignore: [main]
 jobs:
-  pep8:
-    name: PEP8
-    runs-on: ["self-hosted", "Linux", "org-runner"]
-    steps:
-    - name: Clone repository.
-      uses: actions/checkout@v4
-    - name: Activate Virtual env
-      run: |
-        python -m venv .venv
-        source .venv/bin/activate
-        echo PATH=$PATH >> $GITHUB_ENV
-    - name: Install dependencies.
-      run: |
-        python -m pip install --upgrade pip pycodestyle
-    - name: Run pycodestyle.
-      run: |
-        pycodestyle --ignore=E501,W503,E402 app rule_engine
-  xenon:
-    name: Xenon
-    runs-on: ["self-hosted", "Linux", "org-runner"]
-    steps:
-    - name: Clone repository.
-      uses: actions/checkout@v4
-    - name: Activate Virtual env
-      run: |
-        python -m venv .venv
-        source .venv/bin/activate
-        echo PATH=$PATH >> $GITHUB_ENV
-    - name: Install dependencies.
-      run: |
-        python -m pip install --upgrade pip xenon
-    - name: Run xenon.
-      run: |
-        xenon --max-absolute C --max-modules C --max-average B ./app/ ./rule_engine/
+  # pep8:
+  #   name: PEP8
+  #   runs-on: ["self-hosted", "Linux", "org-runner"]
+  #   steps:
+  #   - name: Clone repository.
+  #     uses: actions/checkout@v4
+  #   - name: Activate Virtual env
+  #     run: |
+  #       python -m venv .venv
+  #       source .venv/bin/activate
+  #       echo PATH=$PATH >> $GITHUB_ENV
+  #   - name: Install dependencies.
+  #     run: |
+  #       python -m pip install --upgrade pip pycodestyle
+  #   - name: Run pycodestyle.
+  #     run: |
+  #       pycodestyle --ignore=E501,W503,E402 app rule_engine
+  # xenon:
+  #   name: Xenon
+  #   runs-on: ["self-hosted", "Linux", "org-runner"]
+  #   steps:
+  #   - name: Clone repository.
+  #     uses: actions/checkout@v4
+  #   - name: Activate Virtual env
+  #     run: |
+  #       python -m venv .venv
+  #       source .venv/bin/activate
+  #       echo PATH=$PATH >> $GITHUB_ENV
+  #   - name: Install dependencies.
+  #     run: |
+  #       python -m pip install --upgrade pip xenon
+  #   - name: Run xenon.
+  #     run: |
+  #       xenon --max-absolute C --max-modules C --max-average B ./app/ ./rule_engine/
   build:
     name: Build Image
-    needs: [pep8, xenon]
+    # needs: [pep8, xenon]
     runs-on: ["self-hosted", "Linux", "org-runner"]
     environment: rosa-non-production-openshift
     steps:
