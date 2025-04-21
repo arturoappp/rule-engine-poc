@@ -3,13 +3,10 @@ Endpoints for rule management.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List
-
-from pydantic import BaseModel
 
 from app.api.models.rules import (
     Rule,
-    RuleList,
+    RuleListRequest,
     RuleValidationResponse,
     RuleStoreRequest,
     RuleStoreResponse,
@@ -58,7 +55,7 @@ async def store_rules(request: RuleStoreRequest, service: RuleService = Depends(
 
 
 @router.get("/rules", response_model=RuleListResponse, response_model_exclude_none=True)
-async def list_rules(service: RuleService = Depends(get_rule_service)):
+async def list_rules(entity_type: str | None = None, service: RuleService = Depends(get_rule_service)):
     """List all rules in the engine."""
     rules_by_entity = service.get_rules()
 
