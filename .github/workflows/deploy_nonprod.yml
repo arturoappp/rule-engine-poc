@@ -55,7 +55,7 @@ jobs:
           export APP_LABEL=$APP-$BRANCH
           oc login "${{ secrets.OPENSHIFT_URL }}" --token="${{ secrets.OPENSHIFT_TOKEN }}" --insecure-skip-tls-verify
           oc project "ndc-v4"
-          oc process -f .openshift/ocp-build-template.yml -p APP_NAME=$APP -p ENV=$BRANCH -p ENV_NAME=$BRANCH -p PROJECT_URL=$SSH_REPOSITORY > build_template.json
+          oc process -f .openshift/build-template.yml -p APP_NAME=$APP -p ENV=$BRANCH -p ENV_NAME=$BRANCH -p PROJECT_URL=$SSH_REPOSITORY > build_template.json
           (oc get buildConfig $APP_LABEL 2> /dev/null && oc replace -f build_template.json && oc start-build $APP_LABEL) || (oc create -f build_template.json)
           build_version=$(oc describe bc/$APP_LABEL | grep "Latest Version:" | awk '{print $3}')
           oc wait --for=condition=Complete build/$APP_LABEL-$build_version --timeout=900s
@@ -76,10 +76,10 @@ jobs:
           export APP_LABEL=$APP-$BRANCH
           oc login "${{ secrets.OPENSHIFT_URL }}" --token="${{ secrets.OPENSHIFT_TOKEN }}" --insecure-skip-tls-verify
           oc project "ndc-v4"
-          oc process -f .openshift/ocp-route-service-template.yml -p APP_NAME=$APP -p ENV=$BRANCH -p OCP_ENV_LETTER=n > rs_template.json
+          oc process -f .openshift/route-service-template.yml -p APP_NAME=$APP -p ENV=$BRANCH -p OCP_ENV_LETTER=n > rs_template.json
           (oc get services $APP_LABEL 2> /dev/null && oc replace -f rs_template.json) || (oc create -f rs_template.json)
           export URL=$(oc get route -l app=$APP_LABEL | tail -n 1 | awk '{print $2}')
-          oc process -f .openshift/ocp-deploy-template.yml -p APP_NAME=$APP -p ENV=$BRANCH -p URL=$URL > deploy_template.json
+          oc process -f .openshift/deploy-template.yml -p APP_NAME=$APP -p ENV=$BRANCH -p URL=$URL > deploy_template.json
           (oc get deployment -l app=$APP_LABEL 2> /dev/null && oc replace -f deploy_template.json) || (oc create -f deploy_template.json)
           oc rollout status deployment/$APP_LABEL
           oc logout
