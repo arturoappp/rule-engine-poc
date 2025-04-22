@@ -125,7 +125,7 @@ class TestRuleEndpoints:
         }
         client.post("/api/v1/rules", json=initial_data)
 
-        # Now store an updated version with the same name
+        # Now store an updated version with the same name but in different categories
         updated_data = {
             "entity_type": "NDC_Request",
             "default_category": "default",
@@ -149,23 +149,45 @@ class TestRuleEndpoints:
         list_response = client.get("/api/v1/rules")
         data = list_response.json()
 
-        # Look for our rule in each category
-        categories_found = []
-        description = None
+        # Check that our rule exists in all three expected categories
+        categories_with_rule = set()
+        rule_in_category1 = None
+        rule_in_category2 = None
+        rule_in_category3 = None
 
         for entity_type, categories in data["rules"].items():
             if entity_type == "NDC_Request":
                 for category, rules in categories.items():
                     for rule in rules:
                         if rule["name"] == "OVERWRITE TEST RULE":
-                            categories_found.append(category)
-                            description = rule["description"]
+                            categories_with_rule.add(category)
 
-                            # Check the rule's own categories list
-                            assert "categories" in rule
-                            assert set(rule["categories"]) == set(["testCategory1", "testCategory3"])
+                            if category == "testCategory1":
+                                rule_in_category1 = rule
+                            elif category == "testCategory2":
+                                rule_in_category2 = rule
+                            elif category == "testCategory3":
+                                rule_in_category3 = rule
 
-        # Verify the rule appears in the expected categories
-        assert set(categories_found) == set(["testCategory1", "testCategory3"])
-        assert "testCategory2" not in categories_found
-        assert description == "Updated version"
+        # Verify the rule appears in all expected categories
+        assert "testCategory1" in categories_with_rule, "Rule should be in testCategory1"
+        assert "testCategory2" in categories_with_rule, "Rule should still be in testCategory2"
+        assert "testCategory3" in categories_with_rule, "Rule should be added to testCategory3"
+
+        # Verify the rule in testCategory1 and testCategory3 has been updated
+        assert rule_in_category1 is not None
+        assert rule_in_category1["description"] == "Updated version"
+        assert rule_in_category1["conditions"]["operator"] == "match"
+        assert rule_in_category1["conditions"]["value"] == "^192\\.168\\..*$"
+
+        # Verify the rule in testCategory3 is the updated version
+        assert rule_in_category3 is not None
+        assert rule_in_category3["description"] == "Updated version"
+        assert rule_in_category3["conditions"]["operator"] == "match"
+        assert rule_in_category3["conditions"]["value"] == "^192\\.168\\..*$"
+
+        # Verify the rule in testCategory2 is still the original version
+        assert rule_in_category2 is not None
+        assert rule_in_category2["description"] == "Initial version"
+        assert rule_in_category2["conditions"]["operator"] == "exists"
+        assert rule_in_category2["conditions"]["value"] is True

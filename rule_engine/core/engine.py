@@ -147,24 +147,12 @@ class RuleEngine:
         # Make a copy of the rule to avoid modifying the original
         rule_copy = rule.copy()
 
-        # Make sure rule has a categories list
-        if "categories" not in rule_copy:
-            rule_copy["categories"] = []
-
-        # Add current category to rule's categories if not already present
-        if category not in rule_copy["categories"]:
-            rule_copy["categories"].append(category)
-
-        # Add the rule to the general list (overwriting any previous version)
-        # First, remove any existing version of this rule
-        entity_rules['rules'] = [r for r in entity_rules['rules'] if r.get("name", "") != rule_name]
+        # Add the rule to the general list
         entity_rules['rules'].append(rule_copy)
 
         # Add the rule to the category
         if category not in entity_rules['categories']:
             entity_rules['categories'][category] = []
-
-        # Add to the category (with updated categories list)
         entity_rules['categories'][category].append(rule_copy)
 
     def get_rules_by_category(self, entity_type: str, category: str = None) -> List[Dict]:
