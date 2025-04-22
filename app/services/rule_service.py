@@ -158,7 +158,7 @@ class RuleService:
             logger.error(f"Error storing rules: {e}")
             return False, f"Error storing rules: {str(e)}", 0
 
-    def get_rules(self, entity_type = None, category = None) -> Dict[str, Dict[str, List[Dict]]]:
+    def get_rules(self, entity_type = None, provided_category = None) -> Dict[str, Dict[str, List[Dict]]]:
         """
         Get all rules from the engine.
 
@@ -226,7 +226,8 @@ class RuleService:
             }
         ]
         """
-        self.engine.load_rules_from_json(equal_rule, entity_type="device", category="complex")
+        self.engine.load_rules_from_json(complex_rule, entity_type="commission", category="should")
+        self.engine.load_rules_from_json(equal_rule, entity_type="decommission", category="could")
 
         result = {}
 
@@ -239,11 +240,11 @@ class RuleService:
         for entity_type in entity_types:
             result[entity_type] = {}
 
-            if category == None:
+            if provided_category == None:
                 # Get all categories for this entity type
                 categories = self.engine.get_categories(entity_type)
             else:
-                categories = [category]
+                categories = [provided_category]
 
             for category in categories:
                 # Get rules for this category
