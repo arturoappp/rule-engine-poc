@@ -4,6 +4,7 @@ Service layer for rule engine operations.
 
 import json
 import logging
+from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple, Union
 
 from app.api.models.rules import Rule as APIRule
