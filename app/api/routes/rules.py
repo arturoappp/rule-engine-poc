@@ -39,7 +39,7 @@ async def store_rules(request: RuleStoreRequest, service: RuleService = Depends(
     success, message, stored_count = service.store_rules(
         entity_type=request.entity_type,
         rules=request.rules,
-        category=request.category
+        default_category=request.default_category
     )
 
     if not success:
@@ -55,7 +55,7 @@ async def store_rules(request: RuleStoreRequest, service: RuleService = Depends(
     }
 
 
-@router.get("/rules", response_model=RuleListResponse)
+@router.get("/rules", response_model=RuleListResponse, response_model_exclude_none= True)
 async def list_rules(service: RuleService = Depends(get_rule_service)):
     """List all rules in the engine with statistics."""
     rules_by_entity = service.get_rules()

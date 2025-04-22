@@ -112,7 +112,7 @@ class Rule(BaseModel):
     name: str
     description: Optional[str] = None
     conditions: RuleCondition
-    category: Optional[str] = "default"
+    categories: Optional[List[str]] = Field(default_factory=lambda: ["default"])
 
     model_config = {
         "json_schema_extra": {
@@ -120,6 +120,7 @@ class Rule(BaseModel):
                 {
                     "name": "Cisco Version Rule",
                     "description": "Ensures Cisco devices are running the required OS version",
+                    "categories": ["version", "compliance"],
                     "conditions": {
                         "any": [
                             {
@@ -187,7 +188,7 @@ class RuleValidationResponse(BaseModel):
 class RuleStoreRequest(BaseModel):
     """Request model for storing rules."""
     entity_type: str
-    category: Optional[str] = "default"
+    default_category: Optional[str] = "default"  # Used only if a rule doesn't specify categories
     rules: List[Rule]
 
 
