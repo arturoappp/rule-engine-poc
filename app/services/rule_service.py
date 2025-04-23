@@ -4,6 +4,7 @@ Service layer for rule engine operations.
 
 import json
 import logging
+from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple, Union
 
 from app.api.models.rules import Rule as APIRule
@@ -14,8 +15,6 @@ from rule_engine.core.rule_result import RuleResult
 
 # Set up logging
 logger = logging.getLogger(__name__)
-
-
 
 
 class RuleService:
@@ -281,7 +280,7 @@ class RuleService:
         return result
 
     def store_rules(self, entity_type: str, rules: List[APIRule], default_category: str = "default") -> Tuple[
-        bool, str, int]:
+            bool, str, int]:
         """
         Store rules in the engine, overwriting duplicates with same name across all categories.
 
@@ -403,7 +402,7 @@ class RuleService:
         return result
 
     def evaluate_data(self, data: Dict[str, Any], entity_type: str, categories: Optional[List[str]] = None) -> List[
-        RuleResult]:
+            RuleResult]:
         """
         Evaluate data against rules.
 

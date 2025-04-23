@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 OVERWRITE_DUPLICATE_RULES: bool = True
 
+
 class RuleEngine:
     """
     Main rule engine class that manages rules and performs evaluations.
