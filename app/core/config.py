@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     PROJECT_DESCRIPTION: str = "A flexible rule engine for evaluating conditions against data"
     VERSION: str = "1.0.0"
     API_PREFIX: str = "/api/v1"
-    PORT: int = int( "8001")
+    PORT: int = int("8080")
 
     # CORS settings
     ALLOWED_ORIGINS: List[str] = Field(default_factory=lambda: ["*"])

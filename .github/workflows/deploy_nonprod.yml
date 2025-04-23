@@ -1,0 +1,88 @@
+name: Deploy Development/Feature Branch in ROSA Non-Production
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore: [main]
+jobs:
+  pep8:
+    name: PEP8
+    runs-on: ["self-hosted", "Linux", "org-runner"]
+    steps:
+    - name: Clone repository.
+      uses: actions/checkout@v4
+    - name: Activate Virtual env
+      run: |
+        python -m venv .venv
+        source .venv/bin/activate
+        echo PATH=$PATH >> $GITHUB_ENV
+    - name: Install dependencies.
+      run: |
+        python -m pip install --upgrade pip pycodestyle
+    - name: Run pycodestyle.
+      run: |
+        pycodestyle --ignore=E501,W503,E402 app rule_engine
+
+  unit_tests:
+    name: Run Unit Tests
+    runs-on: ["self-hosted", "Linux", "org-runner"]
+    needs: [pep8]
+    steps:
+    - name: Clone repository.
+      uses: actions/checkout@v4
+    - name: Activate Virtual env
+      run: |
+        python -m venv .venv
+        source .venv/bin/activate
+        echo PATH=$PATH >> $GITHUB_ENV
+    - name: Install dependencies.
+      run: |
+        python -m pip install --upgrade pip setuptools pytest-cov
+        python -m pip install -q -r requirements.txt
+    - name: Run tests.
+      run: |
+        pytest --cov-report term-missing --cov=app --cov=rule_engine tests
+  build:
+    name: Build Image
+    needs: [unit_tests]
+    runs-on: ["self-hosted", "Linux", "org-runner"]
+    environment: rosa-non-production-openshift
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Build in Openshift
+        shell: bash
+        run: |
+          export APP=$(echo ${GITHUB_REPOSITORY#*/} | awk '{print tolower($0)}')
+          export "BRANCH="${GITHUB_REF##*/}
+          export SSH_REPOSITORY=git@github.com:${GITHUB_REPOSITORY}.git
+          export APP_LABEL=$APP-$BRANCH
+          oc login "${{ secrets.OPENSHIFT_URL }}" --token="${{ secrets.OPENSHIFT_TOKEN }}" --insecure-skip-tls-verify
+          oc project "ndc-v4"
+          oc process -f .openshift/build-template.yml -p APP_NAME=$APP -p ENV=$BRANCH -p ENV_NAME=$BRANCH -p PROJECT_URL=$SSH_REPOSITORY > build_template.json
+          (oc get buildConfig $APP_LABEL 2> /dev/null && oc replace -f build_template.json && oc start-build $APP_LABEL) || (oc create -f build_template.json)
+          build_version=$(oc describe bc/$APP_LABEL | grep "Latest Version:" | awk '{print $3}')
+          oc wait --for=condition=Complete build/$APP_LABEL-$build_version --timeout=900s
+          oc logout
+  deploy:
+    name: Deploy Image
+    needs: [build]
+    runs-on: ["self-hosted", "Linux", "org-runner"]
+    environment: rosa-non-production-openshift
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Deploy in Openshift
+        shell: bash
+        run: |
+          export APP=$(echo ${GITHUB_REPOSITORY#*/} | awk '{print tolower($0)}')
+          export "BRANCH="${GITHUB_REF##*/}
+          export APP_LABEL=$APP-$BRANCH
+          oc login "${{ secrets.OPENSHIFT_URL }}" --token="${{ secrets.OPENSHIFT_TOKEN }}" --insecure-skip-tls-verify
+          oc project "ndc-v4"
+          oc process -f .openshift/route-service-template.yml -p APP_NAME=$APP -p ENV=$BRANCH -p OCP_ENV_LETTER=n > rs_template.json
+          (oc get services $APP_LABEL 2> /dev/null && oc replace -f rs_template.json) || (oc create -f rs_template.json)
+          export URL=$(oc get route -l app=$APP_LABEL | tail -n 1 | awk '{print $2}')
+          oc process -f .openshift/deploy-template.yml -p APP_NAME=$APP -p ENV=$BRANCH -p URL=$URL > deploy_template.json
+          (oc get deployment -l app=$APP_LABEL 2> /dev/null && oc replace -f deploy_template.json) || (oc create -f deploy_template.json)
+          oc rollout status deployment/$APP_LABEL
+          oc logout

@@ -133,6 +133,7 @@ async def get_evaluation_stats(service: RuleService = Depends(get_rule_service))
     """Get statistics about rule evaluations."""
     return service.get_evaluation_stats()
 
+
 @router.get("/evaluate/failure-details/{rule_name}", response_model=Dict[str, Any])
 async def get_rule_failure_details(
     rule_name: str,
