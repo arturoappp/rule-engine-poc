@@ -1,0 +1,53 @@
+---
+apiVersion: template.openshift.io/v1
+kind: Template
+metadata:
+  creationTimestamp: null
+  name: rs-template
+parameters:
+- description: "Application name"
+  name: APP_NAME
+- description: "Branch name slug, used in names and URLs"
+  name: ENV
+- description: n or p, depending on the openshift environment
+  name: OCP_ENV_LETTER
+objects:
+- apiVersion: v1
+  kind: Route
+  metadata:
+    annotations:
+      haproxy.router.openshift.io/timeout: 60s
+    creationTimestamp: null
+    labels:
+      app: ${APP_NAME}-${ENV}
+    name: ${APP_NAME}-${ENV}
+  spec:
+    host: ${APP_NAME}-${ENV}.apps.rm${OCP_ENV_LETTER}01.ocp.na.xom.com
+    port:
+      targetPort: 8080-tcp
+    tls:
+      termination: edge
+    to:
+      kind: Service
+      name: ${APP_NAME}-${ENV}
+      weight: 100
+    wildcardPolicy: None
+- apiVersion: v1
+  kind: Service
+  metadata:
+    annotations:
+      openshift.io/generated-by: OpenShiftNewApp
+    creationTimestamp: null
+    labels:
+      app: ${APP_NAME}-${ENV}
+    name: ${APP_NAME}-${ENV}
+  spec:
+    ports:
+    - name: 8080-tcp
+      port: 8080
+      protocol: TCP
+      targetPort: 8080
+    selector:
+      app: ${APP_NAME}-${ENV}
+    sessionAffinity: None
+    type: ClusterIP

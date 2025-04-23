@@ -2,8 +2,9 @@
 API models for rule management.
 """
 
+from typing import Dict, List, Any, Optional
+
 from pydantic import BaseModel, Field, field_validator, model_validator
-from typing import Dict, List, Any, Optional, Union, ClassVar
 
 
 class RuleCondition(BaseModel):
@@ -58,11 +59,48 @@ class RuleCondition(BaseModel):
         return data
 
     def model_dump(self, **kwargs):
-        """Customize the model dump to handle empty conditions."""
+        """Customized model_dump to deeply clean null values."""
+        # Usar el model_dump original
         data = super().model_dump(**kwargs)
 
-        # Eliminar campos nulos o listas vacías
-        return {k: v for k, v in data.items() if v is not None and (not isinstance(v, list) or len(v) > 0)}
+        # Función recursiva para limpiar diccionarios
+        def clean_dict(d):
+            if not isinstance(d, dict):
+                return d
+
+            # Limpiar valores nulos en el nivel actual
+            result = {k: v for k, v in d.items() if v is not None}
+
+            # Procesar listas anidadas
+            for key in ['all', 'any', 'none']:
+                if key in result and isinstance(result[key], list):
+                    # Limpiar cada elemento de la lista
+                    cleaned_list = []
+                    for item in result[key]:
+                        if isinstance(item, dict):
+                            cleaned_item = clean_dict(item)
+                            if cleaned_item and len(cleaned_item) > 0:
+                                cleaned_list.append(cleaned_item)
+
+                    # Si la lista queda vacía, eliminar la clave
+                    if cleaned_list:
+                        result[key] = cleaned_list
+                    else:
+                        result.pop(key, None)
+
+            # Procesar la condición "not"
+            if 'not' in result:
+                if isinstance(result['not'], dict):
+                    cleaned_not = clean_dict(result['not'])
+                    if cleaned_not and len(cleaned_not) > 0:
+                        result['not'] = cleaned_not
+                    else:
+                        result.pop('not', None)
+
+            return result
+
+        # Aplicar limpieza recursiva
+        return clean_dict(data)
 
 
 # Forward reference resolution for recursive model
@@ -74,7 +112,7 @@ class Rule(BaseModel):
     name: str
     description: Optional[str] = None
     conditions: RuleCondition
-    category: Optional[str] = "default"
+    categories: Optional[List[str]] = Field(default_factory=lambda: ["default"])
 
     model_config = {
         "json_schema_extra": {
@@ -82,6 +120,7 @@ class Rule(BaseModel):
                 {
                     "name": "Cisco Version Rule",
                     "description": "Ensures Cisco devices are running the required OS version",
+                    "categories": ["version", "compliance"],
                     "conditions": {
                         "any": [
                             {
@@ -119,15 +158,18 @@ class Rule(BaseModel):
         return v
 
     def model_dump(self, **kwargs):
-        """Customize model dump to ensure conditions are properly formatted."""
+        """Customize model dump to remove null values."""
+        # No añadimos exclude_none aquí, lo pasamos a través de kwargs
         data = super().model_dump(**kwargs)
 
-        # Asegurar que las condiciones estén bien formateadas
-        if "conditions" in data and data["conditions"] is not None:
-            # Convertir condiciones a formato correcto para el motor de reglas
-            if isinstance(data["conditions"], dict) and not any(k in data["conditions"] for k in ["all", "any", "none", "not", "path"]):
-                # Si no hay ninguna condición definida, crear una estructura por defecto
-                data["conditions"] = {"all": []}
+        # Asegurar que las condiciones no tengan valores nulos
+        if 'conditions' in data and isinstance(data['conditions'], dict):
+            # Eliminar atributos nulos de las condiciones
+            conditions = {
+                k: v for k, v in data['conditions'].items()
+                if v is not None
+            }
+            data['conditions'] = conditions
 
         return data
 
@@ -152,7 +194,7 @@ class RuleValidationResponse(BaseModel):
 class RuleStoreRequest(BaseModel):
     """Request model for storing rules."""
     entity_type: str
-    category: Optional[str] = "default"
+    default_category: Optional[str] = "default"  # Used only if a rule doesn't specify categories
     rules: List[Rule]
 
 
@@ -163,8 +205,15 @@ class RuleStoreResponse(BaseModel):
     stored_rules: int
 
 
+class RuleStats(BaseModel):
+    """Model for rule statistics."""
+    total_rules: int
+    rules_by_category: Dict[str, int]
+
+
 class RuleListResponse(BaseModel):
     """Response model for listing rules."""
     entity_types: List[str]
     categories: Dict[str, List[str]]
     rules: Dict[str, Dict[str, List[Rule]]]
+    stats: Dict[str, RuleStats]

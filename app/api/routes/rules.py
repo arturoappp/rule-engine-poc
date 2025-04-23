@@ -40,7 +40,7 @@ async def store_rules(request: RuleStoreRequest, service: RuleService = Depends(
     success, message, stored_count = service.store_rules(
         entity_type=request.entity_type,
         rules=request.rules,
-        category=request.category
+        default_category=request.default_category
     )
 
     if not success:
@@ -65,4 +65,3 @@ async def list_rules(rule_list_request: Annotated[RuleListRequest, Query()], ser
     responseModel = format_list_rules_response(rules_by_entity)
 
     return responseModel
-

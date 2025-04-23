@@ -3,13 +3,14 @@ Endpoints for data evaluation.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List
+from typing import List, Optional, Dict, Any
 
 from app.api.models.evaluate import (
     EvaluationRequest,
     EvaluationWithRulesRequest,
     EvaluationResponse,
-    RuleEvaluationResult
+    RuleEvaluationResult,
+    FailureDetail
 )
 from app.services.rule_service import RuleService
 
@@ -36,11 +37,21 @@ async def evaluate_data(request: EvaluationRequest, service: RuleService = Depen
         passed_count = 0
 
         for result in results:
+            failure_details = [
+                FailureDetail(
+                    operator=detail.operator,
+                    path=detail.path,
+                    expected_value=detail.expected_value,
+                    actual_value=detail.actual_value
+                ) for detail in result.failure_details
+            ]
+
             evaluation_result = RuleEvaluationResult(
                 rule_name=result.rule_name,
                 success=result.success,
                 message=result.message,
-                failing_elements=result.failing_elements
+                failing_elements=result.failing_elements,
+                failure_details=failure_details
             )
 
             evaluation_results.append(evaluation_result)
@@ -79,11 +90,21 @@ async def evaluate_with_rules(request: EvaluationWithRulesRequest, service: Rule
         passed_count = 0
 
         for result in results:
+            failure_details = [
+                FailureDetail(
+                    operator=detail.operator,
+                    path=detail.path,
+                    expected_value=detail.expected_value,
+                    actual_value=detail.actual_value
+                ) for detail in result.failure_details
+            ]
+
             evaluation_result = RuleEvaluationResult(
                 rule_name=result.rule_name,
                 success=result.success,
                 message=result.message,
-                failing_elements=result.failing_elements
+                failing_elements=result.failing_elements,
+                failure_details=failure_details
             )
 
             evaluation_results.append(evaluation_result)
@@ -105,3 +126,19 @@ async def evaluate_with_rules(request: EvaluationWithRulesRequest, service: Rule
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Error evaluating data: {str(e)}"
         )
+
+
+@router.get("/evaluate/stats", response_model=Dict[str, Any])
+async def get_evaluation_stats(service: RuleService = Depends(get_rule_service)):
+    """Get statistics about rule evaluations."""
+    return service.get_evaluation_stats()
+
+
+@router.get("/evaluate/failure-details/{rule_name}", response_model=Dict[str, Any])
+async def get_rule_failure_details(
+    rule_name: str,
+    entity_type: Optional[str] = None,
+    service: RuleService = Depends(get_rule_service)
+):
+    """Get detailed information about failures for a specific rule."""
+    return service.get_rule_failure_details(rule_name, entity_type)

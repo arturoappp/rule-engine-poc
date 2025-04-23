@@ -1,0 +1,24 @@
+name: "Delete Feature Branch from ROSA Non-Production"
+on:
+  delete:
+    branches-ignore: [development, main]
+env:
+  PROJECT: ndc-v4
+jobs:
+  delete_feature: 
+    name: Delete Feature Branch from Openshift
+    runs-on: ["self-hosted", "Linux", "org-runner"]
+    environment: rosa-non-production-openshift
+    steps:
+    - name: Construct FEATURE_APP var name.
+      run: |
+        export APP=$(echo ${GITHUB_REPOSITORY#*/} | awk '{print tolower($0)}')
+        export "BRANCH="${GITHUB_REF##*/}
+        FEATURE_APP=${APP}-${BRANCH}
+        echo "FEATURE_APP="${FEATURE_APP//_/-} >> $GITHUB_ENV
+    - name: Delete objects in Openshift
+      run: |
+        oc login "${{ secrets.OPENSHIFT_URL }}" --token=${{ secrets.OPENSHIFT_TOKEN }} --insecure-skip-tls-verify
+        oc project "${{ env.PROJECT }}"
+        oc delete bc,build,deployment,service,route,is,rs,pod -l app=${{ env.FEATURE_APP }}
+        oc logout
