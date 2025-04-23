@@ -13,6 +13,7 @@ from app.api.models.rules import (
     RuleStoreResponse,
     RuleListResponse
 )
+from app.api.utilities.response_formatter import format_list_rules_response
 from app.services.rule_service import RuleService
 
 router = APIRouter()
@@ -61,15 +62,7 @@ async def list_rules(rule_list_request: Annotated[RuleListRequest, Query()], ser
     entity_type = rule_list_request.entity_type
     category = rule_list_request.category
     rules_by_entity = service.get_rules(entity_type, category)
-
-    # Format response
-    entity_types = list(rules_by_entity.keys())
-    categories = {}
-
-    # Get categories for each entity type
-    for entity_type, categories_rules in rules_by_entity.items():
-        categories[entity_type] = list(categories_rules.keys())
-   
-    responseModel = RuleListResponse(entity_types=entity_types, categories=categories, rules=rules_by_entity)
+    responseModel = format_list_rules_response(rules_by_entity)
 
     return responseModel
+
