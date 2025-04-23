@@ -278,7 +278,7 @@ if __name__ == "__main__":
     }
 
     print("\nScenario 2: FQDN missing - should fail")
-    results = engine.evaluate_data(commission_should_run_data_2, entity_type="request",  categories=["SHOULD NDC COMMISSION REQUEST"])
+    results = engine.evaluate_data(commission_should_run_data_2, entity_type="request", categories=["SHOULD NDC COMMISSION REQUEST"])
     for result in results:
         print(f"  - {result}")
         if not result.success and result.failing_elements:
@@ -320,7 +320,7 @@ if __name__ == "__main__":
     }
 
     print("\nScenario 2: FQDN missing - should fail")
-    results = engine.evaluate_data(decommission_should_run_data_2, entity_type="request", categories= ["SHOULD NDC DECOMMISSION REQUEST"])
+    results = engine.evaluate_data(decommission_should_run_data_2, entity_type="request", categories=["SHOULD NDC DECOMMISSION REQUEST"])
     for result in results:
         print(f"  - {result}")
         if not result.success and result.failing_elements:
@@ -390,7 +390,7 @@ if __name__ == "__main__":
     }
 
     print("\nScenario 2: Missing some required fields - should fail")
-    results = engine.evaluate_data(commission_can_run_data_2, entity_type="request",  categories= ["CAN NDC COMMISSION REQUEST"])
+    results = engine.evaluate_data(commission_can_run_data_2, entity_type="request", categories=["CAN NDC COMMISSION REQUEST"])
     for result in results:
         print(f"  - {result}")
         if not result.success and result.failing_elements:
@@ -424,7 +424,7 @@ if __name__ == "__main__":
     }
 
     print("\nScenario 3: Invalid field formats - should fail")
-    results = engine.evaluate_data(commission_can_run_data_3, entity_type="request", categories= ["CAN NDC COMMISSION REQUEST"])
+    results = engine.evaluate_data(commission_can_run_data_3, entity_type="request", categories=["CAN NDC COMMISSION REQUEST"])
     for result in results:
         print(f"  - {result}")
         if not result.success and result.failing_elements:
@@ -458,7 +458,7 @@ if __name__ == "__main__":
     }
 
     print("\nScenario 4: No serialNumber - should still pass")
-    results = engine.evaluate_data(commission_can_run_data_4, entity_type="request", categories= ["CAN NDC COMMISSION REQUEST"])
+    results = engine.evaluate_data(commission_can_run_data_4, entity_type="request", categories=["CAN NDC COMMISSION REQUEST"])
     for result in results:
         print(f"  - {result}")
         if not result.success and result.failing_elements:
@@ -484,7 +484,7 @@ if __name__ == "__main__":
     }
 
     print("\nScenario 1: All criteria met - should pass")
-    results = engine.evaluate_data(decommission_can_run_data_1, entity_type="request", categories = ["CAN NDC DECOMMISSION REQUEST"])
+    results = engine.evaluate_data(decommission_can_run_data_1, entity_type="request", categories=["CAN NDC DECOMMISSION REQUEST"])
     for result in results:
         print(f"  - {result}")
         if not result.success and result.failing_elements:
@@ -507,7 +507,7 @@ if __name__ == "__main__":
     }
 
     print("\nScenario 2: Missing required fields - should fail")
-    results = engine.evaluate_data(decommission_can_run_data_2, entity_type="request", categories= ["CAN NDC DECOMMISSION REQUEST" ])
+    results = engine.evaluate_data(decommission_can_run_data_2, entity_type="request", categories=["CAN NDC DECOMMISSION REQUEST"])
     for result in results:
         print(f"  - {result}")
         if not result.success and result.failing_elements:
@@ -530,7 +530,7 @@ if __name__ == "__main__":
     }
 
     print("\nScenario 3: Invalid IP and too long serialNumber - should fail")
-    results = engine.evaluate_data(decommission_can_run_data_3, entity_type="request", categories= ["CAN NDC DECOMMISSION REQUEST"])
+    results = engine.evaluate_data(decommission_can_run_data_3, entity_type="request", categories=["CAN NDC DECOMMISSION REQUEST"])
     for result in results:
         print(f"  - {result}")
         if not result.success and result.failing_elements:
@@ -553,7 +553,7 @@ if __name__ == "__main__":
     }
 
     print("\nScenario 4: No serialNumber - should still pass")
-    results = engine.evaluate_data(decommission_can_run_data_4, entity_type="request", categories = ["CAN NDC DECOMMISSION REQUEST"])
+    results = engine.evaluate_data(decommission_can_run_data_4, entity_type="request", categories=["CAN NDC DECOMMISSION REQUEST"])
     for result in results:
         print(f"  - {result}")
         if not result.success and result.failing_elements:

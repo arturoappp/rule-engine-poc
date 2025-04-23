@@ -184,7 +184,7 @@ class RuleService:
         return result
 
     def evaluate_data(self, data: Dict[str, Any], entity_type: str, categories: Optional[List[str]] = None) -> List[
-        RuleResult]:
+            RuleResult]:
         """
         Evaluate data against rules.
 

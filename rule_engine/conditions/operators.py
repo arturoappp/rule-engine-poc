@@ -121,7 +121,7 @@ class Operator:
             return not expected
         if isinstance(actual, (list, dict, str)):
             return bool(actual) == expected
-        return True == expected
+        return bool(expected)
 
     @staticmethod
     def match(actual: Any, expected: Any) -> bool:
@@ -155,10 +155,10 @@ class Operator:
     @staticmethod
     def role_device(actual: Any, expected: Any) -> bool:
         """check for role device match"""
-        role ={
-            'standalone':0,
-            'primary':1,
-            'secondary':2,
+        role = {
+            'standalone': 0,
+            'primary': 1,
+            'secondary': 2,
         }
         try:
             if not isinstance(actual, str) or expected not in role:
