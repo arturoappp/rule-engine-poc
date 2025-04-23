@@ -1,7 +1,7 @@
 from app.api.models.rules import RuleListResponse
 
 
-def format_list_rules_response(rules_by_entity) -> RuleListResponse:
+def format_list_rules_response(rules_by_entity: dict) -> RuleListResponse:
     entity_types = list(rules_by_entity.keys())
     categories = {}
 
