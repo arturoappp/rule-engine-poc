@@ -75,9 +75,12 @@ class EvaluationWithRulesRequest(BaseModel):
     }
 
 
-class FailingElement(BaseModel):
-    """Model for a failing element in rule evaluation."""
-    element: Dict[str, Any]
+class FailureDetail(BaseModel):
+    """Model for detailed failure information."""
+    operator: Optional[str] = None
+    path: Optional[str] = None
+    expected_value: Optional[Any] = None
+    actual_value: Optional[Any] = None
 
 
 class RuleEvaluationResult(BaseModel):
@@ -86,6 +89,7 @@ class RuleEvaluationResult(BaseModel):
     success: bool
     message: str
     failing_elements: List[Dict[str, Any]] = Field(default_factory=list)
+    failure_details: List[FailureDetail] = Field(default_factory=list)
 
 
 class EvaluationResponse(BaseModel):
