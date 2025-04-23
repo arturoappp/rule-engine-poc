@@ -2,7 +2,7 @@ from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 from app.api.models.rules import RuleListResponse
 from app.api.routes.rules import get_rule_service, format_list_rules_response
-from app.main import app
+from main import app
 import pytest
 
 client = TestClient(app)
@@ -32,7 +32,9 @@ def test_get_rules_excludes_fields_with_none_value(mocker: MockerFixture):
     mock_format_list_rules_response = mocker.patch('app.api.routes.rules.format_list_rules_response')
     rule_list_response = RuleListResponse(entity_types=["commission_request"], categories={"commission_request": ["should_run"]}, rules={"commission_request" : {
                 "should_run": test_rule
-            }})
+            }},
+            stats = {}
+            )
     mock_format_list_rules_response.return_value = rule_list_response
 
     response = client.get("/api/v1/rules")
@@ -42,6 +44,7 @@ def test_get_rules_excludes_fields_with_none_value(mocker: MockerFixture):
     assert "entity_types" in data
     assert "categories" in data
     assert "rules" in data
+    assert "stats" in data
 
     # Check that the 'conditions' field does not contain None values
     rules = data["rules"]["commission_request"]["should_run"]
