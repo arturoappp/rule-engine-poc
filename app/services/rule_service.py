@@ -17,8 +17,6 @@ from rule_engine.core.rule_result import RuleResult
 logger = logging.getLogger(__name__)
 
 
-
-
 class RuleService:
     """Service for rule engine operations."""
 
@@ -282,7 +280,7 @@ class RuleService:
         return result
 
     def store_rules(self, entity_type: str, rules: List[APIRule], default_category: str = "default") -> Tuple[
-        bool, str, int]:
+            bool, str, int]:
         """
         Store rules in the engine, overwriting duplicates with same name across all categories.
 

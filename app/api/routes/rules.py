@@ -55,7 +55,7 @@ async def store_rules(request: RuleStoreRequest, service: RuleService = Depends(
     }
 
 
-@router.get("/rules", response_model=RuleListResponse, response_model_exclude_none= True)
+@router.get("/rules", response_model=RuleListResponse, response_model_exclude_none=True)
 async def list_rules(service: RuleService = Depends(get_rule_service)):
     """List all rules in the engine with statistics."""
     rules_by_entity = service.get_rules()
