@@ -8,7 +8,33 @@ import pytest
 client = TestClient(app)
 
 
-def test_get_rules_exclude_none():
+def test_get_rules_excludes_fields_with_none_value(mocker: MockerFixture):
+    test_rule = [
+        {
+                "name": "Equal Rule",
+                "description": "Tests the 'equal' operator",
+                "conditions": {
+                    "all": [
+                        {
+                            "path": "$.items[*].value",
+                            "operator": "equal",
+                            "value": 10
+                        }
+                    ]
+                }
+            }
+    ]
+    
+    mock_service = mocker.MagicMock()  
+    mock_service.get_rules.return_value = {}
+    app.dependency_overrides[get_rule_service] = lambda: mock_service
+
+    mock_format_list_rules_response = mocker.patch('app.api.routes.rules.format_list_rules_response')
+    rule_list_response = RuleListResponse(entity_types=["commission_request"], categories={"commission_request": ["should_run"]}, rules={"commission_request" : {
+                "should_run": test_rule
+            }})
+    mock_format_list_rules_response.return_value = rule_list_response
+
     response = client.get("/api/v1/rules")
     assert response.status_code == 200
     data = response.json()
@@ -18,7 +44,7 @@ def test_get_rules_exclude_none():
     assert "rules" in data
 
     # Check that the 'conditions' field does not contain None values
-    rules = data["rules"]["device"]["complex"]
+    rules = data["rules"]["commission_request"]["should_run"]
     for rule in rules:
         conditions = rule["conditions"]
         assert "path" not in conditions
