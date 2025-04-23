@@ -14,7 +14,6 @@ jobs:
       run: |
         export APP=$(echo ${GITHUB_REPOSITORY#*/} | awk '{print tolower($0)}')
         FEATURE_APP=${APP}-${{ github.event.ref }}
-        FEATURE_APP=${APP}-${BRANCH}
         echo "FEATURE_APP="${FEATURE_APP//_/-} >> $GITHUB_ENV
     - name: Delete objects in Openshift
       run: |
