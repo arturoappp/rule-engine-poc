@@ -13,7 +13,7 @@ jobs:
     - name: Construct FEATURE_APP var name.
       run: |
         REGEX='.*\/(.*)'
-        [[ ${{ github.repository }} =~ $REGEX ]] && APP=${BASH_REMATCH[1]}
+        [[ ${{ github.repository }} =~ $REGEX ]] && APP=$(${BASH_REMATCH[1]} | awk '{print tolower($0)})
         FEATURE_APP=${APP}-${{ github.event.ref }}
         echo "FEATURE_APP="${FEATURE_APP//_/-} >> $GITHUB_ENV
     - name: Delete objects in Openshift
