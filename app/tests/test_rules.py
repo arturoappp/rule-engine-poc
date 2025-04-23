@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 from pytest_mock import MockerFixture
 from app.api.models.rules import RuleListResponse
-from app.api.routes.rules import get_rule_service, format_list_rules_response
+from app.api.routes.rules import get_rule_service
 from main import app
 import pytest
 

@@ -9,6 +9,7 @@ from typing import Dict, List, Any, Optional, Tuple, Union
 
 from app.api.models.rules import Rule as APIRule
 from app.api.models.rules import RuleCondition as APIRuleCondition
+from app.api.utilities.rules import create_rules_dict
 from rule_engine.core.engine import RuleEngine
 from rule_engine.core.failure_info import FailureInfo
 from rule_engine.core.rule_result import RuleResult
@@ -447,29 +448,17 @@ class RuleService:
         self.engine.load_rules_from_json(complex_rule, entity_type="commission", category="should")
         self.engine.load_rules_from_json(equal_rule, entity_type="decommission", category="could")
 
-        result = {}
-
         if entity_type == None:
             # Get all entity types
             entity_types = self.engine.get_entity_types()
         else:
             entity_types = [entity_type]
 
-        for entity_type in entity_types:
-            result[entity_type] = {}
+        rules_dict = create_rules_dict(self.engine, provided_category, entity_types)
 
-            if provided_category == None:
-                # Get all categories for this entity type
-                categories = self.engine.get_categories(entity_type)
-            else:
-                categories = [provided_category]
+        return rules_dict
 
-            for category in categories:
-                # Get rules for this category
-                rules = self.engine.get_rules_by_category(entity_type, category)
-                result[entity_type][category] = rules
-
-        return result
+    
 
     def evaluate_data(self, data: Dict[str, Any], entity_type: str, categories: Optional[List[str]] = None) -> List[
             RuleResult]:
