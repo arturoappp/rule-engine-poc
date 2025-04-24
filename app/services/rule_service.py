@@ -9,7 +9,7 @@ from typing import Dict, List, Any, Optional, Tuple, Union
 
 from app.api.models.rules import Rule as APIRule
 from app.api.models.rules import RuleCondition as APIRuleCondition
-from app.api.utilities.rules import create_rules_dict
+from app.utilities.rules import create_rules_dict
 from rule_engine.core.engine import RuleEngine
 from rule_engine.core.failure_info import FailureInfo
 from rule_engine.core.rule_result import RuleResult
