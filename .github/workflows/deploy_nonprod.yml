@@ -84,5 +84,6 @@ jobs:
           export URL=$(oc get route -l app=$APP_LABEL | tail -n 1 | awk '{print $2}')
           oc process -f .openshift/deploy-template.yml -p APP_NAME=$APP -p ENV=$BRANCH -p URL=$URL > deploy_template.json
           (oc get deployment -l app=$APP_LABEL 2> /dev/null && oc replace -f deploy_template.json) || (oc create -f deploy_template.json)
+          oc rollout restart deployment/$APP_LABEL
           oc rollout status deployment/$APP_LABEL
           oc logout
