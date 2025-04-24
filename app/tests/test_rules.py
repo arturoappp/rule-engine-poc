@@ -92,7 +92,7 @@ def test_list_rules(mocker: MockerFixture, case):
     mock_service = mocker.MagicMock()  
     mock_service.get_rules.return_value = rules_by_entity
     mock_format_list_rules_response = mocker.patch('app.api.routes.rules.format_list_rules_response')
-    rule_list_response = RuleListResponse(entity_types=[], categories={}, rules={})
+    rule_list_response = RuleListResponse(entity_types=[], categories={}, rules={}, stats={})
     mock_format_list_rules_response.return_value = rule_list_response
     app.dependency_overrides[get_rule_service] = lambda: mock_service
     
