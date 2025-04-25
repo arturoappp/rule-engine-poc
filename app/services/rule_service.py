@@ -5,9 +5,10 @@ Service layer for rule engine operations.
 import json
 import logging
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional, Tuple, Union
 
 from app.api.models.rules import Rule as APIRule
+from app.api.models.rules import RuleCondition as APIRuleCondition
 from app.utilities.rules import create_rules_dict
 from rule_engine.core.engine import RuleEngine
 from rule_engine.core.failure_info import FailureInfo
@@ -159,7 +160,7 @@ class RuleService:
                         "category": category,
                         "rule_name": rule.get("name", "Unnamed Rule"),
                         "description": rule.get("description", "No description provided"),
-                        "complexity": self._calculate_rule_complexity(rule),
+                        "complexity": self._calculate_rule_complexity(rule)
                     }
 
                     history.append(rule_info)
@@ -217,7 +218,11 @@ class RuleService:
         if conditions_count > 10 or max_depth > 4:
             complexity_level = "complex"
 
-        return {"level": complexity_level, "conditions": conditions_count, "depth": max_depth}
+        return {
+            "level": complexity_level,
+            "conditions": conditions_count,
+            "depth": max_depth
+        }
 
     def export_rules_to_json(self, entity_type: str = None, category: str = None) -> Dict:
         """
@@ -231,7 +236,15 @@ class RuleService:
             Dictionary with exported rules and metadata
         """
         # Crear un objeto para contener las reglas y metadatos
-        result = {"metadata": {"timestamp": datetime.datetime.now().isoformat(), "total_rules": 0, "entity_types": [], "categories": []}, "rules": {}}
+        result = {
+            "metadata": {
+                "timestamp": datetime.datetime.now().isoformat(),
+                "total_rules": 0,
+                "entity_types": [],
+                "categories": []
+            },
+            "rules": {}
+        }
 
         # Obtener los tipos de entidad a exportar
         entity_types = [entity_type] if entity_type else self.engine.get_entity_types()
@@ -267,7 +280,8 @@ class RuleService:
 
         return result
 
-    def store_rules(self, entity_type: str, rules: List[APIRule], default_category: str = "default") -> Tuple[bool, str, int]:
+    def store_rules(self, entity_type: str, rules: List[APIRule], default_category: str = "default") -> Tuple[
+            bool, str, int]:
         """
         Store rules in the engine, overwriting duplicates with same name across all categories.
 
@@ -286,10 +300,14 @@ class RuleService:
             # Process all rules from request
             for rule in rules:
                 # Use the rule's categories if defined, otherwise use default_category
-                rule_categories = rule.categories if hasattr(rule, "categories") and rule.categories else [default_category]
+                rule_categories = rule.categories if hasattr(rule, 'categories') and rule.categories else [
+                    default_category]
 
                 # Store rule by name (latest definition wins)
-                rules_by_name[rule.name] = {"rule": rule, "categories": rule_categories}
+                rules_by_name[rule.name] = {
+                    "rule": rule,
+                    "categories": rule_categories
+                }
 
             # Find all rule names we need to update
             rule_names_to_update = set(rules_by_name.keys())
@@ -359,7 +377,7 @@ class RuleService:
             logger.error(f"Error storing rules: {e}")
             return False, f"Error storing rules: {str(e)}", 0
 
-    def get_rules(self, entity_type=None, provided_category=None) -> Dict[str, Dict[str, List[Dict]]]:
+    def get_rules(self, entity_type = None, provided_category = None) -> Dict[str, Dict[str, List[Dict]]]:
         """
         Get all rules from the engine.
 
@@ -376,7 +394,10 @@ class RuleService:
 
         return rules_dict
 
-    def evaluate_data(self, data: Dict[str, Any], entity_type: str, categories: Optional[List[str]] = None) -> List[RuleResult]:
+    
+
+    def evaluate_data(self, data: Dict[str, Any], entity_type: str, categories: Optional[List[str]] = None) -> List[
+            RuleResult]:
         """
         Evaluate data against rules.
 
@@ -411,7 +432,10 @@ class RuleService:
             temp_engine = RuleEngine()
 
             # Convert rules to JSON - usando model_dump para Pydantic v2
-            rules_json = json.dumps([rule.model_dump(by_alias=True, exclude_none=True) for rule in rules])
+            rules_json = json.dumps([
+                rule.model_dump(by_alias=True, exclude_none=True)
+                for rule in rules
+            ])
 
             # Debugging para ver la estructura de JSON
             logger.debug(f"Rules JSON: {rules_json}")
@@ -430,7 +454,14 @@ class RuleService:
                 message=f"Error evaluating rule: {str(e)}",
                 input_data={"error": str(e)},
                 failing_elements=[],
-                failure_details=[FailureInfo(operator="unknown", path="$.error", expected_value="valid evaluation", actual_value=str(e))],
+                failure_details=[
+                    FailureInfo(
+                        operator="unknown",
+                        path="$.error",
+                        expected_value="valid evaluation",
+                        actual_value=str(e)
+                    )
+                ]
             )
             return [error_result]
 
@@ -457,11 +488,18 @@ class RuleService:
                 category_counts[category] = category_rule_count
                 entity_rule_count += category_rule_count
 
-            rule_stats[entity_type] = {"total_rules": entity_rule_count, "categories": category_counts}
+            rule_stats[entity_type] = {
+                "total_rules": entity_rule_count,
+                "categories": category_counts
+            }
             total_rules += entity_rule_count
 
         # Información sobre operadores soportados
-        supported_operators = ["equal", "not_equal", "greater_than", "less_than", "greater_than_equal", "less_than_equal", "exists", "not_empty", "match", "contains", "role_device"]
+        supported_operators = [
+            "equal", "not_equal", "greater_than", "less_than",
+            "greater_than_equal", "less_than_equal", "exists",
+            "not_empty", "match", "contains", "role_device"
+        ]
 
         # Estadísticas sobre el motor de reglas
         engine_stats = {
@@ -469,7 +507,7 @@ class RuleService:
             "entity_types": len(entity_types),
             "supported_operators": supported_operators,
             "max_rules_per_request": 100,  # Ejemplo: configurable
-            "rule_stats_by_entity": rule_stats,
+            "rule_stats_by_entity": rule_stats
         }
 
         return engine_stats
@@ -509,7 +547,11 @@ class RuleService:
                 break
 
         if not rule_info:
-            return {"rule_name": rule_name, "found": False, "message": f"Rule '{rule_name}' not found in the engine"}
+            return {
+                "rule_name": rule_name,
+                "found": False,
+                "message": f"Rule '{rule_name}' not found in the engine"
+            }
 
         # Analizar la estructura de condiciones de la regla
         def analyze_conditions(conditions, parent_path=""):
@@ -520,7 +562,13 @@ class RuleService:
 
             if "path" in conditions and "operator" in conditions:
                 # Es una condición simple
-                op_info = {"type": "simple", "path": conditions.get("path"), "operator": conditions.get("operator"), "expected_value": conditions.get("value"), "parent_path": parent_path}
+                op_info = {
+                    "type": "simple",
+                    "path": conditions.get("path"),
+                    "operator": conditions.get("operator"),
+                    "expected_value": conditions.get("value"),
+                    "parent_path": parent_path
+                }
                 structure.append(op_info)
 
             # Analizar condiciones compuestas
@@ -550,7 +598,7 @@ class RuleService:
             "operators_used": list(set(c["operator"] for c in conditions_structure if "operator" in c)),
             "paths_used": list(set(c["path"] for c in conditions_structure if "path" in c)),
             "structure": conditions_structure,
-            "rule_definition": rule_info,
+            "rule_definition": rule_info
         }
 
         return rule_analysis
