@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 class RuleCondition(BaseModel):
     """Model for a rule condition."""
+
     path: Optional[str] = None
     operator: Optional[str] = None
     value: Optional[Any] = None
@@ -25,13 +26,13 @@ class RuleCondition(BaseModel):
                 {
                     "path": "$.devices[*].vendor",
                     "operator": "equal",
-                    "value": "Cisco Systems"
+                    "value": "Cisco Systems",
                 }
             ]
-        }
+        },
     }
 
-    @model_validator(mode='before')
+    @model_validator(mode="before")
     @classmethod
     def validate_condition_structure(cls, data):
         """Validate the condition structure."""
@@ -72,7 +73,7 @@ class RuleCondition(BaseModel):
             result = {k: v for k, v in d.items() if v is not None}
 
             # Procesar listas anidadas
-            for key in ['all', 'any', 'none']:
+            for key in ["all", "any", "none"]:
                 if key in result and isinstance(result[key], list):
                     # Limpiar cada elemento de la lista
                     cleaned_list = []
@@ -89,13 +90,13 @@ class RuleCondition(BaseModel):
                         result.pop(key, None)
 
             # Procesar la condición "not"
-            if 'not' in result:
-                if isinstance(result['not'], dict):
-                    cleaned_not = clean_dict(result['not'])
+            if "not" in result:
+                if isinstance(result["not"], dict):
+                    cleaned_not = clean_dict(result["not"])
                     if cleaned_not and len(cleaned_not) > 0:
-                        result['not'] = cleaned_not
+                        result["not"] = cleaned_not
                     else:
-                        result.pop('not', None)
+                        result.pop("not", None)
 
             return result
 
@@ -109,6 +110,7 @@ RuleCondition.model_rebuild()
 
 class Rule(BaseModel):
     """Model for a rule."""
+
     name: str
     description: Optional[str] = None
     conditions: RuleCondition
@@ -126,30 +128,30 @@ class Rule(BaseModel):
                             {
                                 "path": "$.devices[*].vendor",
                                 "operator": "not_equal",
-                                "value": "Cisco Systems"
+                                "value": "Cisco Systems",
                             },
                             {
                                 "all": [
                                     {
                                         "path": "$.devices[*].vendor",
                                         "operator": "equal",
-                                        "value": "Cisco Systems"
+                                        "value": "Cisco Systems",
                                     },
                                     {
                                         "path": "$.devices[*].osVersion",
                                         "operator": "equal",
-                                        "value": "17.3.6"
-                                    }
+                                        "value": "17.3.6",
+                                    },
                                 ]
-                            }
+                            },
                         ]
-                    }
+                    },
                 }
             ]
         }
     }
 
-    @field_validator('name')
+    @field_validator("name")
     @classmethod
     def name_must_not_be_empty(cls, v):
         """Validate that name is not empty."""
@@ -163,36 +165,37 @@ class Rule(BaseModel):
         data = super().model_dump(**kwargs)
 
         # Asegurar que las condiciones no tengan valores nulos
-        if 'conditions' in data and isinstance(data['conditions'], dict):
+        if "conditions" in data and isinstance(data["conditions"], dict):
             # Eliminar atributos nulos de las condiciones
-            conditions = {
-                k: v for k, v in data['conditions'].items()
-                if v is not None
-            }
-            data['conditions'] = conditions
+            conditions = {k: v for k, v in data["conditions"].items() if v is not None}
+            data["conditions"] = conditions
 
         return data
 
 
 class RuleList(BaseModel):
     """Model for a list of rules."""
+
     rules: List[Rule]
+
 
 class RuleListRequest(BaseModel):
     """Request model for a list of rules."""
+
     entity_type: Optional[str] = None
     category: Optional[str] = None
 
 
-
 class RuleValidationResponse(BaseModel):
     """Response model for rule validation."""
+
     valid: bool
     errors: Optional[List[str]] = None
 
 
 class RuleStoreRequest(BaseModel):
     """Request model for storing rules."""
+
     entity_type: str
     default_category: Optional[str] = "default"  # Used only if a rule doesn't specify categories
     rules: List[Rule]
@@ -200,6 +203,7 @@ class RuleStoreRequest(BaseModel):
 
 class RuleStoreResponse(BaseModel):
     """Response model for storing rules."""
+
     success: bool
     message: str
     stored_rules: int
@@ -207,12 +211,14 @@ class RuleStoreResponse(BaseModel):
 
 class RuleStats(BaseModel):
     """Model for rule statistics."""
+
     total_rules: int
     rules_by_category: Dict[str, int]
 
 
 class RuleListResponse(BaseModel):
     """Response model for listing rules."""
+
     entity_types: List[str]
     categories: Dict[str, List[str]]
     rules: Dict[str, Dict[str, List[Rule]]]
