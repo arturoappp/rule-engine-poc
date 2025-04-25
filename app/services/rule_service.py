@@ -366,7 +366,8 @@ class RuleService:
         Returns:
             Dictionary of rules by entity type and category
         """
-        if entity_type is None:
+        if entity_type == None:
+            # Get all entity types
             entity_types = self.engine.get_entity_types()
         else:
             entity_types = [entity_type]
