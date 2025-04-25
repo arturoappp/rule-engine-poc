@@ -56,7 +56,8 @@ class RuleEngine:
             # Process and add the rules
             self._add_rules(rules_data, entity_type, category)
 
-            logger.info(f"Rules successfully loaded from {file_path} for entity '{entity_type}', category '{category}'")
+            logger.info(
+                f"Rules successfully loaded from {file_path} for entity '{entity_type}', category '{category}'")
 
         except Exception as e:
             logger.error(f"Error loading rules from {file_path}: {e}")
@@ -84,7 +85,8 @@ class RuleEngine:
             for rule in normalized_rules:
                 self._add_rule(rule, entity_type, category)
 
-            logger.info(f"Rules successfully loaded from JSON string for entity '{entity_type}', category '{category}'")
+            logger.info(
+                f"Rules successfully loaded from JSON string for entity '{entity_type}', category '{category}'")
 
         except Exception as e:
             logger.error(f"Error loading rules from JSON string: {e}")
@@ -98,7 +100,10 @@ class RuleEngine:
             entity_type: Entity type
         """
         if entity_type not in self.rules_by_entity:
-            self.rules_by_entity[entity_type] = {"rules": [], "categories": {}}
+            self.rules_by_entity[entity_type] = {
+                'rules': [],
+                'categories': {}
+            }
 
     def _add_rules(self, rules_data: Union[Dict, List], entity_type: str, category: str) -> None:
         """
@@ -131,22 +136,25 @@ class RuleEngine:
         # Check if overwrite is enabled in config
         if OVERWRITE_DUPLICATE_RULES:
             # Remove any existing rule with the same name from the general list
-            entity_rules["rules"] = [r for r in entity_rules["rules"] if r.get("name", "") != rule_name]
+            entity_rules['rules'] = [r for r in entity_rules['rules'] if r.get("name", "") != rule_name]
 
             # Remove any existing rule with the same name from the category
-            if category in entity_rules["categories"]:
-                entity_rules["categories"][category] = [r for r in entity_rules["categories"][category] if r.get("name", "") != rule_name]
+            if category in entity_rules['categories']:
+                entity_rules['categories'][category] = [
+                    r for r in entity_rules['categories'][category]
+                    if r.get("name", "") != rule_name
+                ]
 
         # Make a copy of the rule to avoid modifying the original
         rule_copy = rule.copy()
 
         # Add the rule to the general list
-        entity_rules["rules"].append(rule_copy)
+        entity_rules['rules'].append(rule_copy)
 
         # Add the rule to the category
-        if category not in entity_rules["categories"]:
-            entity_rules["categories"][category] = []
-        entity_rules["categories"][category].append(rule_copy)
+        if category not in entity_rules['categories']:
+            entity_rules['categories'][category] = []
+        entity_rules['categories'][category].append(rule_copy)
 
     def get_rules_by_category(self, entity_type: str, category: str = None) -> List[Dict]:
         """
@@ -159,15 +167,15 @@ class RuleEngine:
         Returns:
             List of rules in the specified category
         """
-
+        
         if entity_type not in self.rules_by_entity:
             return []
 
         entity_rules = self.rules_by_entity[entity_type]
 
         if category is None:
-            return entity_rules["rules"]
-        return entity_rules["categories"].get(category, [])
+            return entity_rules['rules']
+        return entity_rules['categories'].get(category, [])
 
     def get_entity_types(self) -> List[str]:
         """
@@ -191,9 +199,10 @@ class RuleEngine:
         if entity_type not in self.rules_by_entity:
             return []
 
-        return list(self.rules_by_entity[entity_type]["categories"].keys())
+        return list(self.rules_by_entity[entity_type]['categories'].keys())
 
-    def evaluate_data(self, data: Union[str, Dict], entity_type: str, categories: List[str] = None) -> List[RuleResult]:
+    def evaluate_data(self, data: Union[str, Dict], entity_type: str,
+                      categories: List[str] = None) -> List[RuleResult]:
         """
         Evaluate rules against the provided data.
 
@@ -223,7 +232,7 @@ class RuleEngine:
             for category in categories:
                 rules_to_evaluate.extend(self.get_rules_by_category(entity_type, category))
         else:
-            rules_to_evaluate = self.rules_by_entity[entity_type]["rules"]
+            rules_to_evaluate = self.rules_by_entity[entity_type]['rules']
 
         if not rules_to_evaluate:
             logger.warning(f"No rules to evaluate for entity type: {entity_type}")

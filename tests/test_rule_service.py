@@ -1,5 +1,6 @@
 # tests/test_rule_service.py
 import json
+import pytest
 from unittest.mock import Mock, patch, MagicMock
 from app.services.rule_service import RuleService
 from app.api.models.rules import Rule, RuleCondition
@@ -33,8 +34,12 @@ class TestRuleService:
         rule = Rule(
             name="Test Rule",
             description="Test Description",
-            conditions=RuleCondition(path="$.devices[*].vendor", operator="equal", value="Cisco Systems"),
-            categories=["test"],
+            conditions=RuleCondition(
+                path="$.devices[*].vendor",
+                operator="equal",
+                value="Cisco Systems"
+            ),
+            categories=["test"]
         )
 
         # Validate the rule
@@ -51,7 +56,7 @@ class TestRuleService:
             name="test name",
             description="Test Description",
             conditions=RuleCondition(),  # Empty conditions (invalid)
-            categories=["test"],
+            categories=["test"]
         )
 
         # Validate the rule
@@ -62,7 +67,7 @@ class TestRuleService:
         assert len(errors) > 0
         assert any("conditions" in error.lower() for error in errors)
 
-    @patch("app.services.rule_service.json.dumps")
+    @patch('app.services.rule_service.json.dumps')
     def test_store_rules_new(self, mock_dumps):
         """Test storing new rules"""
         # Configure mock to return a valid JSON string
@@ -73,15 +78,23 @@ class TestRuleService:
             Rule(
                 name="Test Rule 1",
                 description="Test Description 1",
-                conditions=RuleCondition(path="$.devices[*].vendor", operator="equal", value="Cisco Systems"),
-                categories=["test1", "test2"],
+                conditions=RuleCondition(
+                    path="$.devices[*].vendor",
+                    operator="equal",
+                    value="Cisco Systems"
+                ),
+                categories=["test1", "test2"]
             ),
             Rule(
                 name="Test Rule 2",
                 description="Test Description 2",
-                conditions=RuleCondition(path="$.devices[*].osVersion", operator="equal", value="17.3.6"),
-                categories=["test2", "test3"],
-            ),
+                conditions=RuleCondition(
+                    path="$.devices[*].osVersion",
+                    operator="equal",
+                    value="17.3.6"
+                ),
+                categories=["test2", "test3"]
+            )
         ]
 
         # Configure additional mock behaviors
@@ -101,7 +114,7 @@ class TestRuleService:
         # Verify engine method calls
         assert self.service.engine.load_rules_from_json.called
 
-    @patch("app.services.rule_service.json.dumps")
+    @patch('app.services.rule_service.json.dumps')
     def test_store_rules_overwrite(self, mock_dumps):
         """Test overwriting existing rules"""
         # Configure mock to return a valid JSON string
@@ -111,8 +124,12 @@ class TestRuleService:
         rule = Rule(
             name="Existing Rule",
             description="Updated Description",
-            conditions=RuleCondition(path="$.devices[*].vendor", operator="equal", value="Updated Value"),
-            categories=["test1", "test2"],
+            conditions=RuleCondition(
+                path="$.devices[*].vendor",
+                operator="equal",
+                value="Updated Value"
+            ),
+            categories=["test1", "test2"]
         )
 
         # Configure additional mock behaviors
@@ -123,9 +140,9 @@ class TestRuleService:
                 "conditions": {
                     "path": "$.devices[*].vendor",
                     "operator": "equal",
-                    "value": "Old Value",
+                    "value": "Old Value"
                 },
-                "categories": ["test1"],
+                "categories": ["test1"]
             }
         ]
 
@@ -143,7 +160,7 @@ class TestRuleService:
         # Verify engine method calls
         assert self.service.engine.load_rules_from_json.called
 
-    @patch("app.services.rule_service.json.dumps")
+    @patch('app.services.rule_service.json.dumps')
     def test_store_rules_multi_category(self, mock_dumps):
         """Test storing rules in multiple categories"""
         # Configure mock to return a valid JSON string
@@ -153,8 +170,12 @@ class TestRuleService:
         rule = Rule(
             name="Multi Category Rule",
             description="Test Description",
-            conditions=RuleCondition(path="$.devices[*].vendor", operator="equal", value="Cisco Systems"),
-            categories=["category1", "category2", "category3"],
+            conditions=RuleCondition(
+                path="$.devices[*].vendor",
+                operator="equal",
+                value="Cisco Systems"
+            ),
+            categories=["category1", "category2", "category3"]
         )
 
         # Configure additional mock behaviors
