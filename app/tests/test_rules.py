@@ -75,9 +75,9 @@ def test_list_rules(mocker: MockerFixture, case):
     entity_type = case.get("entity_type", None)
     category = case.get("category", None)
     request_params = {}
-    if entity_type != None:
+    if entity_type is not None:
         request_params["entity_type"] = entity_type
-    if category != None:
+    if category is not None:
         request_params["category"] = category
     rules_by_entity = {}
 
