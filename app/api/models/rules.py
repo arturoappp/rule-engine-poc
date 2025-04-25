@@ -178,11 +178,11 @@ class RuleList(BaseModel):
     """Model for a list of rules."""
     rules: List[Rule]
 
+
 class RuleListRequest(BaseModel):
     """Request model for a list of rules."""
     entity_type: Optional[str] = None
     category: Optional[str] = None
-
 
 
 class RuleValidationResponse(BaseModel):

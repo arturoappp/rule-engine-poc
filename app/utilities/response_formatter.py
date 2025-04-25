@@ -2,7 +2,7 @@ from app.api.models.rules import RuleListResponse, RuleStats
 
 
 def format_list_rules_response(rules_by_entity: dict) -> RuleListResponse:
-     # Format response
+    # Format response
     entity_types = list(rules_by_entity.keys())
     categories = {}
     stats = {}
@@ -24,6 +24,5 @@ def format_list_rules_response(rules_by_entity: dict) -> RuleListResponse:
 
         stats[entity_type] = RuleStats(total_rules=entity_stats["total_rules"], rules_by_category=entity_stats["rules_by_category"])
 
-
-    responseModel = RuleListResponse(entity_types=entity_types, categories=categories, rules=rules_by_entity, stats=stats)
-    return responseModel
+    response_model = RuleListResponse(entity_types=entity_types, categories=categories, rules=rules_by_entity, stats=stats)
+    return response_model

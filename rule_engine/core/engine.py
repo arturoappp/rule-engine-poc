@@ -167,7 +167,7 @@ class RuleEngine:
         Returns:
             List of rules in the specified category
         """
-        
+
         if entity_type not in self.rules_by_entity:
             return []
 
