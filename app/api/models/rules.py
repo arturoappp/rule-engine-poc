@@ -18,7 +18,7 @@ class RuleCondition(BaseModel):
     not_: Optional["RuleCondition"] = Field(default=None, alias="not")
 
     model_config = {
-        "populate_by_name": True,  # Nueva sintaxis para Pydantic v2
+        "populate_by_name": True,  # New syntax for Pydantic v2
         "extra": "ignore",
         "json_schema_extra": {
             "examples": [
@@ -42,39 +42,39 @@ class RuleCondition(BaseModel):
         if "not" in data and "not_" not in data:
             data["not_"] = data.pop("not")
 
-        # Asegurar que al menos un tipo de condición esté presente
+        # Ensure that at least one condition type is present
         condition_types = ["path", "all", "any", "none", "not_"]
         if not any(k in data for k in condition_types):
             data = {"path": None, "operator": None, "value": None}
 
-        # Validar listas de condiciones
+        # Validate condition lists
         for key in ["all", "any", "none"]:
             if key in data and data[key] is not None:
                 if not isinstance(data[key], list):
                     data[key] = []
                 elif len(data[key]) == 0:
-                    # Asegurar que no haya listas vacías
+                    # Ensure there are no empty lists
                     data.pop(key)
 
         return data
 
     def model_dump(self, **kwargs):
         """Customized model_dump to deeply clean null values."""
-        # Usar el model_dump original
+        # Use the original model_dump
         data = super().model_dump(**kwargs)
 
-        # Función recursiva para limpiar diccionarios
+        # Recursive function to clean dictionaries
         def clean_dict(d):
             if not isinstance(d, dict):
                 return d
 
-            # Limpiar valores nulos en el nivel actual
+            # Clean null values at the current level
             result = {k: v for k, v in d.items() if v is not None}
 
-            # Procesar listas anidadas
+            # Process nested lists
             for key in ['all', 'any', 'none']:
                 if key in result and isinstance(result[key], list):
-                    # Limpiar cada elemento de la lista
+                    # Clean each list element
                     cleaned_list = []
                     for item in result[key]:
                         if isinstance(item, dict):
@@ -82,13 +82,13 @@ class RuleCondition(BaseModel):
                             if cleaned_item and len(cleaned_item) > 0:
                                 cleaned_list.append(cleaned_item)
 
-                    # Si la lista queda vacía, eliminar la clave
+                    # If the list is empty, remove the key
                     if cleaned_list:
                         result[key] = cleaned_list
                     else:
                         result.pop(key, None)
 
-            # Procesar la condición "not"
+            # Process the "not" condition
             if 'not' in result:
                 if isinstance(result['not'], dict):
                     cleaned_not = clean_dict(result['not'])
@@ -99,7 +99,7 @@ class RuleCondition(BaseModel):
 
             return result
 
-        # Aplicar limpieza recursiva
+        # Apply recursive cleaning
         return clean_dict(data)
 
 
@@ -159,12 +159,12 @@ class Rule(BaseModel):
 
     def model_dump(self, **kwargs):
         """Customize model dump to remove null values."""
-        # No añadimos exclude_none aquí, lo pasamos a través de kwargs
+        # We don't add exclude_none here, we pass it through kwargs
         data = super().model_dump(**kwargs)
 
-        # Asegurar que las condiciones no tengan valores nulos
+        # Ensure that conditions don't have null values
         if 'conditions' in data and isinstance(data['conditions'], dict):
-            # Eliminar atributos nulos de las condiciones
+            # Remove null attributes from conditions
             conditions = {
                 k: v for k, v in data['conditions'].items()
                 if v is not None
