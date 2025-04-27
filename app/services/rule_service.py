@@ -278,7 +278,7 @@ class RuleService:
         return result
 
     def store_rules(self, entity_type: str, rules: List[APIRule], default_category: str = "default") -> Tuple[
-        bool, str, int]:
+            bool, str, int]:
         """
         Store rules in the engine, overwriting duplicates with same name across all categories.
 
@@ -409,7 +409,7 @@ class RuleService:
         return result
 
     def evaluate_data(self, data: Dict[str, Any], entity_type: str, categories: Optional[List[str]] = None) -> List[
-        RuleResult]:
+            RuleResult]:
         """
         Evaluate data against rules.
 
