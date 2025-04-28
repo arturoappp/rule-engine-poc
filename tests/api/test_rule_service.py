@@ -159,7 +159,7 @@ def test_store_rules_overwrite(mock_dumps, rule_service):
     # Check result
     assert success is True
     assert count == 1
-    assert "overwritten" in message
+    assert "updated across" in message
 
     # Verify engine method calls
     assert rule_service.engine.load_rules_from_json.called
