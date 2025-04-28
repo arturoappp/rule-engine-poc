@@ -62,6 +62,6 @@ async def list_rules(rule_list_request: Annotated[RuleListRequest, Query()], ser
     entity_type = rule_list_request.entity_type
     category = rule_list_request.category
     rules_by_entity = service.get_rules(entity_type, category)
-    responseModel = format_list_rules_response(rules_by_entity)
+    response_model = format_list_rules_response(rules_by_entity)
 
-    return responseModel
+    return response_model

@@ -1,7 +1,7 @@
 # tests/test_rule_service.py
+from unittest.mock import Mock, patch, MagicMock
 import json
 import pytest
-from unittest.mock import Mock, patch, MagicMock
 
 from pytest_mock import MockerFixture
 from app.services.rule_service import RuleService
@@ -25,7 +25,6 @@ def rule_service():
 @pytest.fixture
 def json_dumps_patch(monkeypatch):
     """Patch json.dumps to avoid serialization issues in tests"""
-    original_dumps = json.dumps
     monkeypatch.setattr(json, 'dumps', lambda x, **kwargs: str(x))
     yield
 
@@ -211,7 +210,7 @@ def test_get_rules_calls_create_rules_dict_with_correct_parameters(mocker: Mocke
     mock_create_rules_dict.return_value = expected_result
     mock_engine = MagicMock()
     mock_engine.get_entity_types.return_value = ['commission', 'decommission']
- 
+
     rule_service = RuleService()
     rule_service.engine = mock_engine
 

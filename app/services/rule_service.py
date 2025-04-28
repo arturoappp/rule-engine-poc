@@ -235,7 +235,7 @@ class RuleService:
         # Create an object to contain rules and metadata
         result = {
             "metadata": {
-                "timestamp": datetime.datetime.now().isoformat(),
+                "timestamp": datetime.now().isoformat(),
                 "total_rules": 0,
                 "entity_types": [],
                 "categories": []
