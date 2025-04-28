@@ -5,10 +5,9 @@ Service layer for rule engine operations.
 import json
 import logging
 from datetime import datetime
-from typing import Dict, List, Any, Optional, Tuple, Union
+from typing import Dict, List, Any, Optional, Tuple
 
 from app.api.models.rules import Rule as APIRule
-from app.api.models.rules import RuleCondition as APIRuleCondition
 from rule_engine.core.engine import RuleEngine
 from rule_engine.core.failure_info import FailureInfo
 from rule_engine.core.rule_result import RuleResult
@@ -286,7 +285,7 @@ class RuleService:
         Args:
             entity_type: Entity type
             rules: List of rules to store
-            default_category: Default category for rules without specified categories
+            default_category: Default category for rules without specified add_to_categories
 
         Returns:
             Tuple of (success, message, stored_rules_count)
@@ -297,9 +296,9 @@ class RuleService:
 
             # Process all rules from request
             for rule in rules:
-                # Use the rule's categories if defined, otherwise use default_category
-                rule_categories = rule.categories if hasattr(rule, 'categories') and rule.categories else [
-                    default_category]
+                # Use the rule's add_to_categories if defined, otherwise use default_category
+                rule_categories = rule.add_to_categories if (hasattr(rule, 'add_to_categories')
+                                                             and rule.add_to_categories) else [default_category]
 
                 # Store rule by name (latest definition wins)
                 rules_by_name[rule.name] = {
@@ -323,23 +322,28 @@ class RuleService:
                             existing_rule_categories[rule_name] = set()
                         existing_rule_categories[rule_name].add(category)
 
-            # Track stats for new vs. overwritten rules
+            # Track stats for new vs. updated rules
             new_count = len(rule_names_to_update - set(existing_rule_categories.keys()))
-            overwritten_count = len(rule_names_to_update & set(existing_rule_categories.keys()))
+            updated_count = len(rule_names_to_update & set(existing_rule_categories.keys()))
 
             # Determine all categories that need to be updated
             categories_to_update = set()
+
+            # For each rule, collect its categories
             for rule_name, rule_info in rules_by_name.items():
                 # Add new categories for this rule
-                categories_to_update.update(rule_info["categories"])
+                new_categories = set(rule_info["categories"])
+                categories_to_update.update(new_categories)
 
-                # Add old categories that need the rule removed
+                # If rule exists, get existing categories
                 if rule_name in existing_rule_categories:
-                    old_categories = existing_rule_categories[rule_name]
-                    new_categories = set(rule_info["categories"])
-
-                    # Categories where the rule needs to be removed
-                    categories_to_update.update(old_categories - new_categories)
+                    existing_cats = existing_rule_categories[rule_name]
+                    # Merge existing and new categories
+                    merged_categories = existing_cats.union(new_categories)
+                    # Update rule info with merged categories
+                    rules_by_name[rule_name]["categories"] = list(merged_categories)
+                    # Make sure all categories are updated
+                    categories_to_update.update(merged_categories)
 
             # Now update each category
             for category in categories_to_update:
@@ -355,8 +359,12 @@ class RuleService:
                         # Create a rule dictionary
                         rule_dict = rule_info["rule"].model_dump(by_alias=True, exclude_none=True)
 
-                        # Make sure categories is set correctly
-                        rule_dict["categories"] = rule_info["categories"]
+                        # Rename add_to_categories to categories in the output
+                        if "add_to_categories" in rule_dict:
+                            rule_dict["categories"] = rule_info["categories"]
+                            del rule_dict["add_to_categories"]
+                        else:
+                            rule_dict["categories"] = rule_info["categories"]
 
                         # Add to our updated rules list
                         updated_rules.append(rule_dict)
@@ -366,7 +374,7 @@ class RuleService:
                 self.engine.load_rules_from_json(rules_json, entity_type=entity_type, category=category)
 
             # Create success message
-            message = f"Successfully stored rules: {new_count} new, {overwritten_count} overwritten across {len(categories_to_update)} categories"
+            message = f"Successfully stored rules: {new_count} new, {updated_count} updated across {len(categories_to_update)} categories"
 
             # Return the total number of unique rules stored
             return True, message, len(rules_by_name)
