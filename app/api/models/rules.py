@@ -179,6 +179,12 @@ class RuleList(BaseModel):
     rules: List[Rule]
 
 
+class RuleListRequest(BaseModel):
+    """Request model for a list of rules."""
+    entity_type: Optional[str] = None
+    category: Optional[str] = None
+
+
 class RuleValidationResponse(BaseModel):
     """Response model for rule validation."""
     valid: bool

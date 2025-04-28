@@ -29,3 +29,6 @@ def main():
 
 if __name__ == "__main__":
     sys.exit(main())
+
+    #  pytest --cov-report term-missing --cov=app --cov=rule_engine tests
+    #  pycodestyle --ignore=E501,W503,E402 app rule_engine

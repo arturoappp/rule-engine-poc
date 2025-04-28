@@ -6,8 +6,8 @@ import json
 import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
-
 from app.api.models.rules import Rule as APIRule
+from app.utilities.rule_service_util import create_rules_dict
 from rule_engine.core.engine import RuleEngine
 from rule_engine.core.failure_info import FailureInfo
 from rule_engine.core.rule_result import RuleResult
@@ -235,7 +235,7 @@ class RuleService:
         # Create an object to contain rules and metadata
         result = {
             "metadata": {
-                "timestamp": datetime.datetime.now().isoformat(),
+                "timestamp": datetime.now().isoformat(),
                 "total_rules": 0,
                 "entity_types": [],
                 "categories": []
@@ -383,30 +383,22 @@ class RuleService:
             logger.error(f"Error storing rules: {e}")
             return False, f"Error storing rules: {str(e)}", 0
 
-    def get_rules(self) -> Dict[str, Dict[str, List[Dict]]]:
+    def get_rules(self, entity_type=None, provided_category=None) -> Dict[str, Dict[str, List[Dict]]]:
         """
         Get all rules from the engine.
 
         Returns:
             Dictionary of rules by entity type and category
         """
-        result = {}
+        if entity_type is None:
+            # Get all entity types
+            entity_types = self.engine.get_entity_types()
+        else:
+            entity_types = [entity_type]
 
-        # Get all entity types
-        entity_types = self.engine.get_entity_types()
+        rules_dict = create_rules_dict(self.engine, provided_category, entity_types)
 
-        for entity_type in entity_types:
-            result[entity_type] = {}
-
-            # Get all categories for this entity type
-            categories = self.engine.get_categories(entity_type)
-
-            for category in categories:
-                # Get rules for this category
-                rules = self.engine.get_rules_by_category(entity_type, category)
-                result[entity_type][category] = rules
-
-        return result
+        return rules_dict
 
     def evaluate_data(self, data: Dict[str, Any], entity_type: str, categories: Optional[List[str]] = None) -> List[
             RuleResult]:
