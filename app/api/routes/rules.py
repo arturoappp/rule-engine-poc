@@ -14,7 +14,7 @@ from app.api.models.rules import (
     RuleListResponse
 )
 from app.services.rule_service import RuleService
-from app.utilities.response_formatter import format_list_rules_response
+from app.helpers.response_formatter import format_list_rules_response
 
 router = APIRouter()
 

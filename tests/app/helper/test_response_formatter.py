@@ -2,7 +2,7 @@
 
 from pytest_mock import MockerFixture
 from app.api.models.rules import RuleListResponse, RuleStats
-from app.utilities.response_formatter import format_list_rules_response
+from app.helpers.response_formatter import format_list_rules_response
 
 
 def test_format_list_rules_response_inits_response_model_with_correct_params(mocker: MockerFixture):

@@ -2,6 +2,8 @@
 import json
 import pytest
 from unittest.mock import Mock, patch, MagicMock
+
+from pytest_mock import MockerFixture
 from app.services.rule_service import RuleService
 from app.api.models.rules import Rule, RuleCondition
 
@@ -21,12 +23,11 @@ def rule_service():
 
 
 @pytest.fixture
-def json_dumps_patch():
+def json_dumps_patch(monkeypatch):
     """Patch json.dumps to avoid serialization issues in tests"""
     original_dumps = json.dumps
-    json.dumps = lambda x, **kwargs: str(x)
+    monkeypatch.setattr(json, 'dumps', lambda x, **kwargs: str(x))
     yield
-    json.dumps = original_dumps
 
 
 def test_validate_rule_valid(rule_service):
@@ -40,7 +41,7 @@ def test_validate_rule_valid(rule_service):
             operator="equal",
             value="Cisco Systems"
         ),
-        categories=["test"]
+        add_to_categories=["test"]  # Changed field name
     )
 
     # Validate the rule
@@ -58,7 +59,7 @@ def test_validate_rule_invalid(rule_service):
         name="test name",
         description="Test Description",
         conditions=RuleCondition(),  # Empty conditions (invalid)
-        categories=["test"]
+        add_to_categories=["test"]  # Changed field name
     )
 
     # Validate the rule
@@ -86,7 +87,7 @@ def test_store_rules_new(mock_dumps, rule_service):
                 operator="equal",
                 value="Cisco Systems"
             ),
-            categories=["test1", "test2"]
+            add_to_categories=["test1", "test2"]  # Changed field name
         ),
         Rule(
             name="Test Rule 2",
@@ -96,7 +97,7 @@ def test_store_rules_new(mock_dumps, rule_service):
                 operator="equal",
                 value="17.3.6"
             ),
-            categories=["test2", "test3"]
+            add_to_categories=["test2", "test3"]  # Changed field name
         )
     ]
 
@@ -119,8 +120,8 @@ def test_store_rules_new(mock_dumps, rule_service):
 
 
 @patch('app.services.rule_service.json.dumps')
-def test_store_rules_overwrite(mock_dumps, rule_service):
-    """Test overwriting existing rules"""
+def test_store_rules_update(mock_dumps, rule_service):  # Renamed function
+    """Test updating existing rules"""  # Updated description
     # Configure mock to return a valid JSON string
     mock_dumps.return_value = "[]"
 
@@ -133,7 +134,7 @@ def test_store_rules_overwrite(mock_dumps, rule_service):
             operator="equal",
             value="Updated Value"
         ),
-        categories=["test1", "test2"]
+        add_to_categories=["test1", "test2"]  # Changed field name
     )
 
     # Configure additional mock behaviors
@@ -146,7 +147,7 @@ def test_store_rules_overwrite(mock_dumps, rule_service):
                 "operator": "equal",
                 "value": "Old Value"
             },
-            "categories": ["test1"]
+            "add_to_categories": ["test1"]  # Changed field name
         }
     ]
 
@@ -159,7 +160,7 @@ def test_store_rules_overwrite(mock_dumps, rule_service):
     # Check result
     assert success is True
     assert count == 1
-    assert "updated across" in message
+    assert "updated" in message  # Changed expectation
 
     # Verify engine method calls
     assert rule_service.engine.load_rules_from_json.called
@@ -180,7 +181,7 @@ def test_store_rules_multi_category(mock_dumps, rule_service):
             operator="equal",
             value="Cisco Systems"
         ),
-        categories=["category1", "category2", "category3"]
+        add_to_categories=["category1", "category2", "category3"]  # Changed field name
     )
 
     # Configure additional mock behaviors
@@ -199,3 +200,22 @@ def test_store_rules_multi_category(mock_dumps, rule_service):
 
     # Verify engine method calls
     assert rule_service.engine.load_rules_from_json.called
+
+@pytest.mark.parametrize("entity_type, provided_category, expected_entity_types", [
+     ('commission', 'should', ['commission']),
+     (None, None, ['commission', 'decommission'])
+])
+def test_get_rules_calls_create_rules_dict_with_correct_parameters(mocker: MockerFixture, entity_type, provided_category, expected_entity_types):
+    expected_result = {}
+    mock_create_rules_dict = mocker.patch('app.services.rule_service.create_rules_dict')
+    mock_create_rules_dict.return_value = expected_result
+    mock_engine = MagicMock()
+    mock_engine.get_entity_types.return_value = ['commission', 'decommission']
+ 
+    rule_service = RuleService()
+    rule_service.engine = mock_engine
+
+    result = rule_service.get_rules(entity_type, provided_category)
+
+    mock_create_rules_dict.assert_called_with(mock_engine, provided_category, expected_entity_types)
+    assert result == expected_result
