@@ -701,11 +701,11 @@ class RuleService:
         # Get rule for entity type
         
         try:
-            self._add_category(self.engine.rules_by_entity, entity_type, rule_name, categories[0])
+            for category in categories:
+                self._add_category(self.engine.rules_by_entity, entity_type, rule_name, category)
         
-        #     # Update the rule engine with new categories
-        #     self.engine.update_categories(rule_name, entity_type)
-        #     return True, f"Successfully updated categories for {entity_type}"
+    
+            return True, f"Successfully updated categories {categories}, for {entity_type} rule {rule_name}"
         except Exception as e:
             logger.error("Error updating rule categories: %s", e)
             return False, f"Error updating rule categories: {str(e)}"

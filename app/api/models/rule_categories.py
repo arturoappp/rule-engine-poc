@@ -18,6 +18,5 @@ class RuleCategoriesRequest(BaseModel):
 
 class RuleCategoriesResponse(BaseModel):
     """Response model for rule categories endpoint."""
-    id: int
-    name: str
-    description: str
+    success: bool
+    message: str

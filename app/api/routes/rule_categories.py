@@ -16,8 +16,4 @@ async def update_rule_categories(request: RuleCategoriesRequest, service: RuleSe
         category_action=request.category_action,
     )
 
-
-    return {
-        "success": "", 
-        "message": "",
-    }
+    return RuleCategoriesResponse(success=success, message=message)
