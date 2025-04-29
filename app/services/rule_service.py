@@ -702,18 +702,37 @@ class RuleService:
         
         try:
             for category in categories:
-                self._add_category(self.engine.rules_by_entity, entity_type, rule_name, category)
-        
+                # if category_action is add
+                if category_action == "add":
+                    self._add_category(entity_type, rule_name, category)
+                # if category_action is remove
+                elif category_action == "remove":
+                    # Remove the category from the rule
+                    self._remove_category(rule_name, entity_type, category)
+
     
             return True, f"Successfully updated categories {categories}, for {entity_type} rule {rule_name}"
         except Exception as e:
             logger.error("Error updating rule categories: %s", e)
             return False, f"Error updating rule categories: {str(e)}"
+
+    def _remove_category(self, rule_name, entity_type, category):
+        self.engine.rules_by_entity[entity_type]["rules"] = [
+                        rule for rule in self.engine.rules_by_entity[entity_type]["rules"]
+                            if rule.get("name", "") != rule_name and category == rule.get("category", [])
+                    ]
+                                        # Remove the rule from the category
+        if category in self.engine.rules_by_entity[entity_type]["categories"]:
+            self.engine.rules_by_entity[entity_type]["categories"][category] = [
+                            rule for rule in self.engine.rules_by_entity[entity_type]["categories"][category]
+                            if rule.get("name", "") != rule_name
+                        ]
         
 
-    def _add_category(self, data, entity_type, rule_name, category):
+    def _add_category(self, entity_type: str, rule_name: str, category: str) -> None:
         # Add the category to the rules object
-        for rule in data[entity_type]["rules"]:
+        rules_dict = self.engine.rules_by_entity[entity_type]["rules"]
+        for rule in rules_dict:
             if rule["name"] == rule_name:
                 if "categories" not in rule:
                     rule["categories"] = []
@@ -722,13 +741,12 @@ class RuleService:
                 break
 
         # Add the rule to the categories object
-        if category not in data[entity_type]["categories"]:
-            data[entity_type]["categories"][category] = []
+        categories_dict = self.engine.rules_by_entity[entity_type]["categories"]
+        if category not in categories_dict:
+           categories_dict[category] = []
         
-        for rule in data[entity_type]["rules"]:
+        for rule in rules_dict:
             if rule["name"] == rule_name:
-                if rule not in data[entity_type]["categories"][category]:
-                    data[entity_type]["categories"][category].append(rule)
+                if rule not in categories_dict[category]:
+                    categories_dict[category].append(rule)
                 break
-
-        return data
