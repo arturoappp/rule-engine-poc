@@ -685,3 +685,50 @@ class RuleService:
         }
 
         return rule_analysis
+
+    def update_rule_categories(self, rule_name: str, entity_type: str, categories: List[str], category_action: str) -> Tuple[bool, str]:
+        """
+        Update rule categories for a specific entity type.
+
+        Args:
+            entity_type: Entity type to update
+            categories: List of categories to set
+
+        Returns:
+            Tuple of (success, message)
+        """
+        # Add
+        # Get rule for entity type
+        
+        try:
+            self._add_category(self.engine.rules_by_entity, entity_type, rule_name, categories[0])
+        
+        #     # Update the rule engine with new categories
+        #     self.engine.update_categories(rule_name, entity_type)
+        #     return True, f"Successfully updated categories for {entity_type}"
+        except Exception as e:
+            logger.error("Error updating rule categories: %s", e)
+            return False, f"Error updating rule categories: {str(e)}"
+        
+
+    def _add_category(self, data, entity_type, rule_name, category):
+        # Add the category to the rules object
+        for rule in data[entity_type]["rules"]:
+            if rule["name"] == rule_name:
+                if "categories" not in rule:
+                    rule["categories"] = []
+                if category not in rule["categories"]:
+                    rule["categories"].append(category)
+                break
+
+        # Add the rule to the categories object
+        if category not in data[entity_type]["categories"]:
+            data[entity_type]["categories"][category] = []
+        
+        for rule in data[entity_type]["rules"]:
+            if rule["name"] == rule_name:
+                if rule not in data[entity_type]["categories"][category]:
+                    data[entity_type]["categories"][category].append(rule)
+                break
+
+        return data
