@@ -110,7 +110,7 @@ class SpikeAPIRule(BaseModel):
     name: str
     description: Optional[str] = None
     conditions: RuleCondition
-    add_to_categories: Optional[List[str]] = None
+    add_to_categories: Optional[List[str]] = []
 
 class SpikeRule(BaseModel):
     name: str

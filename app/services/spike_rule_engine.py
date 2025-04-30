@@ -64,6 +64,17 @@ class SpikeRuleEngine:
             # raise error rule not found
             raise ValueError(f"Rule with name '{rule_name}' not found for entity type '{entity_type}'")
     
+    def spike_get_entity_types(self) -> List[str]:
+        """
+        Get the list of entity types for which rules are loaded.
+
+        Returns:
+            List of entity types
+        """
+        # Get a set of unique entity types from the values of the spike_rule_repository
+        entity_types = {rule.entity_type for rule in self.spike_rule_repository.values()}
+        return entity_types.list()
+    
     #  get spikestoredrule by name and entity type
     def get_spike_stored_rule_by_name_and_entity_type(self, rule_name: str, entity_type: str) -> SpikeStoredRule:
         stored_rule_key = f"{entity_type}|{rule_name}"
@@ -85,6 +96,16 @@ class SpikeRuleEngine:
         stored_rule_key = f"{entity_type}|{rule_name}"
         return stored_rule_key in self.spike_rule_repository
 
+    # get all rules, but if entity type is not none, get only rules for entity_type, and if category is not none, get only rules for entity_type and category
+    def get_spike_rules(self, entity_type: Optional[str] = None, category: Optional[str] = None) -> list[SpikeStoredRule]:
+        if entity_type is None and category is None:
+            return [stored_rule.rule for stored_rule in self.spike_rule_repository.values()]
+        elif entity_type is not None and category is None:
+            return [stored_rule.rule for _, stored_rule in self.spike_rule_repository.items() if stored_rule.entity_type == entity_type]
+        elif entity_type is not None and category is not None:
+            return [stored_rule.rule for key, stored_rule in self.spike_rule_repository.items() if stored_rule.entity_type == entity_type and category in stored_rule.categories]
+
+        
     # get rules by entity type
     def get_spike_rules_by_entity_type(self, entity_type: str) -> list[SpikeRule]:
         return [stored_rule.rule for key, stored_rule in self.spike_rule_repository.items() if stored_rule.entity_type == entity_type]

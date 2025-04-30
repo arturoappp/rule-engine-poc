@@ -185,6 +185,7 @@ class RuleEngine:
             List of entity types
         """
         return list(self.rules_by_entity.keys())
+    
 
     def get_categories(self, entity_type: str) -> List[str]:
         """

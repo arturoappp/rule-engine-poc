@@ -68,6 +68,35 @@ def test_store_rules_endpoint(client):
     assert data["stored_rules"] == 1
 
 
+def test_spike_store_rules_endpoint(client):
+    """Test the store rules endpoint"""
+    # Create request data
+    request_data = {
+        "entity_type": "device",
+        "rules": [
+            {
+                "name": "API Test Rule",
+                "description": "Test Description",
+                "conditions": {
+                    "path": "$.devices[*].vendor",
+                    "operator": "equal",
+                    "value": "Cisco Systems"
+                },
+                "categories": ["test_category"]
+            }
+        ]
+    }
+
+    # Call the endpoint
+    response = client.post("/api/v1/spike-rules", json=request_data)
+
+    # Check result
+    assert response.status_code == 200
+    data = response.json()
+    assert data["success"] is True
+    assert data["stored_rules"] == 1
+
+
 # Test para el endpoint de listado de reglas - CORREGIDO
 def test_list_rules_endpoint(client):
     """Test the list rules endpoint"""
@@ -124,7 +153,7 @@ def test_list_rules_endpoint(client):
     assert found, "Added rule not found in list response"
 
 
-# Test para la funcionalidad de sobreescritura de reglas - CORREGIDO
+# Test for rule overwriting functionality - FIXED
 def test_rule_overwrite_functionality(client):
     """Test the rule overwriting functionality"""
     # Preparar datos iniciales
@@ -180,6 +209,68 @@ def test_rule_overwrite_functionality(client):
                 for rule in rules:
                     if rule["name"] == "OVERWRITE TEST RULE":
                         if category == "default":
+                            rule_found = rule
+
+    # Verificar que la regla existe y ha sido actualizada
+    assert rule_found is not None, "Rule not found in default category"
+    assert rule_found["description"] == "Updated version"
+    assert rule_found["conditions"]["operator"] == "match"
+    assert rule_found["conditions"]["value"] == "^192\\.168\\..*$"
+
+
+def test_spike_rule_overwrite_functionality(client):
+    """Test the rule overwriting functionality"""
+    # Preparar datos iniciales
+    initial_data = {
+        "entity_type": "NDC_Request",
+        "rules": [
+            {
+                "name": "OVERWRITE TEST RULE",
+                "description": "Initial version",
+                "conditions": {
+                    "path": "$.requests[*].managementIP",
+                    "operator": "exists",
+                    "value": True
+                },
+                "categories": ["default"]  # Cambiado para probar con categorías que sabemos que funcionan
+            }
+        ]
+    }
+    client.post("/api/v1/spike-rules", json=initial_data)
+
+    # Ahora guardar una versión actualizada con el mismo nombre
+    updated_data = {
+        "entity_type": "NDC_Request",
+        "rules": [
+            {
+                "name": "OVERWRITE TEST RULE",
+                "description": "Updated version",
+                "conditions": {
+                    "path": "$.requests[*].managementIP",
+                    "operator": "match",
+                    "value": "^192\\.168\\..*$"
+                },
+                "categories": ["default"]  # Usar la misma categoría para verificar sobreescritura
+            }
+        ]
+    }
+    response = client.post("/api/v1/spike-rules", json=updated_data)
+    assert response.status_code == 200
+
+    # Obtener la lista de reglas y verificar si la regla fue sobreescrita correctamente
+    list_response = client.get("/api/v1/spike-rules")
+    data = list_response.json()
+
+    # Buscar la regla en las categorías
+    rule_found = None
+
+    # Buscar en todas las entidades y categorías
+    for entity_type, categories in data["rules"].items():
+        if entity_type == "NDC_Request":
+            for category, rules in categories.items():
+                for rule in rules:
+                    if rule["name"] == "OVERWRITE TEST RULE":
+                        if  rule["description"] == "Updated version":
                             rule_found = rule
 
     # Verificar que la regla existe y ha sido actualizada

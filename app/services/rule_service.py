@@ -448,6 +448,37 @@ class RuleService:
         rules_dict = create_rules_dict(self.engine, provided_category, entity_types)
 
         return rules_dict
+    
+    def spike_get_rules(self, entity_type=None, provided_category=None) -> Dict[str, Dict[str, List[Dict]]]:
+        """
+        Get all rules from the engine.
+
+        Returns:
+            Dictionary of rules by entity type and category
+        """
+        stored_rules = self.spike_engine.get_spike_rules(entity_type, provided_category)
+
+        #  get all unique entity types from stored rules
+        entity_types = {rule.entity_type for rule in stored_rules}
+        #  get all unique categories from stored rules
+        categories = {rule.category for rule in stored_rules}
+        # create a dictionary with three keys, "entity_type", "category" and "rules". 
+        # The value of "entity_type" is a list of entity types, the value of "category" is a dictionary with each entity_type as a key, and the list of categories associated with it, and the value of "rules" is a dictionary with each entity_type as a key, and then each category associated with it as a key, with the list of rules associated with that entity_type and category.
+        rules_dict = {
+            "entity_type": list(entity_types),
+            "category": {entity_type: list(categories) for entity_type in entity_types},
+            "rules": {entity_type: {category: [] for category in categories} for entity_type in entity_types}
+        }
+
+        # if entity_type is None:
+        #     # Get all entity types
+        #     entity_types = self.spike_engine.spike_get_entity_types()
+        # else:
+        #     entity_types = [entity_type]
+
+        # rules_dict = create_rules_dict(self.engine, provided_category, entity_types)
+
+        return rules_dict
 
     def evaluate_data(self, data: Dict[str, Any], entity_type: str, categories: Optional[List[str]] = None) -> List[
             RuleResult]:
