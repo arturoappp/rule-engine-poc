@@ -730,20 +730,28 @@ class RuleService:
         
 
     def _add_category(self, entity_type: str, rule_name: str, category: str) -> None:
-        # Add the category to the rules object
+        if entity_type not in self.engine.rules_by_entity:
+            raise ValueError(f"Entity type '{entity_type}' not found.")
         rules_dict = self.engine.rules_by_entity[entity_type]["rules"]
+        if not any(rule["name"] == rule_name for rule in rules_dict):
+            raise ValueError(f"Rule '{rule_name}' not found in entity type '{entity_type}'.")
+        new_rule_created = False
         for rule in rules_dict:
             if rule["name"] == rule_name:
+                if not new_rule_created:
+                    new_rule_for_category = rule.copy()
+                    new_rule_for_category["category"] = category
+                    new_rule_for_category["categories"].append(category)
+                    new_rule_created = True
+
                 if "categories" not in rule:
                     rule["categories"] = []
                 if category not in rule["categories"]:
                     rule["categories"].append(category)
-                break
-
-        # Add the rule to the categories object
+            # Create new rule object for category and add to rules_dict with category and categories set
         categories_dict = self.engine.rules_by_entity[entity_type]["categories"]
         if category not in categories_dict:
-           categories_dict[category] = []
+            categories_dict[category] = []
         
         for rule in rules_dict:
             if rule["name"] == rule_name:
