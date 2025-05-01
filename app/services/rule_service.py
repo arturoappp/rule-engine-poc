@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 from app.api.models.rules import Rule as APIRule, SpikeAPIRule, SpikeRule
 from app.services.spike_rule_engine import SpikeRuleEngine
-from app.utilities.rule_service_util import create_rules_dict
+from app.utilities.rule_service_util import create_rules_dict, spike_create_rules_dict
 from rule_engine.core.engine import RuleEngine
 from rule_engine.core.failure_info import FailureInfo
 from rule_engine.core.rule_result import RuleResult
@@ -24,7 +24,7 @@ class RuleService:
         """Initialize the rule service."""
         self.engine = RuleEngine.get_instance()
         self.spike_engine = SpikeRuleEngine.get_instance()
-
+        
     def validate_rule(self, rule: APIRule) -> Tuple[bool, Optional[List[str]]]:
         """
         Validate a rule.
@@ -418,9 +418,14 @@ class RuleService:
                     description=rule.description,
                     conditions=rule.conditions)
                 
-                all_categories_to_add_to = rule.add_to_categories.append(existing_categories)
+                all_categories_to_include = {}
+                # append any existing categories to the rule.categories list
+                if existing_categories:
+                    all_categories_to_include = set(existing_categories + rule.add_to_categories)
+                else:
+                    all_categories_to_include = set(rule.add_to_categories)
 
-                self.spike_engine.add_rule(new_rule, all_categories_to_add_to)
+                self.spike_engine.add_rule(new_rule, all_categories_to_include)
 
             # Create success message
             message = f"Successfully stored rules: {new_rules} new, {updated_rules} updated"
@@ -461,14 +466,23 @@ class RuleService:
         #  get all unique entity types from stored rules
         entity_types = {rule.entity_type for rule in stored_rules}
         #  get all unique categories from stored rules
-        categories = {rule.category for rule in stored_rules}
+        categories_set = set()
+        # create a set of categories from all of the elements in each stored rule in the stored_rules list
+        for rule in stored_rules:
+            if rule.categories:
+                categories_set.update(rule.categories)
+
+        rules_dict = spike_create_rules_dict(stored_rules, categories_set, entity_types)
+        
+
+
         # create a dictionary with three keys, "entity_type", "category" and "rules". 
         # The value of "entity_type" is a list of entity types, the value of "category" is a dictionary with each entity_type as a key, and the list of categories associated with it, and the value of "rules" is a dictionary with each entity_type as a key, and then each category associated with it as a key, with the list of rules associated with that entity_type and category.
-        rules_dict = {
-            "entity_type": list(entity_types),
-            "category": {entity_type: list(categories) for entity_type in entity_types},
-            "rules": {entity_type: {category: [] for category in categories} for entity_type in entity_types}
-        }
+        # rules_dict = {
+        #     "entity_type": list(entity_types),
+        #     "category": {entity_type: list(categories_set) for entity_type in entity_types},
+        #     "rules": {entity_type: {category: [] for category in categories} for entity_type in entity_types}
+        # }
 
         # if entity_type is None:
         #     # Get all entity types

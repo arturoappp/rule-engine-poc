@@ -25,16 +25,16 @@ class SpikeRuleEngine:
     def all_rules(self):
         return self.spike_rule_repository.values()
 
-    def add_rule(self, rule: SpikeRule, categories: Optional[List[str]] = None) -> None:
+    def add_rule(self, rule: SpikeRule, categories: Optional[set[str]] = None) -> None:
         if categories is None:
-            categories = []
+            categories = set()
         print(rule)
         stored_rule_key = f"{rule.entity_type}|{rule.name}"
 
         new_spike_stored_rule = SpikeStoredRule(
             rule_name=rule.name,
             entity_type=rule.entity_type,
-            categories=categories,
+            categories=list(categories),
             rule=rule
         )
         # TODO: Should we require the user to pass an "overwrite" parameter to allow overwriting existing rules?
@@ -99,11 +99,11 @@ class SpikeRuleEngine:
     # get all rules, but if entity type is not none, get only rules for entity_type, and if category is not none, get only rules for entity_type and category
     def get_spike_rules(self, entity_type: Optional[str] = None, category: Optional[str] = None) -> list[SpikeStoredRule]:
         if entity_type is None and category is None:
-            return [stored_rule.rule for stored_rule in self.spike_rule_repository.values()]
+            return [stored_rule for stored_rule in self.spike_rule_repository.values()]
         elif entity_type is not None and category is None:
-            return [stored_rule.rule for _, stored_rule in self.spike_rule_repository.items() if stored_rule.entity_type == entity_type]
+            return [stored_rule for _, stored_rule in self.spike_rule_repository.items() if stored_rule.entity_type == entity_type]
         elif entity_type is not None and category is not None:
-            return [stored_rule.rule for key, stored_rule in self.spike_rule_repository.items() if stored_rule.entity_type == entity_type and category in stored_rule.categories]
+            return [stored_rule for key, stored_rule in self.spike_rule_repository.items() if stored_rule.entity_type == entity_type and category in stored_rule.categories]
 
         
     # get rules by entity type

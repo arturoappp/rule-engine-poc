@@ -27,7 +27,8 @@ def format_list_rules_response(rules_by_entity: dict) -> RuleListResponse:
     response_model = RuleListResponse(entity_types=entity_types, categories=categories, rules=rules_by_entity, stats=stats)
     return response_model
 
-def spike_format_list_rules_response() -> RuleListResponse:
+# TODO: fix this
+def spike_format_list_rules_response(rules_by_entity: dict) -> RuleListResponse:
     # Format response
     entity_types = list(rules_by_entity.keys())
     categories = {}
