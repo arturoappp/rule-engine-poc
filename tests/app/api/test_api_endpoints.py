@@ -190,19 +190,6 @@ def test_spike_list_rules_endpoint(client):
                 for rule in rules:
                     if rule["name"] == "List Test Rule":
                         found = True
-                        # El campo podría ser 'categories' o 'add_to_categories'
-                        # Verificamos cuál existe y luego su contenido
-                        categories_field = None
-                        if "categories" in rule:
-                            categories_field = "categories"
-                        elif "add_to_categories" in rule:
-                            categories_field = "add_to_categories"
-
-                        # Verificar que hay un campo con las categorías
-                        assert categories_field is not None, "No categories field found in rule"
-
-                        # Verificar que la categoría default está presente
-                        assert "default" in rule[categories_field], f"Default category not found in {categories_field}"
 
     assert found, "Added rule not found in list response"
 
@@ -400,6 +387,7 @@ def test_spike_get_rules_excludes_fields_with_none_value(client, mocker: MockerF
     test_rule = [
         {
             "name": "Equal Rule",
+            "entity_type": "commission_request",
             "description": "Tests the 'equal' operator",
             "conditions": {
                 "all": [

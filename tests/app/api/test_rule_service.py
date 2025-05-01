@@ -5,7 +5,7 @@ import pytest
 
 from pytest_mock import MockerFixture
 from app.services.rule_service import RuleService
-from app.api.models.rules import Rule, RuleCondition
+from app.api.models.rules import Rule, RuleCondition, SpikeAPIRule, SpikeRule
 
 
 @pytest.fixture
@@ -116,6 +116,45 @@ def test_store_rules_new(mock_dumps, rule_service):
 
     # Verify engine method calls
     assert rule_service.engine.load_rules_from_json.called
+
+
+def test_spike_store_rules_new(rule_service):
+    """Test storing new rules"""
+
+    # Create test rules
+    rules = [
+        SpikeAPIRule(
+            name="Test Rule 1",
+            description="Test Description 1",
+            conditions=RuleCondition(
+                path="$.devices[*].vendor",
+                operator="equal",
+                value="Cisco Systems"
+            ),
+            add_to_categories=["test1", "test2"]
+        ),
+        SpikeAPIRule(
+            name="Test Rule 2",
+            description="Test Description 2",
+            conditions=RuleCondition(
+                path="$.devices[*].osVersion",
+                operator="equal",
+                value="17.3.6"
+            ),
+            add_to_categories=["test2", "test3"]
+        )
+    ]
+
+    # Configure additional mock behaviors
+    rule_service.engine.spike_get_rules_by_category.return_value = []
+
+    # Store the rules
+    success, message, count = rule_service.spike_store_rules("device", rules)
+
+    # Check result
+    assert success is True
+    assert count == 2
+    assert "new" in message
 
 
 @patch('app.services.rule_service.json.dumps')

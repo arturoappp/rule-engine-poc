@@ -473,24 +473,6 @@ class RuleService:
                 categories_set.update(rule.categories)
 
         rules_dict = spike_create_rules_dict(stored_rules, categories_set, entity_types)
-        
-
-
-        # create a dictionary with three keys, "entity_type", "category" and "rules". 
-        # The value of "entity_type" is a list of entity types, the value of "category" is a dictionary with each entity_type as a key, and the list of categories associated with it, and the value of "rules" is a dictionary with each entity_type as a key, and then each category associated with it as a key, with the list of rules associated with that entity_type and category.
-        # rules_dict = {
-        #     "entity_type": list(entity_types),
-        #     "category": {entity_type: list(categories_set) for entity_type in entity_types},
-        #     "rules": {entity_type: {category: [] for category in categories} for entity_type in entity_types}
-        # }
-
-        # if entity_type is None:
-        #     # Get all entity types
-        #     entity_types = self.spike_engine.spike_get_entity_types()
-        # else:
-        #     entity_types = [entity_type]
-
-        # rules_dict = create_rules_dict(self.engine, provided_category, entity_types)
 
         return rules_dict
 
