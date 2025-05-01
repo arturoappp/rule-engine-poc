@@ -461,7 +461,7 @@ class RuleService:
         Returns:
             Dictionary of rules by entity type and category
         """
-        stored_rules = self.spike_engine.get_spike_rules(entity_type, provided_category)
+        stored_rules = self.spike_engine.get_spike_stored_rules(entity_type, provided_category)
 
         #  get all unique entity types from stored rules
         entity_types = {rule.entity_type for rule in stored_rules}
@@ -471,7 +471,7 @@ class RuleService:
         for rule in stored_rules:
             if rule.categories:
                 categories_set.update(rule.categories)
-
+        
         rules_dict = spike_create_rules_dict(stored_rules, categories_set, entity_types)
 
         return rules_dict

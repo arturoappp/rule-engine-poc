@@ -98,7 +98,7 @@ class SpikeRuleEngine:
         return stored_rule_key in self.spike_rule_repository
 
     # get all rules, but if entity type is not none, get only rules for entity_type, and if category is not none, get only rules for entity_type and category
-    def get_spike_rules(self, entity_type: Optional[str] = None, category: Optional[str] = None) -> list[SpikeStoredRule]:
+    def get_spike_stored_rules(self, entity_type: Optional[str] = None, category: Optional[str] = None) -> list[SpikeStoredRule]:
         if entity_type is None and category is None:
             return [stored_rule for stored_rule in self.spike_rule_repository.values()]
         elif entity_type is not None and category is None:

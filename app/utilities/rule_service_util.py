@@ -22,7 +22,7 @@ def create_rules_dict(engine: RuleEngine, provided_category: str, entity_types: 
     return result
 
 
-def spike_create_rules_dict(stored_rules: list[SpikeStoredRule], categories: list[str], entity_types: list[str]) -> Dict[str, Dict[str, List[Dict]]]:
+def spike_create_rules_dict(stored_rules: list[SpikeStoredRule], categories: set[str], entity_types: set[str]) -> Dict[str, Dict[str, List[Dict]]]:
     result = {}
     for entity_type in entity_types:
         result[entity_type] = {}
