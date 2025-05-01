@@ -232,7 +232,7 @@ def test_spike_rule_overwrite_functionality(client):
                     "operator": "exists",
                     "value": True
                 },
-                "categories": ["default"]  # Cambiado para probar con categorías que sabemos que funcionan
+                "add_to_categories": ["default"]  # Cambiado para probar con categorías que sabemos que funcionan
             }
         ]
     }
@@ -250,7 +250,7 @@ def test_spike_rule_overwrite_functionality(client):
                     "operator": "match",
                     "value": "^192\\.168\\..*$"
                 },
-                "categories": ["default"]  # Usar la misma categoría para verificar sobreescritura
+                "add_to_categories": ["default"]  # Usar la misma categoría para verificar sobreescritura
             }
         ]
     }
