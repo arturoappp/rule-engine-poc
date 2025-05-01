@@ -34,6 +34,7 @@ class SpikeRuleEngine:
         new_spike_stored_rule = SpikeStoredRule(
             rule_name=rule.name,
             entity_type=rule.entity_type,
+            description=rule.description,
             categories=list(categories),
             rule=rule
         )

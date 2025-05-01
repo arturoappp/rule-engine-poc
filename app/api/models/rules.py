@@ -122,6 +122,7 @@ class SpikeRule(BaseModel):
 class SpikeStoredRule(BaseModel):
     rule_name: str
     entity_type: str
+    description: Optional[str] = None
     categories: List[str]
     rule: SpikeRule  # The rule itself, can be a complex structure
 
@@ -239,4 +240,11 @@ class RuleListResponse(BaseModel):
     entity_types: List[str]
     categories: Dict[str, List[str]]
     rules: Dict[str, Dict[str, List[Rule]]]
+    stats: Dict[str, RuleStats]
+
+class SpikeRuleListResponse(BaseModel):
+    """Response model for listing rules."""
+    entity_types: List[str]
+    categories: Dict[str, List[str]]
+    rules: Dict[str, Dict[str, List[SpikeRule]]]
     stats: Dict[str, RuleStats]

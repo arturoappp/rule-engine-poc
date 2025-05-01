@@ -1,4 +1,4 @@
-from app.api.models.rules import RuleListResponse, RuleStats
+from app.api.models.rules import RuleListResponse, RuleStats, SpikeRuleListResponse
 
 
 def format_list_rules_response(rules_by_entity: dict) -> RuleListResponse:
@@ -28,7 +28,7 @@ def format_list_rules_response(rules_by_entity: dict) -> RuleListResponse:
     return response_model
 
 # TODO: fix this
-def spike_format_list_rules_response(rules_by_entity: dict) -> RuleListResponse:
+def spike_format_list_rules_response(rules_by_entity: dict) -> SpikeRuleListResponse:
     # Format response
     entity_types = list(rules_by_entity.keys())
     categories = {}
@@ -51,5 +51,5 @@ def spike_format_list_rules_response(rules_by_entity: dict) -> RuleListResponse:
 
         stats[entity_type] = RuleStats(total_rules=entity_stats["total_rules"], rules_by_category=entity_stats["rules_by_category"])
 
-    response_model = RuleListResponse(entity_types=entity_types, categories=categories, rules=rules_by_entity, stats=stats)
+    response_model = SpikeRuleListResponse(entity_types=entity_types, categories=categories, rules=rules_by_entity, stats=stats)
     return response_model

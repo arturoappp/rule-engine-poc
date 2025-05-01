@@ -1,5 +1,5 @@
 from typing import Dict, List
-from app.api.models.rules import SpikeStoredRule
+from app.api.models.rules import SpikeRule, SpikeStoredRule
 from app.services.spike_rule_engine import SpikeRuleEngine
 from rule_engine.core.engine import RuleEngine
 
@@ -22,16 +22,14 @@ def create_rules_dict(engine: RuleEngine, provided_category: str, entity_types: 
     return result
 
 
-def spike_create_rules_dict(rules: list[SpikeStoredRule], categories: list[str], entity_types: list[str]) -> Dict[str, Dict[str, List[Dict]]]:
+def spike_create_rules_dict(stored_rules: list[SpikeStoredRule], categories: list[str], entity_types: list[str]) -> Dict[str, Dict[str, List[Dict]]]:
     result = {}
     for entity_type in entity_types:
         result[entity_type] = {}
 
         for category in categories:
-            # Get rules for this category
-            rules = [rule for rule in rules if category in rule.categories and rule.entity_type == entity_type]
-            if not rules:
-                rules = [rule for rule in rules if rule.category == category and rule.entity_type is None]
+            filtered_stored_rules = [stored_rule for stored_rule in stored_rules if category in stored_rule.categories and stored_rule.entity_type == entity_type]
+            rules = [SpikeRule(name=rule.rule_name, entity_type=rule.entity_type, description=rule.description, conditions=rule.rule.conditions) for rule in filtered_stored_rules]
             result[entity_type][category] = rules
 
     return result
