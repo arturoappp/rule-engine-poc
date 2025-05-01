@@ -288,7 +288,7 @@ def test_get_rules_calls_create_rules_dict_with_correct_parameters(mocker: Mocke
      (None, None, {'commission', 'decommission'})
 ])
 def test_spike_get_rules_calls_spike_create_rules_dict_with_correct_parameters(mocker: MockerFixture, entity_type, provided_category, expected_entity_types):
-    if entity_type == None:
+    if entity_type is None:
         entity_type1 = 'commission'
         entity_type2 = 'decommission'
     else:
