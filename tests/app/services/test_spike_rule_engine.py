@@ -57,7 +57,7 @@ def test_get_spike_stored_rules_no_filters(spike_rule_engine, sample_stored_rule
     assert all(rule in result for rule in sample_stored_rules)
 
 
-def test_get_spike_stored_rules_by_entity_type(spike_rule_engine):
+def test_get_spike_stored_rules_by_entity_type(spike_rule_engine, sample_stored_rules):
 
     result = spike_rule_engine.get_spike_stored_rules(entity_type="Commission Request")
 
@@ -65,7 +65,7 @@ def test_get_spike_stored_rules_by_entity_type(spike_rule_engine):
     assert all(rule.entity_type == "Commission Request" for rule in result)
 
 
-def test_get_spike_stored_rules_by_categories(spike_rule_engine):
+def test_get_spike_stored_rules_by_categories(spike_rule_engine, sample_stored_rules):
 
     result = spike_rule_engine.get_spike_stored_rules(categories=["Should Run"])
 
@@ -73,13 +73,18 @@ def test_get_spike_stored_rules_by_categories(spike_rule_engine):
     assert all("Should Run" in rule.categories for rule in result)
 
 
-def test_get_spike_stored_rules_by_entity_type_and_categories(spike_rule_engine):
-
+def test_get_spike_stored_rules_by_entity_type_and_categories(spike_rule_engine, sample_stored_rules):
+    """Test filtering by both entity type and categories."""
     result = spike_rule_engine.get_spike_stored_rules(entity_type="Commission Request", categories=["Should Run"])
 
-    assert len(result) == 2
-    assert all(rule.entity_type == "Commission Request" for rule in result)
-    assert all("Should Run" in rule.categories for rule in result)
+    # # Debugging assertions
+    # assert isinstance(result, list), "Result should be a list"
+    # assert all(isinstance(rule, SpikeStoredRule) for rule in result), "All items in result should be SpikeStoredRule instances"
+
+    # Main assertions
+    assert len(result) == 2, f"Expected 2 rules, but got {len(result)}"
+    assert all(rule.entity_type == "Commission Request" for rule in result), "All rules should have entity_type 'Commission Request'"
+    assert all("Should Run" in rule.categories for rule in result), "All rules should include 'Should Run' in categories"
 
 
 def test_get_spike_stored_rules_no_match(spike_rule_engine):
