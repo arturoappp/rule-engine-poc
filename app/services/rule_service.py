@@ -473,7 +473,9 @@ class RuleService:
         if provided_categories:
             categories_to_display = set(provided_categories)
         else:
-            categories_to_display = {rule.categories for rule in stored_rules if rule.categories}
+            for rule in stored_rules:
+                if rule.categories:
+                    categories_to_display.update(rule.categories)
         
         rules_dict = spike_create_rules_dict(stored_rules, categories_to_display, entity_types_to_display)
 
