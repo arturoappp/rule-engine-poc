@@ -1,6 +1,5 @@
 from typing import Dict, List
 from app.api.models.rules import SpikeRule, SpikeStoredRule
-from app.services.spike_rule_engine import SpikeRuleEngine
 from rule_engine.core.engine import RuleEngine
 
 

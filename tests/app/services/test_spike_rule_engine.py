@@ -75,7 +75,7 @@ def test_get_spike_stored_rules_by_categories(spike_rule_engine):
 def test_get_spike_stored_rules_by_entity_type_and_categories(spike_rule_engine):
 
     result = spike_rule_engine.get_spike_stored_rules(entity_type="Commission Request", categories=["Should Run"])
-    
+
     assert len(result) == 2
     assert all(rule.entity_type == "Commission Request" for rule in result)
     assert all("Should Run" in rule.categories for rule in result)
