@@ -454,25 +454,28 @@ class RuleService:
 
         return rules_dict
     
-    def spike_get_rules(self, entity_type=None, provided_category=None) -> Dict[str, Dict[str, List[Dict]]]:
+    def spike_get_rules(self, entity_type=None, provided_categories=None) -> Dict[str, Dict[str, List[Dict]]]:
         """
         Get all rules from the engine.
 
         Returns:
             Dictionary of rules by entity type and category
         """
-        stored_rules = self.spike_engine.get_spike_stored_rules(entity_type, provided_category)
+        stored_rules = self.spike_engine.get_spike_stored_rules(entity_type, provided_categories)
 
-        #  get all unique entity types from stored rules
-        entity_types = {rule.entity_type for rule in stored_rules}
-        #  get all unique categories from stored rules
-        categories_set = set()
-        # create a set of categories from all of the elements in each stored rule in the stored_rules list
-        for rule in stored_rules:
-            if rule.categories:
-                categories_set.update(rule.categories)
         
-        rules_dict = spike_create_rules_dict(stored_rules, categories_set, entity_types)
+        if entity_type:
+            entity_types_to_display = {entity_type}
+        else:
+            entity_types_to_display = {rule.entity_type for rule in stored_rules if rule.entity_type}
+        
+        categories_to_display = set()
+        if provided_categories:
+            categories_to_display = set(provided_categories)
+        else:
+            categories_to_display = {rule.categories for rule in stored_rules if rule.categories}
+        
+        rules_dict = spike_create_rules_dict(stored_rules, categories_to_display, entity_types_to_display)
 
         return rules_dict
 

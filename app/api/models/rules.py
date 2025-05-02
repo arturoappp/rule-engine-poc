@@ -204,6 +204,12 @@ class RuleListRequest(BaseModel):
     entity_type: Optional[str] = None
     category: Optional[str] = None
 
+class SpikeRuleListRequest(BaseModel):
+    """Request model for a list of rules."""
+    entity_type: Optional[str] = None
+    # makes this an optional list of categories
+    categories: Optional[List[str]] = None
+
 
 class RuleValidationResponse(BaseModel):
     """Response model for rule validation."""

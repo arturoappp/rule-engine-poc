@@ -98,16 +98,16 @@ class SpikeRuleEngine:
         return stored_rule_key in self.spike_rule_repository
 
     # get all rules, but if entity type is not none, get only rules for entity_type, and if category is not none, get only rules for entity_type and category
-    def get_spike_stored_rules(self, entity_type: Optional[str] = None, category: Optional[str] = None) -> list[SpikeStoredRule]:
+    def get_spike_stored_rules(self, entity_type: Optional[str] = None, categories: Optional[list[str]] = None) -> list[SpikeStoredRule]:
         stored_rules =[]
-        if entity_type is None and category is None:
+        if entity_type is None and categories is None:
             stored_rules = [stored_rule for stored_rule in self.spike_rule_repository.values()]
-        elif entity_type is not None and category is None:
+        elif entity_type is not None and categories is None:
             stored_rules = [stored_rule for _, stored_rule in self.spike_rule_repository.items() if stored_rule.entity_type == entity_type]
-        elif entity_type is None and category is not None:
-            stored_rules = [stored_rule for _, stored_rule in self.spike_rule_repository.items() if category in stored_rule.categories]
-        elif entity_type is not None and category is not None:
-            stored_rules = [stored_rule for key, stored_rule in self.spike_rule_repository.items() if stored_rule.entity_type == entity_type and category in stored_rule.categories]
+        elif entity_type is None and categories is not None:
+            stored_rules = [stored_rule for _, stored_rule in self.spike_rule_repository.items() if any(category in stored_rule.categories for category in categories)]
+        elif entity_type is not None and categories is not None:
+            stored_rules = [stored_rule for key, stored_rule in self.spike_rule_repository.items() if stored_rule.entity_type == entity_type and any(category in stored_rule.categories for category in categories)]
         if stored_rules is None:
             return []
         return stored_rules
