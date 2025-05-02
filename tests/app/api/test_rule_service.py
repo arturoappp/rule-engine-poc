@@ -283,11 +283,11 @@ def test_get_rules_calls_create_rules_dict_with_correct_parameters(mocker: Mocke
     mock_create_rules_dict.assert_called_with(mock_engine, provided_category, expected_entity_types)
     assert result == expected_result
 
-@pytest.mark.parametrize("entity_type, provided_category, expected_entity_types", [
-     ('commission', 'should', {'commission'}),
+@pytest.mark.parametrize("entity_type, provided_categories, expected_entity_types", [
+     ('commission', ['should'], {'commission'}),
      (None, None, {'commission', 'decommission'})
 ])
-def test_spike_get_rules_calls_spike_create_rules_dict_with_correct_parameters(mocker: MockerFixture, entity_type, provided_category, expected_entity_types):
+def test_spike_get_rules_calls_spike_create_rules_dict_with_correct_parameters(mocker: MockerFixture, entity_type, provided_categories, expected_entity_types):
     if entity_type is None:
         entity_type1 = 'commission'
         entity_type2 = 'decommission'
@@ -297,12 +297,12 @@ def test_spike_get_rules_calls_spike_create_rules_dict_with_correct_parameters(m
     expected_result = {}
     mock_stored_rule1 = MagicMock()
     mock_stored_rule1.entity_type = entity_type1
-    mock_stored_rule1.categories = [provided_category]
+    mock_stored_rule1.categories = provided_categories
     mock_stored_rule2 = MagicMock()
     mock_stored_rule2.entity_type = entity_type2
-    mock_stored_rule2.categories = [provided_category]
+    mock_stored_rule2.categories = provided_categories
     stored_rules = [mock_stored_rule1, mock_stored_rule2]
-
+    expected_provided_categories_set = set(provided_categories) if provided_categories else set()
     mock_spike_create_rules_dict = mocker.patch('app.services.rule_service.spike_create_rules_dict')
     mock_spike_create_rules_dict.return_value = expected_result
     mock_engine = MagicMock()
@@ -311,7 +311,7 @@ def test_spike_get_rules_calls_spike_create_rules_dict_with_correct_parameters(m
     rule_service = RuleService()
     rule_service.spike_engine = mock_engine
 
-    result = rule_service.spike_get_rules(entity_type, provided_category)
+    result = rule_service.spike_get_rules(entity_type, provided_categories)
 
-    mock_spike_create_rules_dict.assert_called_with(stored_rules, {provided_category}, expected_entity_types)
+    mock_spike_create_rules_dict.assert_called_with(stored_rules, expected_provided_categories_set, expected_entity_types)
     assert result == expected_result

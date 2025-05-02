@@ -453,6 +453,12 @@ test_cases = [
     {"category": "could_run"},
     {},
 ]
+spike_test_cases = [
+    {"entity_type": "commission", "categories": ["should_run"]},
+    {"entity_type": "decommission"},
+    {"category": "could_run"},
+    {},
+]
 
 
 @pytest.mark.parametrize("case", test_cases)
@@ -489,15 +495,15 @@ def test_list_rules(mocker: MockerFixture, case, client):
     app.dependency_overrides = {}
 
 
-@pytest.mark.parametrize("case", test_cases)
+@pytest.mark.parametrize("case", spike_test_cases)
 def test_spike_list_rules(mocker: MockerFixture, case, client):
     entity_type = case.get("entity_type", None)
-    category = case.get("category", None)
+    categories = case.get("categories", None)
     request_params = {}
     if entity_type != None:
         request_params["entity_type"] = entity_type
-    if category != None:
-        request_params["category"] = category
+    if categories != None:
+        request_params["categories"] = categories
     rules_by_entity = {}
 
     mock_service = mocker.MagicMock()
@@ -511,7 +517,7 @@ def test_spike_list_rules(mocker: MockerFixture, case, client):
     assert response.status_code == 200
 
     # Verify service.get_rules is called with the correct values
-    mock_service.spike_get_rules.assert_called_with(entity_type, category)
+    mock_service.spike_get_rules.assert_called_with(entity_type, categories)
     mock_spike_format_list_rules_response.assert_called_with(rules_by_entity)
     # Verify the response model
     response_data = response.json()
