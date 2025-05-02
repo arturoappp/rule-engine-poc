@@ -99,13 +99,18 @@ class SpikeRuleEngine:
 
     # get all rules, but if entity type is not none, get only rules for entity_type, and if category is not none, get only rules for entity_type and category
     def get_spike_stored_rules(self, entity_type: Optional[str] = None, category: Optional[str] = None) -> list[SpikeStoredRule]:
+        stored_rules =[]
         if entity_type is None and category is None:
-            return [stored_rule for stored_rule in self.spike_rule_repository.values()]
+            stored_rules = [stored_rule for stored_rule in self.spike_rule_repository.values()]
         elif entity_type is not None and category is None:
-            return [stored_rule for _, stored_rule in self.spike_rule_repository.items() if stored_rule.entity_type == entity_type]
+            stored_rules = [stored_rule for _, stored_rule in self.spike_rule_repository.items() if stored_rule.entity_type == entity_type]
+        elif entity_type is None and category is not None:
+            stored_rules = [stored_rule for _, stored_rule in self.spike_rule_repository.items() if category in stored_rule.categories]
         elif entity_type is not None and category is not None:
-            return [stored_rule for key, stored_rule in self.spike_rule_repository.items() if stored_rule.entity_type == entity_type and category in stored_rule.categories]
-
+            stored_rules = [stored_rule for key, stored_rule in self.spike_rule_repository.items() if stored_rule.entity_type == entity_type and category in stored_rule.categories]
+        if stored_rules is None:
+            return []
+        return stored_rules
         
     # get rules by entity type
     def get_spike_rules_by_entity_type(self, entity_type: str) -> list[SpikeRule]:
