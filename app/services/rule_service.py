@@ -454,7 +454,7 @@ class RuleService:
 
         return rules_dict
     
-    def spike_get_rules(self, entity_type=None, provided_categories=None) -> Dict[str, Dict[str, List[Dict]]]:
+    def spike_get_rules(self, entity_type:Optional[str]=None, provided_categories:Optional[list[str]]=None) -> Dict[str, Dict[str, List[Dict]]]:
         """
         Get all rules from the engine.
 
