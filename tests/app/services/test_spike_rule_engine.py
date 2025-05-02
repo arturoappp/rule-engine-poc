@@ -2,6 +2,7 @@ import pytest
 from app.services.spike_rule_engine import SpikeRuleEngine
 from app.api.models.rules import SpikeRule, SpikeStoredRule
 
+
 @pytest.fixture
 def spike_rule_engine():
     return SpikeRuleEngine()
@@ -10,9 +11,9 @@ def spike_rule_engine():
 @pytest.fixture
 def sample_rules():
     return [
-        SpikeRule(name="Rule1", entity_type="Commission Request", description="Description1", conditions= { "condition": {}}),
-        SpikeRule(name="Rule2", entity_type="Decommission Request", description="Description2", conditions= { "condition": {}}),
-        SpikeRule(name="Rule3", entity_type="Commission Request", description="Description3", conditions= { "condition": {}}),
+        SpikeRule(name="Rule1", entity_type="Commission Request", description="Description1", conditions={"condition": {}}),
+        SpikeRule(name="Rule2", entity_type="Decommission Request", description="Description2", conditions={"condition": {}}),
+        SpikeRule(name="Rule3", entity_type="Commission Request", description="Description3", conditions={"condition": {}}),
     ]
 
 

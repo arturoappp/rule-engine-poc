@@ -106,11 +106,13 @@ class RuleCondition(BaseModel):
 # Forward reference resolution for recursive model
 RuleCondition.model_rebuild()
 
+
 class SpikeAPIRule(BaseModel):
     name: str
     description: Optional[str] = None
     conditions: RuleCondition
     add_to_categories: Optional[List[str]] = []
+
 
 class SpikeRule(BaseModel):
     name: str
@@ -204,6 +206,7 @@ class RuleListRequest(BaseModel):
     entity_type: Optional[str] = None
     category: Optional[str] = None
 
+
 class SpikeRuleListRequest(BaseModel):
     """Request model for a list of rules."""
     entity_type: Optional[str] = None
@@ -223,10 +226,12 @@ class RuleStoreRequest(BaseModel):
     default_category: Optional[str] = "default"  # Used only if a rule doesn't specify add_to_categories
     rules: List[Rule]
 
+
 class SpikeRuleStoreRequest(BaseModel):
     """Request model for storing rules."""
     entity_type: str
     rules: List[SpikeAPIRule]
+
 
 class RuleStoreResponse(BaseModel):
     """Response model for storing rules."""
@@ -247,6 +252,7 @@ class RuleListResponse(BaseModel):
     categories: Dict[str, List[str]]
     rules: Dict[str, Dict[str, List[Rule]]]
     stats: Dict[str, RuleStats]
+
 
 class SpikeRuleListResponse(BaseModel):
     """Response model for listing rules."""

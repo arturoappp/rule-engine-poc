@@ -30,5 +30,5 @@ def spike_create_rules_dict(stored_rules: list[SpikeStoredRule], categories_to_d
             filtered_stored_rules = [stored_rule for stored_rule in stored_rules if category in stored_rule.categories and stored_rule.entity_type == entity_type]
             rules = [SpikeRule(name=rule.rule_name, entity_type=rule.entity_type, description=rule.description, conditions=rule.rule.conditions) for rule in filtered_stored_rules]
             if len(rules) > 0:
-               result[entity_type][category] = rules
+                result[entity_type][category] = rules
     return result

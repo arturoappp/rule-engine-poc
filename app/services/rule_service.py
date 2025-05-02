@@ -24,7 +24,7 @@ class RuleService:
         """Initialize the rule service."""
         self.engine = RuleEngine.get_instance()
         self.spike_engine = SpikeRuleEngine.get_instance()
-        
+
     def validate_rule(self, rule: APIRule) -> Tuple[bool, Optional[List[str]]]:
         """
         Validate a rule.
@@ -384,7 +384,6 @@ class RuleService:
         except Exception as e:
             logger.error(f"Error storing rules: {e}")
             return False, f"Error storing rules: {str(e)}", 0
-        
 
     def spike_store_rules(self, entity_type: str, rules: List[SpikeAPIRule]) -> Tuple[
             bool, str, int]:
@@ -417,7 +416,7 @@ class RuleService:
                     entity_type=entity_type,
                     description=rule.description,
                     conditions=rule.conditions)
-                
+
                 all_categories_to_include = {}
                 # append any existing categories to the rule.categories list
                 if existing_categories:
@@ -453,8 +452,8 @@ class RuleService:
         rules_dict = create_rules_dict(self.engine, provided_category, entity_types)
 
         return rules_dict
-    
-    def spike_get_rules(self, entity_type:Optional[str]=None, provided_categories:Optional[list[str]]=None) -> Dict[str, Dict[str, List[Dict]]]:
+
+    def spike_get_rules(self, entity_type: Optional[str] = None, provided_categories: Optional[list[str]] = None) -> Dict[str, Dict[str, List[Dict]]]:
         """
         Get all rules from the engine.
 
@@ -463,12 +462,11 @@ class RuleService:
         """
         stored_rules = self.spike_engine.get_spike_stored_rules(entity_type, provided_categories)
 
-        
         if entity_type:
             entity_types_to_display = {entity_type}
         else:
             entity_types_to_display = {rule.entity_type for rule in stored_rules if rule.entity_type}
-        
+
         categories_to_display = set()
         if provided_categories:
             categories_to_display = set(provided_categories)
@@ -476,7 +474,7 @@ class RuleService:
             for rule in stored_rules:
                 if rule.categories:
                     categories_to_display.update(rule.categories)
-        
+
         rules_dict = spike_create_rules_dict(stored_rules, categories_to_display, entity_types_to_display)
 
         return rules_dict

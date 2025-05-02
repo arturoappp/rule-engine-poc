@@ -88,11 +88,12 @@ def test_spike_create_rules_dict_multiple_rules_same_category():
         }
     }
 
+
 def test_spike_create_rules_dict_multiple_rules_different_entity_types_and_categories():
     # Sample data
     condition1 = RuleCondition()
     condition2 = RuleCondition()
-    commission_entity  = "commission request"
+    commission_entity = "commission request"
     decommision_entity = "decommission request"
     should_run_category = "should run"
     could_run_category = "could run"
