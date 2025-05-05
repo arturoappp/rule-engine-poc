@@ -152,6 +152,7 @@ def test_list_rules_endpoint(client):
 
     assert found, "Added rule not found in list response"
 
+
 def test_spike_list_rules_endpoint(client):
     """Test the list rules endpoint"""
     # Guardar una regla
@@ -258,7 +259,7 @@ def test_rule_overwrite_functionality(client):
     assert rule_found["conditions"]["operator"] == "match"
     assert rule_found["conditions"]["value"] == "^192\\.168\\..*$"
 
-# TODO: Fix this
+
 def test_spike_rule_overwrite_functionality(client):
     """Test the rule overwriting functionality"""
     # Preparar datos iniciales
@@ -311,7 +312,7 @@ def test_spike_rule_overwrite_functionality(client):
             for category, rules in categories.items():
                 for rule in rules:
                     if rule["name"] == "OVERWRITE TEST RULE":
-                        if  rule["description"] == "Updated version":
+                        if rule["description"] == "Updated version":
                             rule_found = rule
 
     # Verificar que la regla existe y ha sido actualizada
@@ -407,12 +408,12 @@ def test_spike_get_rules_excludes_fields_with_none_value(client, mocker: MockerF
 
     mock_spike_format_list_rules_response = mocker.patch('app.api.routes.rules.spike_format_list_rules_response')
     rule_list_response = SpikeRuleListResponse(entity_types=["commission_request"],
-                                          categories={"commission_request": ["should_run"]},
-                                          rules={"commission_request": {
-                                              "should_run": test_rule
-                                          }},
-                                          stats={}
-                                          )
+                                               categories={"commission_request": ["should_run"]},
+                                               rules={"commission_request": {
+                                                   "should_run": test_rule
+                                               }},
+                                               stats={}
+                                               )
     mock_spike_format_list_rules_response.return_value = rule_list_response
 
     response = client.get("/api/v1/spike-rules")
