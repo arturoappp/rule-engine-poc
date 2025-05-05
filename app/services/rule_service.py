@@ -687,15 +687,22 @@ class RuleService:
         return rule_analysis
 
     def update_rule_categories(self, rule_name: str, entity_type: str, categories: List[str], category_action: str) -> Tuple[bool, str]:
-        """
-        Update rule categories for a specific entity type.
-
+        """This method allows adding or removing categories associated with a rule
+        for a given entity type. The action to perform is determined by the 
+        `category_action` parameter.
         Args:
-            entity_type: Entity type to update
-            categories: List of categories to set
-
+            rule_name (str): The name of the rule to update.
+            entity_type (str): The type of entity associated with the rule.
+            categories (List[str]): A list of category names to add or remove.
+            category_action (str): The action to perform, either "add" or "remove".
         Returns:
-            Tuple of (success, message)
+            Tuple[bool, str]: A tuple containing a boolean indicating success or failure,
+            and a message providing additional context about the operation.
+        Raises:
+            Exception: If an unexpected error occurs during the update process.
+        Notes:
+            - If `category_action` is not "add" or "remove", the method will return
+              a failure message without performing any updates.
         """
         try:
             if category_action == "add":
@@ -712,7 +719,6 @@ class RuleService:
 
     def _add_categories(self, entity_type: str, rule_name: str, categories: list[str]) -> None:
         rule_to_add_categories_to = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type)
-        # Add each individual str in categories to the rule_to_add_categories_to.categories set
         categories_set = set(categories)
         rule_to_add_categories_to.categories = set(rule_to_add_categories_to.categories).union(categories_set)
 
