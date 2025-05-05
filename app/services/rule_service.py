@@ -697,18 +697,12 @@ class RuleService:
         Returns:
             Tuple of (success, message)
         """
-        # Add
-        # Get rule for entity type
-
         try:
-            for category in categories:
-                # if category_action is add
-                if category_action == "add":
-                    self._add_category(entity_type, rule_name, category)
-                # if category_action is remove
-                elif category_action == "remove":
-                    # Remove the category from the rule
-                    self._remove_category(rule_name, entity_type, category)
+            if category_action == "add":
+                self._add_categories(entity_type, rule_name, categories)
+            # elif category_action == "remove":
+            #     # Remove the category from the rule
+            #     self._remove_category(rule_name, entity_type, category)
 
             return True, f"Successfully updated categories {categories}, for {entity_type} rule {rule_name}"
         except Exception as e:
