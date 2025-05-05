@@ -383,3 +383,57 @@ def test_update_rule_categories_exception_handling(rule_service):
     assert "Error updating rule categories" in message
     rule_service._add_categories.assert_called_once_with(entity_type, rule_name, categories)
     rule_service._remove_categories.assert_not_called()
+
+
+def test_remove_categories_success(rule_service):
+    """Test successfully removing categories from a rule"""
+    # Mock the rule returned by the spike engine
+    mock_rule = MagicMock()
+    mock_rule.categories = {"test1", "test2", "test3"}
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type = MagicMock(return_value=mock_rule)
+
+    # Call the method
+    rule_name = "Test Rule"
+    entity_type = "Commission Request"
+    categories_to_remove = ["test1", "test3"]
+    rule_service._remove_categories(rule_name, entity_type, categories_to_remove)
+
+    # Assert the categories were updated correctly
+    assert mock_rule.categories == {"test2"}
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.assert_called_once_with(rule_name, entity_type)
+
+
+def test_remove_categories_no_matching_categories(rule_service):
+    """Test removing categories when none match"""
+    # Mock the rule returned by the spike engine
+    mock_rule = MagicMock()
+    mock_rule.categories = {"test1", "test2"}
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type = MagicMock(return_value=mock_rule)
+
+    # Call the method
+    rule_name = "Test Rule"
+    entity_type = "Commission Request"
+    categories_to_remove = ["test3"]
+    rule_service._remove_categories(rule_name, entity_type, categories_to_remove)
+
+    # Assert the categories remain unchanged
+    assert mock_rule.categories == {"test1", "test2"}
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.assert_called_once_with(rule_name, entity_type)
+
+
+def test_remove_categories_empty_categories(rule_service):
+    """Test removing categories when the rule has no categories"""
+    # Mock the rule returned by the spike engine
+    mock_rule = MagicMock()
+    mock_rule.categories = set()
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type = MagicMock(return_value=mock_rule)
+
+    # Call the method
+    rule_name = "Test Rule"
+    entity_type = "Commission Request"
+    categories_to_remove = ["test1"]
+    rule_service._remove_categories(rule_name, entity_type, categories_to_remove)
+
+    # Assert the categories remain empty
+    assert mock_rule.categories == set()
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.assert_called_once_with(rule_name, entity_type)
