@@ -107,7 +107,7 @@ def test_store_rules_new(mock_dumps, rule_service):
     rule_service.engine.load_rules_from_json = MagicMock()
 
     # Store the rules
-    success, message, count = rule_service.store_rules("device", rules)
+    success, message, count = rule_service.store_rules("Commission Request", rules)
 
     # Check result
     assert success is True
@@ -149,7 +149,7 @@ def test_spike_store_rules_new(rule_service):
     rule_service.engine.spike_get_rules_by_category.return_value = []
 
     # Store the rules
-    success, message, count = rule_service.spike_store_rules("device", rules)
+    success, message, count = rule_service.spike_store_rules("Commission Request", rules)
 
     # Check result
     assert success is True
@@ -193,7 +193,7 @@ def test_store_rules_update(mock_dumps, rule_service):  # Renamed function
     rule_service.engine.load_rules_from_json = MagicMock()
 
     # Store the rule
-    success, message, count = rule_service.store_rules("device", [rule])
+    success, message, count = rule_service.store_rules("Commission Request", [rule])
 
     # Check result
     assert success is True
@@ -219,7 +219,7 @@ def test_spike_store_rules_update(rule_service):  # Renamed function
     )
 
     # Store the rule
-    success, message, count = rule_service.spike_store_rules("device", [rule])
+    success, message, count = rule_service.spike_store_rules("Commission Request", [rule])
 
     # Check result
     assert success is True
@@ -242,7 +242,7 @@ def test_store_rules_multi_category(mock_dumps, rule_service):
             operator="equal",
             value="Cisco Systems"
         ),
-        add_to_categories=["category1", "category2", "category3"]  # Changed field name
+        add_to_categories=["Should Run", "Can Run", "category3"]  # Changed field name
     )
 
     # Configure additional mock behaviors
@@ -252,7 +252,7 @@ def test_store_rules_multi_category(mock_dumps, rule_service):
     rule_service.engine.load_rules_from_json = MagicMock()
 
     # Store the rule
-    success, message, count = rule_service.store_rules("device", [rule])
+    success, message, count = rule_service.store_rules("Commission Request", [rule])
 
     # Check result
     assert success is True
@@ -317,41 +317,69 @@ def test_spike_get_rules_calls_spike_create_rules_dict_with_correct_parameters(m
     assert result == expected_result
 
 
-def test_add_category_success(rule_service):
-    """Test successfully adding a category to a rule"""
-    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type = MagicMock()
-    mock_rule = MagicMock()
-    mock_rule.categories = ["existing_category"]
-    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.return_value = mock_rule
+def test_update_rule_categories_add_success(rule_service):
+    """Test successfully adding categories to a rule"""
+    rule_service._add_categories = MagicMock()
+    rule_service._remove_categories = MagicMock()
 
-    rule_service._add_category("device", "Test Rule", "new_category")
-
-    assert "new_category" in mock_rule.categories
-    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.assert_called_once_with("Test Rule", "device")
-
-
-def test_add_category_already_exists(rule_service):
-    """Test adding a category that already exists"""
-    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type = MagicMock()
-    mock_rule = MagicMock()
-    existing_category = "Should Run"
-    entity_type = "Commission Request"
     rule_name = "Test Rule"
-    mock_rule.categories = [existing_category]
-    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.return_value = mock_rule
+    entity_type = "Commission Request"
+    categories = ["Should Run", "Can Run"]
 
-    rule_service._add_category(entity_type, rule_name, existing_category)
+    success, message = rule_service.update_rule_categories(rule_name, entity_type, categories, "add")
 
-    assert mock_rule.categories == [existing_category]
-    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.assert_called_once_with(rule_name, entity_type)
+    assert success is True
+    assert "Successfully updated categories" in message
+    rule_service._add_categories.assert_called_once_with(entity_type, rule_name, categories)
+    rule_service._remove_categories.assert_not_called()
 
 
-def test_add_category_rule_not_found(rule_service):
-    """Test adding a category when the rule is not found"""
-    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type = MagicMock()
-    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.return_value = None
+def test_update_rule_categories_remove_success(rule_service):
+    """Test successfully removing categories from a rule"""
+    rule_service._add_categories = MagicMock()
+    rule_service._remove_categories = MagicMock()
 
-    with pytest.raises(ValueError, match="Rule 'Test Rule' not found for entity type 'device'."):
-        rule_service._add_category("device", "Test Rule", "new_category")
+    rule_name = "Test Rule"
+    entity_type = "Commission Request"
+    categories = ["Should Run", "Can Run"]
 
-    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.assert_called_once_with("Test Rule", "device")
+    success, message = rule_service.update_rule_categories(rule_name, entity_type, categories, "remove")
+
+    assert success is True
+    assert "Successfully updated categories" in message
+    rule_service._remove_categories.assert_called_once_with(rule_name, entity_type, categories)
+    rule_service._add_categories.assert_not_called()
+
+
+def test_update_rule_categories_invalid_action(rule_service):
+    """Test updating categories with an invalid action"""
+    rule_service._add_categories = MagicMock()
+    rule_service._remove_categories = MagicMock()
+
+    rule_name = "Test Rule"
+    entity_type = "Commission Request"
+    categories = ["Should Run", "Can Run"]
+
+    success, message = rule_service.update_rule_categories(rule_name, entity_type, categories, "invalid_action")
+
+    assert success is False
+    assert "Invalid category action" in message
+    rule_service._add_categories.assert_not_called()
+    rule_service._remove_categories.assert_not_called()
+
+
+def test_update_rule_categories_exception_handling(rule_service):
+    """Test exception handling during category update"""
+    rule_service._add_categories = MagicMock(side_effect=Exception("Test exception"))
+    rule_service._remove_categories = MagicMock()
+
+    rule_name = "Test Rule"
+    entity_type = "Commission Request"
+    categories = ["Should Run", "Can Run"]
+
+    success, message = rule_service.update_rule_categories(rule_name, entity_type, categories, "add")
+
+    assert success is False
+    assert "Error updating rule categories" in message
+    rule_service._add_categories.assert_called_once_with(entity_type, rule_name, categories)
+    rule_service._remove_categories.assert_not_called()

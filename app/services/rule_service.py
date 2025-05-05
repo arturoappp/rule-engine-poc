@@ -702,6 +702,8 @@ class RuleService:
                 self._add_categories(entity_type, rule_name, categories)
             elif category_action == "remove":
                 self._remove_categories(rule_name, entity_type, categories)
+            else:
+                return False, f"Invalid category action: {category_action}. Must be either 'add' or 'remove'"
 
             return True, f"Successfully updated categories {categories}, for {entity_type} rule {rule_name}"
         except Exception as e:
