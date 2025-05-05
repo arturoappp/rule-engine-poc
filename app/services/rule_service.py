@@ -688,7 +688,7 @@ class RuleService:
 
     def update_rule_categories(self, rule_name: str, entity_type: str, categories: List[str], category_action: str) -> Tuple[bool, str]:
         """This method allows adding or removing categories associated with a rule
-        for a given entity type. The action to perform is determined by the 
+        for a given entity type. The action to perform is determined by the
         `category_action` parameter.
         Args:
             rule_name (str): The name of the rule to update.
