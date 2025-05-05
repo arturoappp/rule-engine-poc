@@ -125,7 +125,7 @@ class SpikeStoredRule(BaseModel):
     rule_name: str
     entity_type: str
     description: Optional[str] = None
-    categories: List[str]
+    categories: set[str]
     rule: SpikeRule  # The rule itself, can be a complex structure
 
 

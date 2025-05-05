@@ -420,7 +420,7 @@ class RuleService:
                 all_categories_to_include = {}
                 # append any existing categories to the rule.categories list
                 if existing_categories:
-                    all_categories_to_include = set(existing_categories + rule.add_to_categories)
+                    all_categories_to_include = existing_categories.union(rule.add_to_categories)
                 else:
                     all_categories_to_include = set(rule.add_to_categories)
 
@@ -710,10 +710,12 @@ class RuleService:
             logger.error("Error updating rule categories: %s", e)
             return False, f"Error updating rule categories: {str(e)}"
 
+    def _add_categories(self, entity_type: str, rule_name: str, categories: list[str]) -> None:
+        rule_to_add_categories_to = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type)
+        # Add each individual str in categories to the rule_to_add_categories_to.categories set
+        categories_set = set(categories)
+        rule_to_add_categories_to.categories = set(rule_to_add_categories_to.categories).union(categories_set)
+
     def _remove_categories(self, rule_name, entity_type, categories: list[str]) -> None:
         rule_to_remove_categories_from = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type)
         rule_to_remove_categories_from.categories = {category for category in rule_to_remove_categories_from.categories if category not in categories}
-
-    def _add_categories(self, entity_type: str, rule_name: str, categories: list[str]) -> None:
-        rule_to_add_categories_to = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type)
-        rule_to_add_categories_to.categories.append(categories)
