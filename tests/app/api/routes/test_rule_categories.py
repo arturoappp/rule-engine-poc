@@ -1,10 +1,8 @@
-import pytest
+from app.api.routes.rules import get_rule_service
 from fastapi.testclient import TestClient
 from main import app
 from unittest.mock import MagicMock
-from app.api.routes.rules import get_rule_service
-
-# Create a TestClient for the FastAPI router
+import pytest
 
 
 @pytest.fixture

@@ -6,7 +6,6 @@ from app.api.routes.rules import get_rule_service
 from main import app
 
 
-# Crear un cliente de prueba como fixture
 @pytest.fixture
 def client():
     return TestClient(app)
@@ -467,9 +466,9 @@ def test_list_rules(mocker: MockerFixture, case, client):
     entity_type = case.get("entity_type", None)
     category = case.get("category", None)
     request_params = {}
-    if entity_type != None:
+    if entity_type is not None:
         request_params["entity_type"] = entity_type
-    if category != None:
+    if category is not None:
         request_params["category"] = category
     rules_by_entity = {}
 
@@ -501,9 +500,9 @@ def test_spike_list_rules(mocker: MockerFixture, case, client):
     entity_type = case.get("entity_type", None)
     categories = case.get("categories", None)
     request_params = {}
-    if entity_type != None:
+    if entity_type is not None:
         request_params["entity_type"] = entity_type
-    if categories != None:
+    if categories is not None:
         request_params["categories"] = categories
     rules_by_entity = {}
 
