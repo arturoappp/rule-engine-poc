@@ -699,7 +699,7 @@ class RuleService:
         """
         # Add
         # Get rule for entity type
-        
+
         try:
             for category in categories:
                 # if category_action is add
@@ -710,7 +710,6 @@ class RuleService:
                     # Remove the category from the rule
                     self._remove_category(rule_name, entity_type, category)
 
-    
             return True, f"Successfully updated categories {categories}, for {entity_type} rule {rule_name}"
         except Exception as e:
             logger.error("Error updating rule categories: %s", e)
@@ -734,8 +733,5 @@ class RuleService:
         if not rule_to_add_category_to:
             raise ValueError(f"Rule '{rule_name}' not found for entity type '{entity_type}'.")
         else:
-            # Check if the category already exists in the rule's categories
             if category not in rule_to_add_category_to.categories:
-                # Add the new category to the rule's categories
                 rule_to_add_category_to.categories.append(category)
-              

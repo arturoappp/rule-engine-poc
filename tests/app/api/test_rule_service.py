@@ -5,7 +5,7 @@ import pytest
 
 from pytest_mock import MockerFixture
 from app.services.rule_service import RuleService
-from app.api.models.rules import Rule, RuleCondition, SpikeAPIRule, SpikeRule
+from app.api.models.rules import Rule, RuleCondition, SpikeAPIRule
 
 
 @pytest.fixture
@@ -227,7 +227,6 @@ def test_spike_store_rules_update(rule_service):  # Renamed function
     assert "updated" in message  # Changed expectation
 
 
-
 @patch('app.services.rule_service.json.dumps')
 def test_store_rules_multi_category(mock_dumps, rule_service):
     """Test storing rules in multiple categories"""
@@ -265,8 +264,8 @@ def test_store_rules_multi_category(mock_dumps, rule_service):
 
 
 @pytest.mark.parametrize("entity_type, provided_category, expected_entity_types", [
-     ('commission', 'should', ['commission']),
-     (None, None, ['commission', 'decommission'])
+    ('commission', 'should', ['commission']),
+    (None, None, ['commission', 'decommission'])
 ])
 def test_get_rules_calls_create_rules_dict_with_correct_parameters(mocker: MockerFixture, entity_type, provided_category, expected_entity_types):
     expected_result = {}
@@ -283,9 +282,10 @@ def test_get_rules_calls_create_rules_dict_with_correct_parameters(mocker: Mocke
     mock_create_rules_dict.assert_called_with(mock_engine, provided_category, expected_entity_types)
     assert result == expected_result
 
+
 @pytest.mark.parametrize("entity_type, provided_categories, expected_entity_types", [
-     ('commission', ['should'], {'commission'}),
-     (None, None, {'commission', 'decommission'})
+    ('commission', ['should'], {'commission'}),
+    (None, None, {'commission', 'decommission'})
 ])
 def test_spike_get_rules_calls_spike_create_rules_dict_with_correct_parameters(mocker: MockerFixture, entity_type, provided_categories, expected_entity_types):
     if entity_type is None:
@@ -306,7 +306,7 @@ def test_spike_get_rules_calls_spike_create_rules_dict_with_correct_parameters(m
     mock_spike_create_rules_dict = mocker.patch('app.services.rule_service.spike_create_rules_dict')
     mock_spike_create_rules_dict.return_value = expected_result
     mock_engine = MagicMock()
-    mock_engine.get_spike_stored_rules.return_value = stored_rules   
+    mock_engine.get_spike_stored_rules.return_value = stored_rules
 
     rule_service = RuleService()
     rule_service.spike_engine = mock_engine
@@ -315,3 +315,43 @@ def test_spike_get_rules_calls_spike_create_rules_dict_with_correct_parameters(m
 
     mock_spike_create_rules_dict.assert_called_with(stored_rules, expected_provided_categories_set, expected_entity_types)
     assert result == expected_result
+
+
+def test_add_category_success(rule_service):
+    """Test successfully adding a category to a rule"""
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type = MagicMock()
+    mock_rule = MagicMock()
+    mock_rule.categories = ["existing_category"]
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.return_value = mock_rule
+
+    rule_service._add_category("device", "Test Rule", "new_category")
+
+    assert "new_category" in mock_rule.categories
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.assert_called_once_with("Test Rule", "device")
+
+
+def test_add_category_already_exists(rule_service):
+    """Test adding a category that already exists"""
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type = MagicMock()
+    mock_rule = MagicMock()
+    existing_category = "Should Run"
+    entity_type = "Commission Request"
+    rule_name = "Test Rule"
+    mock_rule.categories = [existing_category]
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.return_value = mock_rule
+
+    rule_service._add_category(entity_type, rule_name, existing_category)
+
+    assert mock_rule.categories == [existing_category]
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.assert_called_once_with(rule_name, entity_type)
+
+
+def test_add_category_rule_not_found(rule_service):
+    """Test adding a category when the rule is not found"""
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type = MagicMock()
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.return_value = None
+
+    with pytest.raises(ValueError, match="Rule 'Test Rule' not found for entity type 'device'."):
+        rule_service._add_category("device", "Test Rule", "new_category")
+
+    rule_service.spike_engine.get_spike_stored_rule_by_name_and_entity_type.assert_called_once_with("Test Rule", "device")
