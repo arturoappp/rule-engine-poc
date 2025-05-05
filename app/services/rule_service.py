@@ -700,32 +700,18 @@ class RuleService:
         try:
             if category_action == "add":
                 self._add_categories(entity_type, rule_name, categories)
-            # elif category_action == "remove":
-            #     # Remove the category from the rule
-            #     self._remove_category(rule_name, entity_type, category)
+            elif category_action == "remove":
+                self._remove_categories(rule_name, entity_type, categories)
 
             return True, f"Successfully updated categories {categories}, for {entity_type} rule {rule_name}"
         except Exception as e:
             logger.error("Error updating rule categories: %s", e)
             return False, f"Error updating rule categories: {str(e)}"
 
-    def _remove_category(self, rule_name, entity_type, category):
-        self.engine.rules_by_entity[entity_type]["rules"] = [
-                        rule for rule in self.engine.rules_by_entity[entity_type]["rules"]
-                            if rule.get("name", "") != rule_name and category == rule.get("category", [])
-                    ]
-                                        # Remove the rule from the category
-        if category in self.engine.rules_by_entity[entity_type]["categories"]:
-            self.engine.rules_by_entity[entity_type]["categories"][category] = [
-                            rule for rule in self.engine.rules_by_entity[entity_type]["categories"][category]
-                            if rule.get("name", "") != rule_name
-                        ]
+    def _remove_categories(self, rule_name, entity_type, categories: list[str]) -> None:
+        rule_to_remove_categories_from = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type)
+        rule_to_remove_categories_from.categories = {category for category in rule_to_remove_categories_from.categories if category not in categories}
 
-    def _add_category(self, entity_type: str, rule_name: str, category: str) -> None:
-
-        rule_to_add_category_to = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type)
-        if not rule_to_add_category_to:
-            raise ValueError(f"Rule '{rule_name}' not found for entity type '{entity_type}'.")
-        else:
-            if category not in rule_to_add_category_to.categories:
-                rule_to_add_category_to.categories.append(category)
+    def _add_categories(self, entity_type: str, rule_name: str, categories: list[str]) -> None:
+        rule_to_add_categories_to = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type)
+        rule_to_add_categories_to.categories.append(categories)
