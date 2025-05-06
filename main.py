@@ -5,7 +5,7 @@ Main FastAPI application definition.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import rules, evaluate, health
+from app.api.routes import rules, evaluate, health, rule_categories
 from app.core.config import settings
 
 app = FastAPI(
@@ -30,6 +30,7 @@ app.add_middleware(
 app.include_router(health.router, prefix=settings.API_PREFIX, tags=["Health"])
 app.include_router(rules.router, prefix=settings.API_PREFIX, tags=["Rules"])
 app.include_router(evaluate.router, prefix=settings.API_PREFIX, tags=["Evaluation"])
+app.include_router(rule_categories.router, prefix=settings.API_PREFIX, tags=["Rule Categories"])
 
 
 if __name__ == "__main__":

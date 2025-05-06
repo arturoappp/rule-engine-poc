@@ -4,7 +4,7 @@ Module containing the main RuleEngine class.
 
 import json
 import logging
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional, Any
 
 from rule_engine.core.evaluator import RuleEvaluator
 from rule_engine.core.rule_result import RuleResult
@@ -240,3 +240,62 @@ class RuleEngine:
 
         # Evaluate the rules
         return RuleEvaluator.evaluate_data(data_dict, rules_to_evaluate, entity_type)
+
+    def evaluate_data_with_criteria(self, data_dict: Dict[str, Any], entity_type: str,
+                                    categories: Optional[List[str]] = None,
+                                    rule_names: Optional[List[str]] = None) -> List[RuleResult]:
+        """
+        Evaluate data against rules filtered by categories and/or rule names.
+
+        Args:
+            data_dict: Data to evaluate
+            entity_type: Entity type
+            categories: Optional list of categories to filter rules
+            rule_names: Optional list of rule names to filter rules
+        """
+
+        # If there are no rules for this entity type, return an empty list
+        if entity_type not in self.get_entity_types():
+            logger.warning(f"No rules for entity type: {entity_type}")
+            return []
+
+        # Rules to evaluate
+        rules_to_evaluate = []
+
+        # If we have rule names, search for them in all categories
+        if rule_names:
+            all_categories = self.get_categories(entity_type)
+            for category in all_categories:
+                category_rules = self.get_rules_by_category(entity_type, category)
+                for rule in category_rules:
+                    if rule.get("name") in rule_names and rule not in rules_to_evaluate:
+                        rules_to_evaluate.append(rule)
+
+        # If we have categories, add all rules from those categories
+        if categories:
+            for category in categories:
+                category_rules = self.get_rules_by_category(entity_type, category)
+                for rule in category_rules:
+                    if rule not in rules_to_evaluate:
+                        rules_to_evaluate.append(rule)
+
+        # If no rules to evaluate, return empty list
+        if not rules_to_evaluate:
+            logger.warning(f"No rules found for the specified criteria")
+            return []
+
+        rules_without_duplicates = self.remove_duplicates_by_name(rules_to_evaluate)
+
+        # Evaluate with the filtered rules
+        return RuleEvaluator.evaluate_data(data_dict, rules_without_duplicates, entity_type)
+
+    def remove_duplicates_by_name(self, rules_list):
+        unique_rules = {}
+
+        for rule in rules_list:
+            rule_name = rule.get('name')
+            if rule_name not in unique_rules:
+                unique_rules[rule_name] = rule
+
+        # Convertir el diccionario de reglas únicas de vuelta a una lista
+        return list(unique_rules.values())

@@ -420,7 +420,7 @@ class RuleService:
                 all_categories_to_include = {}
                 # append any existing categories to the rule.categories list
                 if existing_categories:
-                    all_categories_to_include = set(existing_categories + rule.add_to_categories)
+                    all_categories_to_include = existing_categories.union(rule.add_to_categories)
                 else:
                     all_categories_to_include = set(rule.add_to_categories)
 
@@ -480,7 +480,7 @@ class RuleService:
         return rules_dict
 
     def evaluate_data(self, data: Dict[str, Any], entity_type: str, categories: Optional[List[str]] = None) -> List[
-            RuleResult]:
+        RuleResult]:
         """
         Evaluate data against rules.
 
@@ -497,6 +497,37 @@ class RuleService:
         except Exception as e:
             logger.error(f"Error evaluating data: {e}")
             raise
+
+    def evaluate_data_with_criteria(self, data: Dict[str, Any], entity_type: str,
+                                    categories: Optional[List[str]] = None,
+                                    rule_names: Optional[List[str]] = None) -> List[RuleResult]:
+        """
+        Evaluate data against rules filtered by categories and/or rule names.
+
+        Args:
+            data: Data to evaluate
+            entity_type: Entity type
+            categories: Optional list of categories to filter rules
+            rule_names: Optional list of rule names to filter rules
+
+        Returns:
+            List of evaluation results
+        """
+        try:
+            # Convert the data to a dictionary if it's a string
+            data_dict = json.loads(data) if isinstance(data, str) else data
+        except json.JSONDecodeError as e:
+            logger.error(f"Error decoding JSON data: {e}")
+            raise
+
+        # Call the RuleEngine method that contains the filtering logic
+        return self.engine.evaluate_data_with_criteria(
+            data_dict=data_dict,
+            entity_type=entity_type,
+            categories=categories,
+            rule_names=rule_names
+        )
+
 
     def evaluate_with_rules(self, data: Dict[str, Any], entity_type: str, rules: List[APIRule]) -> List[RuleResult]:
         """
@@ -685,3 +716,43 @@ class RuleService:
         }
 
         return rule_analysis
+
+    def update_rule_categories(self, rule_name: str, entity_type: str, categories: List[str], category_action: str) -> Tuple[bool, str]:
+        """This method allows adding or removing categories associated with a rule
+        for a given entity type. The action to perform is determined by the
+        `category_action` parameter.
+        Args:
+            rule_name (str): The name of the rule to update.
+            entity_type (str): The type of entity associated with the rule.
+            categories (List[str]): A list of category names to add or remove.
+            category_action (str): The action to perform, either "add" or "remove".
+        Returns:
+            Tuple[bool, str]: A tuple containing a boolean indicating success or failure,
+            and a message providing additional context about the operation.
+        Raises:
+            Exception: If an unexpected error occurs during the update process.
+        Notes:
+            - If `category_action` is not "add" or "remove", the method will return
+              a failure message without performing any updates.
+        """
+        try:
+            if category_action == "add":
+                self._add_categories(entity_type, rule_name, categories)
+            elif category_action == "remove":
+                self._remove_categories(rule_name, entity_type, categories)
+            else:
+                return False, f"Invalid category action: {category_action}. Must be either 'add' or 'remove'"
+
+            return True, f"Successfully updated categories {categories}, for {entity_type} rule {rule_name}"
+        except Exception as e:
+            logger.error("Error updating rule categories: %s", e)
+            return False, f"Error updating rule categories: {str(e)}"
+
+    def _add_categories(self, entity_type: str, rule_name: str, categories: list[str]) -> None:
+        rule_to_add_categories_to = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type)
+        categories_set = set(categories)
+        rule_to_add_categories_to.categories = set(rule_to_add_categories_to.categories).union(categories_set)
+
+    def _remove_categories(self, rule_name, entity_type, categories: list[str]) -> None:
+        rule_to_remove_categories_from = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type)
+        rule_to_remove_categories_from.categories = {category for category in rule_to_remove_categories_from.categories if category not in categories}

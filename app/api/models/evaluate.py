@@ -2,7 +2,7 @@
 API models for data evaluation.
 """
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from typing import Dict, List, Any, Optional
 
 from app.api.models.rules import Rule
@@ -13,6 +13,7 @@ class EvaluationRequest(BaseModel):
     data: Dict[str, Any]
     entity_type: str
     categories: Optional[List[str]] = None
+    rule_names: Optional[List[str]] = None
 
     model_config = {
         "json_schema_extra": {
@@ -33,6 +34,13 @@ class EvaluationRequest(BaseModel):
             ]
         }
     }
+
+    @model_validator(mode='after')
+    def validate_filtering_criteria(self):
+        """Ensure at least one filtering criteria is provided."""
+        if self.categories is None and self.rule_names is None:
+            raise ValueError("At least one of 'categories' or 'rule_names' must be provided")
+        return self
 
 
 class EvaluationWithRulesRequest(BaseModel):
@@ -96,6 +104,7 @@ class EvaluationResponse(BaseModel):
     """Response model for evaluation requests."""
     entity_type: str
     categories: Optional[List[str]] = None
+    rule_names: Optional[List[str]] = None
     total_rules: int
     passed_rules: int
     failed_rules: int
