@@ -521,6 +521,9 @@ class RuleService:
             raise
 
         # Call the RuleEngine method that contains the filtering logic
+        return self.spike_engine.evaluate_data_with_criteria(
+
+        
         return self.engine.evaluate_data_with_criteria(
             data_dict=data_dict,
             entity_type=entity_type,

@@ -1,5 +1,11 @@
-from typing import Optional
+from typing import Any, Optional
 from app.api.models.rules import SpikeRule, SpikeStoredRule
+from rule_engine.core.evaluator import RuleEvaluator
+from rule_engine.core.rule_result import RuleResult
+import logging
+
+# Logging configuration
+logger = logging.getLogger(__name__)
 
 
 class SpikeRuleEngine:
@@ -68,3 +74,66 @@ class SpikeRuleEngine:
         if stored_rules is None:
             return []
         return stored_rules
+
+    def evaluate_data_with_criteria(self, data_dict: dict[str, Any], entity_type: str,
+                                    categories: Optional[list[str]] = None,
+                                    rule_names: Optional[list[str]] = None) -> list[RuleResult]:
+        """
+        Evaluate data against rules filtered by categories and/or rule names.
+
+        Args:
+            data_dict: Data to evaluate
+            entity_type: Entity type
+            categories: Optional list of categories to filter rules
+            rule_names: Optional list of rule names to filter rules
+        """
+
+        if not self.rule_exists(entity_type):
+            logger.warning(f"No rules for entity type: {entity_type}")
+            return []
+
+        # Rules to evaluate
+        rules_to_evaluate = {}
+
+        # If we have rule names, search for them in the specified entity type
+        if rule_names:
+            for rule_name in rule_names:
+                try:
+                    rule = self.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type)
+                    rules_to_evaluate.update(rule)
+                except ValueError as e:
+                    logger.warning(f"Rule not found: {e}")
+
+        # If categories is not None, get all rules for the entity type and filter by categories
+        if categories is not None:
+            for category in categories:
+                category_rules = self.get_spike_stored_rules(entity_type, [category])
+                for rule in category_rules:
+                    if rule.rule_name in rule_names:
+                        rules_to_evaluate.update(rule)
+
+        # If we have rule names, search for them in all categories
+
+        # if rule_names:
+        #     all_categories = self.get_categories(entity_type)
+        #     for category in all_categories:
+        #         category_rules = self.get_rules_by_category(entity_type, category)
+        #         for rule in category_rules:
+        #             if rule.get("name") in rule_names and rule not in rules_to_evaluate:
+        #                 rules_to_evaluate.append(rule)
+
+        # If we have categories, add all rules from those categories
+        # if categories:
+        #     for category in categories:
+        #         category_rules = self.get_rules_by_category(entity_type, category)
+        #         for rule in category_rules:
+        #             if rule not in rules_to_evaluate:
+        #                 rules_to_evaluate.append(rule)
+
+        # If no rules to evaluate, return empty list
+        if not rules_to_evaluate:
+            logger.warning(f"No rules found for the specified criteria")
+            return []
+
+        # Evaluate with the filtered rules
+        return RuleEvaluator.evaluate_data(data_dict, rules_to_evaluate, entity_type)
