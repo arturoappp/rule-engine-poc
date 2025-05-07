@@ -11,7 +11,6 @@ def client():
     return TestClient(app)
 
 
-# Test para el endpoint de validación de reglas
 def test_validate_rule_endpoint(client):
     """Test the rule validation endpoint"""
     # Create a valid rule
@@ -36,7 +35,6 @@ def test_validate_rule_endpoint(client):
     assert data["errors"] is None
 
 
-# Test para el endpoint de almacenamiento de reglas
 def test_store_rules_endpoint(client):
     """Test the store rules endpoint"""
     # Create request data
@@ -96,10 +94,9 @@ def test_spike_store_rules_endpoint(client):
     assert data["stored_rules"] == 1
 
 
-# Test para el endpoint de listado de reglas - CORREGIDO
 def test_list_rules_endpoint(client):
     """Test the list rules endpoint"""
-    # Guardar una regla
+    # Save a rule
     store_data = {
         "entity_type": "device",
         "default_category": "default",
@@ -118,16 +115,16 @@ def test_list_rules_endpoint(client):
     }
     client.post("/api/v1/rules", json=store_data)
 
-    # Ahora obtener la lista de reglas
+    # Now get the list of rules
     response = client.get("/api/v1/rules")
 
-    # Verificar resultado
+    # Verify result
     assert response.status_code == 200
     data = response.json()
     assert "entity_types" in data
     assert "rules" in data
 
-    # Verificar si nuestra regla está en la respuesta
+    # Verify if our rule is in the response
     found = False
     for entity_type, categories in data["rules"].items():
         if entity_type == "device":
@@ -135,18 +132,18 @@ def test_list_rules_endpoint(client):
                 for rule in rules:
                     if rule["name"] == "List Test Rule":
                         found = True
-                        # El campo podría ser 'categories' o 'add_to_categories'
-                        # Verificamos cuál existe y luego su contenido
+                        # The field could be 'categories' or 'add_to_categories'
+                        # We check which exists and then its content
                         categories_field = None
                         if "categories" in rule:
                             categories_field = "categories"
                         elif "add_to_categories" in rule:
                             categories_field = "add_to_categories"
 
-                        # Verificar que hay un campo con las categorías
+                        # Verify there is a field with categories
                         assert categories_field is not None, "No categories field found in rule"
 
-                        # Verificar que la categoría default está presente
+                        # Verify the default category is present
                         assert "default" in rule[categories_field], f"Default category not found in {categories_field}"
 
     assert found, "Added rule not found in list response"
@@ -154,7 +151,7 @@ def test_list_rules_endpoint(client):
 
 def test_spike_list_rules_endpoint(client):
     """Test the list rules endpoint"""
-    # Guardar una regla
+    # Save a rule
     store_data = {
         "entity_type": "device",
         "default_category": "default",
@@ -173,16 +170,16 @@ def test_spike_list_rules_endpoint(client):
     }
     client.post("/api/v1/spike-rules", json=store_data)
 
-    # Ahora obtener la lista de reglas
+    # Now get the list of rules
     response = client.get("/api/v1/spike-rules")
 
-    # Verificar resultado
+    # Verify result
     assert response.status_code == 200
     data = response.json()
     assert "entity_types" in data
     assert "rules" in data
 
-    # Verificar si nuestra regla está en la respuesta
+    # Verify if our rule is in the response
     found = False
     for entity_type, categories in data["rules"].items():
         if entity_type == "device":
@@ -194,10 +191,9 @@ def test_spike_list_rules_endpoint(client):
     assert found, "Added rule not found in list response"
 
 
-# Test for rule overwriting functionality - FIXED
 def test_rule_overwrite_functionality(client):
     """Test the rule overwriting functionality"""
-    # Preparar datos iniciales
+    # Prepare initial data
     initial_data = {
         "entity_type": "NDC_Request",
         "default_category": "default",
@@ -210,13 +206,13 @@ def test_rule_overwrite_functionality(client):
                     "operator": "exists",
                     "value": True
                 },
-                "categories": ["default"]  # Cambiado para probar con categorías que sabemos que funcionan
+                "categories": ["default"]  # Changed to test with categories we know work
             }
         ]
     }
     client.post("/api/v1/rules", json=initial_data)
 
-    # Ahora guardar una versión actualizada con el mismo nombre
+    # Now save an updated version with the same name
     updated_data = {
         "entity_type": "NDC_Request",
         "default_category": "default",
@@ -229,21 +225,21 @@ def test_rule_overwrite_functionality(client):
                     "operator": "match",
                     "value": "^192\\.168\\..*$"
                 },
-                "categories": ["default"]  # Usar la misma categoría para verificar sobreescritura
+                "categories": ["default"]  # Use the same category to verify overwriting
             }
         ]
     }
     response = client.post("/api/v1/rules", json=updated_data)
     assert response.status_code == 200
 
-    # Obtener la lista de reglas y verificar si la regla fue sobreescrita correctamente
+    # Get the list of rules and verify if the rule was correctly overwritten
     list_response = client.get("/api/v1/rules")
     data = list_response.json()
 
-    # Buscar la regla en las categorías
+    # Look for the rule in categories
     rule_found = None
 
-    # Buscar en todas las entidades y categorías
+    # Search in all entities and categories
     for entity_type, categories in data["rules"].items():
         if entity_type == "NDC_Request":
             for category, rules in categories.items():
@@ -252,7 +248,7 @@ def test_rule_overwrite_functionality(client):
                         if category == "default":
                             rule_found = rule
 
-    # Verificar que la regla existe y ha sido actualizada
+    # Verify the rule exists and has been updated
     assert rule_found is not None, "Rule not found in default category"
     assert rule_found["description"] == "Updated version"
     assert rule_found["conditions"]["operator"] == "match"
@@ -261,7 +257,7 @@ def test_rule_overwrite_functionality(client):
 
 def test_spike_rule_overwrite_functionality(client):
     """Test the rule overwriting functionality"""
-    # Preparar datos iniciales
+    # Prepare initial data
     initial_data = {
         "entity_type": "NDC_Request",
         "rules": [
@@ -273,13 +269,13 @@ def test_spike_rule_overwrite_functionality(client):
                     "operator": "exists",
                     "value": True
                 },
-                "add_to_categories": ["default"]  # Cambiado para probar con categorías que sabemos que funcionan
+                "add_to_categories": ["default"]  # Changed to test with categories we know work
             }
         ]
     }
     client.post("/api/v1/spike-rules", json=initial_data)
 
-    # Ahora guardar una versión actualizada con el mismo nombre
+    # Now save an updated version with the same name
     updated_data = {
         "entity_type": "NDC_Request",
         "rules": [
@@ -291,21 +287,21 @@ def test_spike_rule_overwrite_functionality(client):
                     "operator": "match",
                     "value": "^192\\.168\\..*$"
                 },
-                "add_to_categories": ["default"]  # Usar la misma categoría para verificar sobreescritura
+                "add_to_categories": ["default"]  # Use the same category to verify overwriting
             }
         ]
     }
     response = client.post("/api/v1/spike-rules", json=updated_data)
     assert response.status_code == 200
 
-    # Obtener la lista de reglas y verificar si la regla fue sobreescrita correctamente
+    # Get the list of rules and verify if the rule was correctly overwritten
     list_response = client.get("/api/v1/spike-rules")
     data = list_response.json()
 
-    # Buscar la regla en las categorías
+    # Look for the rule in categories
     rule_found = None
 
-    # Buscar en todas las entidades y categorías
+    # Search in all entities and categories
     for entity_type, categories in data["rules"].items():
         if entity_type == "NDC_Request":
             for category, rules in categories.items():
@@ -314,7 +310,7 @@ def test_spike_rule_overwrite_functionality(client):
                         if rule["description"] == "Updated version":
                             rule_found = rule
 
-    # Verificar que la regla existe y ha sido actualizada
+    # Verify the rule exists and has been updated
     assert rule_found is not None, "Rule not found in default category"
     assert rule_found["description"] == "Updated version"
     assert rule_found["conditions"]["operator"] == "match"

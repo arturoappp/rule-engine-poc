@@ -1,28 +1,23 @@
-import http
-
-from fastapi import requests
-
-import logging
-import os
 import sys
 import threading
 from importlib.util import find_spec
 
+import logging
+from app.core.config import settings
 
-
-INFLUXDB_URL = os.environ["INFLUXDB_URL"]
-
+# Datadog integration
 BASE_LOGGING_ATTRS = '%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] [function=%(funcName)s] [thread=%(threadName)s]'
 DD_ENABLED = bool(getattr(find_spec('ddtrace'), "loader", None))
 DD_LOGGING_ATTRS = '[dd.service=%(dd.service)s dd.env=%(dd.env)s dd.version=%(dd.version)s dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s]'
 
-_LOGGERS_CONTEXT_DATA = {"rule-engine-api": ["ritm", "sctask", "device"]}
+_LOGGERS_CONTEXT_DATA = {"rule-engine-api": ["entity_type", "rule_name", "category"]}
 
 
 class ArgsFilter(logging.Filter):
     """
     Filter to clean up the interpolated variables (args) that are passed to the log message with lazy formatting
     """
+
     def filter(self, record):
         cleaned_args: tuple[str] | dict[str, str] = None
         if isinstance(record.args, tuple):
@@ -52,74 +47,54 @@ class NDCLoggerAdapter(logging.LoggerAdapter):
 class NDCLoggerParams(threading.local):
     """
     Hold default parameters for the logger. Parameters are local to the current thread so every
-    thread should set its own parameters. The dimensions property holds parameters that should
-    be added to the custom_dimensions in AppInsights but not to the log messages.
+    thread should set its own parameters.
     """
 
-    def __init__(self, ritm=None, task=None, device=None) -> None:
+    def __init__(self, entity_type=None, rule_name=None, category=None) -> None:
         super().__init__()
-        self.set(ritm, task)
+        self.set(entity_type, rule_name, category)
 
     @staticmethod
     def _get_valid(a_dict):
         return {name: value or '' for name, value in a_dict.items()}
 
-    def set(self, ritm=None, task=None, device=None):
+    def set(self, entity_type=None, rule_name=None, category=None):
+        # Parameters specific for rule engine
         self._params = {
-            "ritm": ritm,
-            "sctask": task,
-            "device": device
+            "entity_type": entity_type,
+            "rule_name": rule_name,
+            "category": category
         }
 
     def get_valid_params(self):
         return self._get_valid(self._params)
 
 
-class InfluxHandler(logging.Handler):
-    def emit(self, record):
-        log_entry = self.format(record)
-        # send_to_influx('ndc_log', log_entry.strip(), {'level': record.levelname})
-
-
-def send_to_influx(measurement, value, keys=None):
-    try:
-        data_to_write = f'{measurement}'
-        if keys:
-            keys = ['{}={}'.format(key, item.replace(" ", "\\ ")) if isinstance(item, str) else '{}={}'.format(key, item) for key, item in keys.items()]
-            data_to_write += f",{','.join(keys)}"
-        data_to_write += ' value="{}"'.format(value.replace("\"", r"\"")) if isinstance(value, str) else ' value="{}"'.format(value)
-        resp = requests.post(INFLUXDB_URL + 'write?db=ndc', data=data_to_write.encode(), verify=False, timeout=10)
-        if resp.status_code != http.HTTPStatus.NO_CONTENT:
-            raise Exception
-    except Exception as _:
-        logger.debug(f'Could not send data to influxdb. {value}')
-
-
-def init_logging(flask_app):
+def init_logging():
     """
-    Init all logging configuration.
+    Initialize logging configuration for FastAPI application.
     """
+    main_loggers = ["rule-engine-api"]
+    loggers = [*main_loggers]
 
-    main_loggers = ["ndc-api", "emsnow", "werkzeug"]
-    tasks_loggers = [t for t in os.listdir(os.path.realpath("app/tasks")) if not t.startswith("__") and os.path.isdir(os.path.abspath(f"app/tasks/{t}"))]
-    loggers = [*main_loggers, *tasks_loggers]
     for logger_name in loggers:
-        logger = logging.getLogger(logger_name)
+        log = logging.getLogger(logger_name)
         ch = logging.StreamHandler(sys.stdout)
-        # We set DEBUG for the NDC logger and for tasks loggers if app is running in production
-        level = logging.DEBUG if "ndc" in logger_name or (os.environ["FLASK_ENV"] != "production" and logger_name in tasks_loggers) else logging.INFO
+
+        # Set log level based on environment
+        env = settings.ENVIRONMENT
+        level = logging.DEBUG if env != "production" else logging.INFO
 
         context_data = _LOGGERS_CONTEXT_DATA.get(logger_name, None)
-        logger.handlers.clear()
-        logger.setLevel(level)
+        log.handlers.clear()
+        log.setLevel(level)
         configure_handler(ch, level, context_data)
-        logger.addHandler(ch)
+        log.addHandler(ch)
         f = ArgsFilter()
-        logger.addFilter(f)
+        log.addFilter(f)
 
 
 def configure_handler(handler, level: int, context_data: list[str]) -> None:
-
     format_elements = [BASE_LOGGING_ATTRS, "- %(message)s"]
 
     if DD_ENABLED:
@@ -138,5 +113,6 @@ def clean_line_breaks(string: str) -> str:
     return string.replace("\n", "").replace("\r", "").strip() if isinstance(string, str) else string
 
 
-ndc_logger = logging.getLogger("ndc-api")
-logger = NDCLoggerAdapter(ndc_logger)
+# Configure the logger
+rule_engine_logger = logging.getLogger("rule-engine-api")
+logger = NDCLoggerAdapter(rule_engine_logger)
