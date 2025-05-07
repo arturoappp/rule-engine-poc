@@ -3,21 +3,22 @@ Tests for the role_device operator in the rule engine using pytest.
 """
 
 import pytest
-from rule_engine.core.engine import RuleEngine
+from app.services.spike_rule_engine import SpikeRuleEngine
+from app.api.models.rules import SpikeRule
 
 
 @pytest.fixture
 def rule_engine():
-    """Create a RuleEngine instance with rules for testing the role_device operator."""
-    engine = RuleEngine()
+    """Create a SpikeRuleEngine instance with rules for testing the role_device operator."""
+    engine = SpikeRuleEngine.get_instance()
 
     # Load rules for testing the role_device operator
-    role_device_rule = """
-    [
-        {
-            "name": "Standalone Device Rule",
-            "description": "Checks if the device is a standalone device",
-            "conditions": {
+    role_device_rules = [
+        SpikeRule(
+            name="Standalone Device Rule",
+            entity_type="device",
+            description="Checks if the device is a standalone device",
+            conditions={
                 "all": [
                     {
                         "path": "$.devices[*].hostname",
@@ -26,11 +27,12 @@ def rule_engine():
                     }
                 ]
             }
-        },
-        {
-            "name": "Primary Device Rule",
-            "description": "Checks if the device is a primary device",
-            "conditions": {
+        ),
+        SpikeRule(
+            name="Primary Device Rule",
+            entity_type="device",
+            description="Checks if the device is a primary device",
+            conditions={
                 "all": [
                     {
                         "path": "$.devices[*].hostname",
@@ -39,11 +41,12 @@ def rule_engine():
                     }
                 ]
             }
-        },
-        {
-            "name": "Secondary Device Rule",
-            "description": "Checks if the device is a secondary device",
-            "conditions": {
+        ),
+        SpikeRule(
+            name="Secondary Device Rule",
+            entity_type="device",
+            description="Checks if the device is a secondary device",
+            conditions={
                 "all": [
                     {
                         "path": "$.devices[*].hostname",
@@ -52,11 +55,10 @@ def rule_engine():
                     }
                 ]
             }
-        }
+        )
     ]
-    """
-    engine.load_rules_from_json(role_device_rule, entity_type="device", category="role")
 
+    engine.add_rules(role_device_rules)
     return engine
 
 
@@ -69,7 +71,7 @@ def test_standalone_device(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="device", categories=["role"])
+    results = rule_engine.evaluate_data(data, entity_type="device")
     rule_result = next((r for r in results if r.rule_name == "Standalone Device Rule"), None)
 
     assert rule_result is not None
@@ -82,7 +84,7 @@ def test_standalone_device(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="device", categories=["role"])
+    results = rule_engine.evaluate_data(data, entity_type="device")
     rule_result = next((r for r in results if r.rule_name == "Standalone Device Rule"), None)
 
     assert rule_result is not None
@@ -98,7 +100,7 @@ def test_primary_device(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="device", categories=["role"])
+    results = rule_engine.evaluate_data(data, entity_type="device")
     rule_result = next((r for r in results if r.rule_name == "Primary Device Rule"), None)
 
     assert rule_result is not None
@@ -111,7 +113,7 @@ def test_primary_device(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="device", categories=["role"])
+    results = rule_engine.evaluate_data(data, entity_type="device")
     rule_result = next((r for r in results if r.rule_name == "Primary Device Rule"), None)
 
     assert rule_result is not None
@@ -127,7 +129,7 @@ def test_secondary_device(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="device", categories=["role"])
+    results = rule_engine.evaluate_data(data, entity_type="device")
     rule_result = next((r for r in results if r.rule_name == "Secondary Device Rule"), None)
 
     assert rule_result is not None
@@ -140,7 +142,7 @@ def test_secondary_device(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="device", categories=["role"])
+    results = rule_engine.evaluate_data(data, entity_type="device")
     rule_result = next((r for r in results if r.rule_name == "Secondary Device Rule"), None)
 
     assert rule_result is not None
@@ -157,7 +159,7 @@ def test_invalid_hostname_format(rule_engine):
 
     # The operator should handle invalid formats gracefully
     # We expect all rules to fail in this case
-    results = rule_engine.evaluate_data(data, entity_type="device", categories=["role"])
+    results = rule_engine.evaluate_data(data, entity_type="device")
 
     for rule_result in results:
         assert not rule_result.success
@@ -174,7 +176,7 @@ def test_multiple_devices(rule_engine):
     }
 
     # Test standalone rule
-    results = rule_engine.evaluate_data(data, entity_type="device", categories=["role"])
+    results = rule_engine.evaluate_data(data, entity_type="device")
     standalone_rule = next((r for r in results if r.rule_name == "Standalone Device Rule"), None)
 
     assert standalone_rule is not None
