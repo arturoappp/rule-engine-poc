@@ -85,7 +85,7 @@ class SpikeRuleEngine:
 
     # get all rules, but if entity type is not none, get only rules for entity_type, and if category is not none, get only rules for entity_type and category
     def get_spike_stored_rules(self, entity_type: Optional[str] = None, categories: Optional[list[str]] = None) -> list[
-        SpikeStoredRule]:
+            SpikeStoredRule]:
         # Set context for logging
         logger.params.set(
             entity_type=entity_type,

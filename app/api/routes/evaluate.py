@@ -38,7 +38,8 @@ async def evaluate_data(request: EvaluationRequest, service: RuleService = Depen
         category=categories_str
     )
 
-    logger.info(f"Evaluating data for entity_type={request.entity_type}, categories={categories_str}, rule_names={rule_names_str}")
+    logger.info(
+        f"Evaluating data for entity_type={request.entity_type}, categories={categories_str}, rule_names={rule_names_str}")
 
     try:
         # Validate that at least one filtering criteria is present
@@ -96,7 +97,8 @@ async def evaluate_data(request: EvaluationRequest, service: RuleService = Depen
             if result.success:
                 passed_count += 1
 
-        logger.info(f"Evaluation completed: {len(results)} rules processed, {passed_count} passed, {len(results) - passed_count} failed")
+        logger.info(
+            f"Evaluation completed: {len(results)} rules processed, {passed_count} passed, {len(results) - passed_count} failed")
 
         return {
             "entity_type": request.entity_type,
@@ -157,7 +159,8 @@ async def evaluate_with_rules(request: EvaluationWithRulesRequest, service: Rule
             if result.success:
                 passed_count += 1
 
-        logger.info(f"Evaluation with provided rules completed: {len(results)} rules processed, {passed_count} passed, {len(results) - passed_count} failed")
+        logger.info(
+            f"Evaluation with provided rules completed: {len(results)} rules processed, {passed_count} passed, {len(results) - passed_count} failed")
 
         return {
             "entity_type": request.entity_type,
@@ -189,13 +192,14 @@ async def get_evaluation_stats(service: RuleService = Depends(get_rule_service))
 
 @router.get("/evaluate/failure-details/{rule_name}", response_model=Dict[str, Any])
 async def get_rule_failure_details(
-    rule_name: str,
-    entity_type: Optional[str] = None,
-    service: RuleService = Depends(get_rule_service)
+        rule_name: str,
+        entity_type: Optional[str] = None,
+        service: RuleService = Depends(get_rule_service)
 ):
     """Get detailed information about failures for a specific rule."""
     logger.params.set(rule_name=rule_name, entity_type=entity_type)
-    logger.info(f"Getting failure details for rule '{rule_name}'{f', entity_type={entity_type}' if entity_type else ''}")
+    logger.info(
+        f"Getting failure details for rule '{rule_name}'{f', entity_type={entity_type}' if entity_type else ''}")
 
     details = service.get_rule_failure_details(rule_name, entity_type)
 

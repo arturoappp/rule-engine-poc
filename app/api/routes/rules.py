@@ -101,7 +101,8 @@ async def spike_store_rules(request: SpikeRuleStoreRequest, service: RuleService
 
 
 @router.get("/rules", response_model=RuleListResponse, response_model_exclude_none=True)
-async def list_rules(rule_list_request: Annotated[RuleListRequest, Query()], service: RuleService = Depends(get_rule_service)):
+async def list_rules(rule_list_request: Annotated[RuleListRequest, Query()],
+                     service: RuleService = Depends(get_rule_service)):
     """List all rules in the engine."""
     entity_type = rule_list_request.entity_type
     category = rule_list_request.category
@@ -128,7 +129,8 @@ async def list_rules(rule_list_request: Annotated[RuleListRequest, Query()], ser
 
 
 @router.get("/spike-rules", response_model=SpikeRuleListResponse, response_model_exclude_none=True)
-async def spike_list_rules(rule_list_request: Annotated[SpikeRuleListRequest, Query()], service: RuleService = Depends(get_rule_service)):
+async def spike_list_rules(rule_list_request: Annotated[SpikeRuleListRequest, Query()],
+                           service: RuleService = Depends(get_rule_service)):
     """List all rules in the engine."""
     entity_type = rule_list_request.entity_type
     categories = rule_list_request.categories
