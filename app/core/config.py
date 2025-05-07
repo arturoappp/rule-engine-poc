@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     VERSION: str = "1.0.0"
     API_PREFIX: str = "/api/v1"
     PORT: int = int("8080")
+    ENVIRONMENT: str = "development"
 
     # CORS settings
     ALLOWED_ORIGINS: List[str] = Field(default_factory=lambda: ["*"])
