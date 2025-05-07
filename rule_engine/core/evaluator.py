@@ -3,7 +3,6 @@ Module containing the rule evaluation logic.
 """
 
 import logging
-from typing import Dict, List, Tuple
 
 from app.api.models.rules import SpikeStoredRule
 from rule_engine.conditions.conditions_factory import ConditionFactory
@@ -17,7 +16,7 @@ class RuleEvaluator:
     """Class responsible for evaluating rules against data."""
 
     @staticmethod
-    def evaluate_rule_for_entities(entities: List[Dict], stored_rule: SpikeStoredRule) -> Tuple[bool, List[Dict], List[FailureInfo]]:
+    def evaluate_rule_for_entities(entities: list[dict], stored_rule: SpikeStoredRule) -> tuple[bool, list[dict], list[FailureInfo]]:
         """
         Evaluate a rule for a list of entities.
 
@@ -53,7 +52,7 @@ class RuleEvaluator:
         return success, failing_entities, all_failures
 
     @staticmethod
-    def evaluate_data(data: Dict, stored_rules: list[SpikeStoredRule], entity_type: str) -> List[RuleResult]:
+    def evaluate_data(data: dict, stored_rules: list[SpikeStoredRule], entity_type: str) -> list[RuleResult]:
         """
         Evaluate rules against the provided data.
 

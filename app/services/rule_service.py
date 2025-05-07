@@ -531,7 +531,7 @@ class RuleService:
             rule_names=rule_names
         )
 
-    def evaluate_with_rules(self, data: Dict[str, Any], entity_type: str, rules: List[APIRule]) -> List[RuleResult]:
+    def evaluate_with_rules(self, data: dict[str, Any], entity_type: str, rules: list[SpikeAPIRule]) -> list[RuleResult]:
         """
         Evaluate data against provided rules.
 
@@ -545,22 +545,32 @@ class RuleService:
         """
         try:
             # Create a temporary rule engine
-            temp_engine = RuleEngine()
+            temp_engine = SpikeRuleEngine()
+
+            # Create SpikeStoredRule from rules
+            spike_rules = [SpikeRule(
+                name=rule.name,
+                entity_type=entity_type,
+                description=rule.description,
+                conditions=rule.conditions
+            ) for rule in rules]
+
+            for spike_rule in spike_rules:
+                # Add each rule to the temporary engine
+                temp_engine.add_rule(spike_rule)
 
             # Convert rules to JSON - using model_dump for Pydantic v2
             rules_json = json.dumps([
                 rule.model_dump(by_alias=True, exclude_none=True)
-                for rule in rules
+                for rule in spike_rules
             ])
 
             # Debugging to see the JSON structure
             logger.debug(f"Rules JSON: {rules_json}")
 
-            # Load rules into engine
-            temp_engine.load_rules_from_json(rules_json, entity_type=entity_type)
-
             # Evaluate data
             return temp_engine.evaluate_data(data, entity_type=entity_type)
+
         except Exception as e:
             logger.error(f"Error evaluating data with provided rules: {e}")
             # Return an error result with more detailed failure information

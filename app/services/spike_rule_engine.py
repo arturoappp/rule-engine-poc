@@ -1,4 +1,5 @@
-from typing import Any, Optional
+import json
+from typing import Any, Optional, Union
 from app.api.models.rules import SpikeRule, SpikeStoredRule
 from rule_engine.core.evaluator import RuleEvaluator
 from rule_engine.core.rule_result import RuleResult
@@ -79,6 +80,46 @@ class SpikeRuleEngine:
             return []
         return stored_rules
 
+    def evaluate_data(self, data: Union[str, dict], entity_type: str,
+                      categories: list[str] = None) -> list[RuleResult]:
+        """
+        Evaluate rules against the provided data.
+
+        Args:
+            data: JSON string or dictionary with data to evaluate
+            entity_type: Entity type to filter rules
+            categories: Optional list of categories to evaluate. If None, evaluates all rules.
+
+        Returns:
+            List of RuleResult objects
+        """
+        try:
+            # Convert the data to a dictionary if it's a string
+            data_dict = json.loads(data) if isinstance(data, str) else data
+        except json.JSONDecodeError as e:
+            logger.error(f"Error decoding JSON data: {e}")
+            raise
+
+        # # If there are no rules for this entity type, return an empty list
+        # if entity_type not in self.rules_by_entity:
+        #     logger.warning(f"No rules for entity type: {entity_type}")
+        #     return []
+
+        # Filter rules by category if specified
+        rules_to_evaluate = []
+        if categories:
+            for category in categories:
+                rules_to_evaluate.extend(self.get_stored_rules_to_evaluate(entity_type, category))
+        else:
+            rules_to_evaluate = self.get_stored_rules_to_evaluate(entity_type)
+
+        if not rules_to_evaluate:
+            logger.warning(f"No rules to evaluate for entity type: {entity_type}")
+            return []
+
+        # Evaluate the rules
+        return RuleEvaluator.evaluate_data(data_dict, rules_to_evaluate, entity_type)
+
     def evaluate_data_with_criteria(self, data_dict: dict[str, Any], entity_type: str,
                                     categories: Optional[list[str]] = None,
                                     rule_names: Optional[list[str]] = None) -> list[RuleResult]:
@@ -102,7 +143,18 @@ class SpikeRuleEngine:
         # Evaluate with the filtered rules
         return RuleEvaluator.evaluate_data(data_dict, stored_rules_to_evaluate, entity_type)
 
-    def get_stored_rules_to_evaluate(self, entity_type, categories, rule_names):
+    def get_stored_rules_to_evaluate(self, entity_type: str, categories: Optional[list[str]] = None, rule_names: Optional[list[str]] = None) -> list[SpikeStoredRule]:
+        """
+        Retrieve rules to evaluate based on entity type, categories, and/or rule names.
+
+        Args:
+            entity_type: The entity type to filter rules.
+            categories: Optional list of categories to filter rules.
+            rule_names: Optional list of rule names to filter rules.
+
+        Returns:
+            A list of SpikeStoredRule objects to evaluate.
+        """
         rules_to_evaluate = set()
 
         if rule_names:
@@ -110,6 +162,10 @@ class SpikeRuleEngine:
             rules_to_evaluate.update(stored_rules)
 
         elif categories:
-            stored_rules = self.get_spike_stored_rules(entity_type, categories)
-            rules_to_evaluate.update(stored_rules)
-        return rules_to_evaluate
+            category_rules = self.get_spike_stored_rules(entity_type, categories)
+            rules_to_evaluate.update(category_rules)
+        else:
+            all_rules = self.get_spike_stored_rules(entity_type)
+            rules_to_evaluate.update(all_rules)
+
+        return list(rules_to_evaluate)
