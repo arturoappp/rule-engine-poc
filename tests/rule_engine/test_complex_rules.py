@@ -3,21 +3,22 @@ Tests for complex rule evaluations with nested logical operators using pytest.
 """
 
 import pytest
-from rule_engine.core.engine import RuleEngine
+from app.services.spike_rule_engine import SpikeRuleEngine
+from app.api.models.rules import SpikeRule
 
 
 @pytest.fixture
 def rule_engine():
-    """Create a RuleEngine instance with a complex rule."""
-    engine = RuleEngine()
+    """Create a SpikeRuleEngine instance with a complex rule."""
+    engine = SpikeRuleEngine.get_instance()
 
-    # Complex rule with nested conditions
-    complex_rule = """
-    [
-        {
-            "name": "Complex Device Rule",
-            "description": "Vendor must be Cisco with version 17.x, or non-Cisco with any version above 10.0",
-            "conditions": {
+    # Complex rules as SpikeRule objects
+    complex_rules = [
+        SpikeRule(
+            name="Complex Device Rule",
+            entity_type="device",
+            description="Vendor must be Cisco with version 17.x, or non-Cisco with any version above 10.0",
+            conditions={
                 "any": [
                     {
                         "all": [
@@ -29,7 +30,7 @@ def rule_engine():
                             {
                                 "path": "$.devices[*].osVersion",
                                 "operator": "match",
-                                "value": "^17\\\\."
+                                "value": "^17\\."
                             }
                         ]
                     },
@@ -43,17 +44,16 @@ def rule_engine():
                             {
                                 "path": "$.devices[*].osVersion",
                                 "operator": "match",
-                                "value": "^[1-9][0-9]\\\\."
+                                "value": "^[1-9][0-9]\\."
                             }
                         ]
                     }
                 ]
             }
-        }
+        )
     ]
-    """
-    engine.load_rules_from_json(complex_rule, entity_type="device", category="complex")
 
+    engine.add_rules(complex_rules)
     return engine
 
 
@@ -65,7 +65,7 @@ def test_complex_rule_cisco_pass(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="device", categories=["complex"])
+    results = rule_engine.evaluate_data(data, entity_type="device")
     rule_result = next((r for r in results if r.rule_name == "Complex Device Rule"), None)
 
     assert rule_result is not None
@@ -81,7 +81,7 @@ def test_complex_rule_non_cisco_pass(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="device", categories=["complex"])
+    results = rule_engine.evaluate_data(data, entity_type="device")
     rule_result = next((r for r in results if r.rule_name == "Complex Device Rule"), None)
 
     assert rule_result is not None
@@ -97,7 +97,7 @@ def test_complex_rule_cisco_fail(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="device", categories=["complex"])
+    results = rule_engine.evaluate_data(data, entity_type="device")
     rule_result = next((r for r in results if r.rule_name == "Complex Device Rule"), None)
 
     assert rule_result is not None
@@ -113,7 +113,7 @@ def test_complex_rule_non_cisco_fail(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="device", categories=["complex"])
+    results = rule_engine.evaluate_data(data, entity_type="device")
     rule_result = next((r for r in results if r.rule_name == "Complex Device Rule"), None)
 
     assert rule_result is not None
@@ -132,7 +132,7 @@ def test_complex_rule_mixed_results(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="device", categories=["complex"])
+    results = rule_engine.evaluate_data(data, entity_type="device")
     rule_result = next((r for r in results if r.rule_name == "Complex Device Rule"), None)
 
     assert rule_result is not None
