@@ -48,6 +48,10 @@ class SpikeRuleEngine:
         # Would prevent accidental overwrites
         self.spike_rule_repository[stored_rule_key] = new_spike_stored_rule
 
+    def get_spike_stored_rules_by_names_and_entity_type(self, rule_names: list[str], entity_type: str) -> SpikeStoredRule:
+        stored_rules = [self.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type) for rule_name in rule_names]
+        return stored_rules
+
     def get_spike_stored_rule_by_name_and_entity_type(self, rule_name: str, entity_type: str) -> SpikeStoredRule:
         stored_rule_key = f"{entity_type}|{rule_name}"
         if stored_rule_key in self.spike_rule_repository:
@@ -88,52 +92,24 @@ class SpikeRuleEngine:
             rule_names: Optional list of rule names to filter rules
         """
 
-        if not self.rule_exists(entity_type):
-            logger.warning(f"No rules for entity type: {entity_type}")
-            return []
-
-        # Rules to evaluate
-        rules_to_evaluate = {}
-
-        # If we have rule names, search for them in the specified entity type
-        if rule_names:
-            for rule_name in rule_names:
-                try:
-                    rule = self.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type)
-                    rules_to_evaluate.update(rule)
-                except ValueError as e:
-                    logger.warning(f"Rule not found: {e}")
-
-        # If categories is not None, get all rules for the entity type and filter by categories
-        if categories is not None:
-            for category in categories:
-                category_rules = self.get_spike_stored_rules(entity_type, [category])
-                for rule in category_rules:
-                    if rule.rule_name in rule_names:
-                        rules_to_evaluate.update(rule)
-
-        # If we have rule names, search for them in all categories
-
-        # if rule_names:
-        #     all_categories = self.get_categories(entity_type)
-        #     for category in all_categories:
-        #         category_rules = self.get_rules_by_category(entity_type, category)
-        #         for rule in category_rules:
-        #             if rule.get("name") in rule_names and rule not in rules_to_evaluate:
-        #                 rules_to_evaluate.append(rule)
-
-        # If we have categories, add all rules from those categories
-        # if categories:
-        #     for category in categories:
-        #         category_rules = self.get_rules_by_category(entity_type, category)
-        #         for rule in category_rules:
-        #             if rule not in rules_to_evaluate:
-        #                 rules_to_evaluate.append(rule)
+        stored_rules_to_evaluate = self.get_stored_rules_to_evaluate(entity_type, categories, rule_names)
 
         # If no rules to evaluate, return empty list
-        if not rules_to_evaluate:
-            logger.warning(f"No rules found for the specified criteria")
+        if not stored_rules_to_evaluate:
+            logger.warning("No rules found for the specified criteria")
             return []
 
         # Evaluate with the filtered rules
-        return RuleEvaluator.evaluate_data(data_dict, rules_to_evaluate, entity_type)
+        return RuleEvaluator.evaluate_data(data_dict, stored_rules_to_evaluate, entity_type)
+
+    def get_stored_rules_to_evaluate(self, entity_type, categories, rule_names):
+        rules_to_evaluate = set()
+
+        if rule_names:
+            stored_rules = self.get_spike_stored_rules_by_names_and_entity_type(rule_names, entity_type)
+            rules_to_evaluate.update(stored_rules)
+
+        elif categories:
+            stored_rules = self.get_spike_stored_rules(entity_type, categories)
+            rules_to_evaluate.update(stored_rules)
+        return rules_to_evaluate

@@ -3,7 +3,7 @@ Endpoints for data evaluation.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Optional, Dict, Any
+from typing import Optional, Dict, Any
 
 from app.api.models.evaluate import (
     EvaluationRequest,

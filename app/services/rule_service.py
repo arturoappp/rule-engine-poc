@@ -36,10 +36,10 @@ class RuleService:
             Tuple of (valid, errors)
         """
         errors = []
-
         # Check if conditions are valid
         try:
             # Convert to dictionary and validate - use model_dump() for Pydantic v2
+            # TODO: Find where this needs added for evaluate data, and if it needs an analagous method created
             rule_dict = rule.model_dump(by_alias=True)
 
             # Check for required fields
@@ -480,7 +480,7 @@ class RuleService:
         return rules_dict
 
     def evaluate_data(self, data: Dict[str, Any], entity_type: str, categories: Optional[List[str]] = None) -> List[
-        RuleResult]:
+            RuleResult]:
         """
         Evaluate data against rules.
 
@@ -520,17 +520,16 @@ class RuleService:
             logger.error(f"Error decoding JSON data: {e}")
             raise
 
+        if categories and rule_names:
+            raise ValueError("Cannot filter by both categories and rule names at the same time. Please provide only one of them.")
+
         # Call the RuleEngine method that contains the filtering logic
         return self.spike_engine.evaluate_data_with_criteria(
-
-        
-        return self.engine.evaluate_data_with_criteria(
             data_dict=data_dict,
             entity_type=entity_type,
             categories=categories,
             rule_names=rule_names
         )
-
 
     def evaluate_with_rules(self, data: Dict[str, Any], entity_type: str, rules: List[APIRule]) -> List[RuleResult]:
         """

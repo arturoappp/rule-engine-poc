@@ -128,6 +128,15 @@ class SpikeStoredRule(BaseModel):
     categories: set[str]
     rule: SpikeRule  # The rule itself, can be a complex structure
 
+    def __hash__(self):
+        # Use a unique combination of attributes to compute the hash
+        return hash((self.rule_name, self.entity_type))
+
+    def __eq__(self, other):
+        if not isinstance(other, SpikeStoredRule):
+            return False
+        return self.rule_name == other.rule_name and self.entity_type == other.entity_type
+
 
 class Rule(BaseModel):
     """Model for a rule."""

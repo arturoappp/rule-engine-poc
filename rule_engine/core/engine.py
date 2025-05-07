@@ -281,7 +281,7 @@ class RuleEngine:
 
         # If no rules to evaluate, return empty list
         if not rules_to_evaluate:
-            logger.warning(f"No rules found for the specified criteria")
+            logger.warning("No rules found for the specified criteria")
             return []
 
         rules_without_duplicates = self.remove_duplicates_by_name(rules_to_evaluate)
