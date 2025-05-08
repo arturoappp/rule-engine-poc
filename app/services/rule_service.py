@@ -6,6 +6,7 @@ import json
 import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
+
 from app.api.models.rules import Rule as APIRule, SpikeAPIRule, SpikeRule
 from app.services.spike_rule_engine import SpikeRuleEngine
 from app.utilities.rule_service_util import create_rules_dict, spike_create_rules_dict
@@ -405,7 +406,8 @@ class RuleService:
             for rule in rules:
                 existing_categories = []
                 if self.spike_engine.rule_exists(rule.name, entity_type):
-                    existing_stored_rule = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule.name, entity_type)
+                    existing_stored_rule = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule.name,
+                                                                                                           entity_type)
                     existing_categories = existing_stored_rule.categories
                     updated_rules += 1
                 else:
@@ -453,7 +455,8 @@ class RuleService:
 
         return rules_dict
 
-    def spike_get_rules(self, entity_type: Optional[str] = None, provided_categories: Optional[list[str]] = None) -> Dict[str, Dict[str, List[Dict]]]:
+    def spike_get_rules(self, entity_type: Optional[str] = None, provided_categories: Optional[list[str]] = None) -> \
+            Dict[str, Dict[str, List[Dict]]]:
         """
         Get all rules from the engine.
 
@@ -518,9 +521,11 @@ class RuleService:
             data_dict = json.loads(data) if isinstance(data, str) else data
         except json.JSONDecodeError as e:
             logger.error(f"Error decoding JSON data: {e}")
+            # TODO: Should a ValueError and message be included with the raise?
             raise
 
         if categories and rule_names:
+            logger.error(f"Cannot filter by both categories and rule names at the same time. Please provide only one of them.")
             raise ValueError("Cannot filter by both categories and rule names at the same time. Please provide only one of them.")
 
         # Call the RuleEngine method that contains the filtering logic
@@ -729,7 +734,8 @@ class RuleService:
 
         return rule_analysis
 
-    def update_rule_categories(self, rule_name: str, entity_type: str, categories: List[str], category_action: str) -> Tuple[bool, str]:
+    def update_rule_categories(self, rule_name: str, entity_type: str, categories: List[str], category_action: str) -> \
+            Tuple[bool, str]:
         """This method allows adding or removing categories associated with a rule
         for a given entity type. The action to perform is determined by the
         `category_action` parameter.
@@ -761,10 +767,13 @@ class RuleService:
             return False, f"Error updating rule categories: {str(e)}"
 
     def _add_categories(self, entity_type: str, rule_name: str, categories: list[str]) -> None:
-        rule_to_add_categories_to = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type)
+        rule_to_add_categories_to = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name,
+                                                                                                    entity_type)
         categories_set = set(categories)
         rule_to_add_categories_to.categories = set(rule_to_add_categories_to.categories).union(categories_set)
 
     def _remove_categories(self, rule_name, entity_type, categories: list[str]) -> None:
-        rule_to_remove_categories_from = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type)
-        rule_to_remove_categories_from.categories = {category for category in rule_to_remove_categories_from.categories if category not in categories}
+        rule_to_remove_categories_from = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name,
+                                                                                                         entity_type)
+        rule_to_remove_categories_from.categories = {category for category in rule_to_remove_categories_from.categories
+                                                     if category not in categories}
