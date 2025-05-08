@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 import pytest
 from pytest_mock import MockerFixture
-from app.api.models.rules import RuleListResponse, RuleListResponse
+from app.api.models.rules import RuleListResponse
 from app.api.routes.rules import get_rule_service
 from main import app
 
@@ -254,7 +254,7 @@ def test_get_rules_excludes_fields_with_none_value(client, mocker: MockerFixture
     mock_service.get_rules.return_value = {}
     app.dependency_overrides[get_rule_service] = lambda: mock_service
 
-    mock_spike_format_list_rules_response = mocker.patch('app.api.routes.rules.format_list_rules_response')
+    mock_format_list_rules_response = mocker.patch('app.api.routes.rules.format_list_rules_response')
     rule_list_response = RuleListResponse(entity_types=["commission_request"],
                                           categories={"commission_request": ["should_run"]},
                                           rules={"commission_request": {
@@ -262,7 +262,7 @@ def test_get_rules_excludes_fields_with_none_value(client, mocker: MockerFixture
                                           }},
                                           stats={}
                                           )
-    mock_spike_format_list_rules_response.return_value = rule_list_response
+    mock_format_list_rules_response.return_value = rule_list_response
 
     response = client.get("/api/v1/rules")
     assert response.status_code == 200
@@ -316,9 +316,9 @@ def test_list_rules(mocker: MockerFixture, case, client):
 
     mock_service = mocker.MagicMock()
     mock_service.get_rules.return_value = rules_by_entity
-    mock_spike_format_list_rules_response = mocker.patch('app.api.routes.rules.format_list_rules_response')
+    mock_format_list_rules_response = mocker.patch('app.api.routes.rules.format_list_rules_response')
     rule_list_response = RuleListResponse(entity_types=[], categories={}, rules={}, stats={})
-    mock_spike_format_list_rules_response.return_value = rule_list_response
+    mock_format_list_rules_response.return_value = rule_list_response
     app.dependency_overrides[get_rule_service] = lambda: mock_service
 
     response = client.get("/api/v1/rules", params=request_params)
@@ -326,7 +326,7 @@ def test_list_rules(mocker: MockerFixture, case, client):
 
     # Verify service.get_rules is called with the correct values
     mock_service.get_rules.assert_called_with(entity_type, categories)
-    mock_spike_format_list_rules_response.assert_called_with(rules_by_entity)
+    mock_format_list_rules_response.assert_called_with(rules_by_entity)
     # Verify the response model
     response_data = response.json()
     assert "entity_types" in response_data

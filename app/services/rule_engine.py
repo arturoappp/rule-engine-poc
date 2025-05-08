@@ -53,7 +53,7 @@ class RuleEngine:
             existing_categories = existing_rule.categories
             logger.info(f"Overwriting existing rule with previous categories: {existing_categories}")
 
-        new_spike_stored_rule = StoredRule(
+        new_stored_rule = StoredRule(
             rule_name=rule.name,
             entity_type=rule.entity_type,
             description=rule.description,
@@ -62,7 +62,7 @@ class RuleEngine:
         )
         # TODO: Should we require the user to pass an "overwrite" parameter to allow overwriting existing rules?
         # Would prevent accidental overwrites
-        self.rule_repository[stored_rule_key] = new_spike_stored_rule
+        self.rule_repository[stored_rule_key] = new_stored_rule
         logger.debug(f"Rule successfully added to repository with key: {stored_rule_key}")
 
     def get_stored_rules_by_names_and_entity_type(self, rule_names: list[str], entity_type: str) -> StoredRule:

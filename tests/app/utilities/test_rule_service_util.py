@@ -2,7 +2,7 @@ from app.api.models.rules import RuleCondition, Rule, StoredRule
 from app.utilities.rule_service_util import create_rules_dict
 
 
-def test_spike_create_rules_dict_empty_stored_rules():
+def test_create_rules_dict_empty_stored_rules():
     """Test with no stored rules."""
     stored_rules = []
     categories = {"category1", "category2"}
@@ -13,7 +13,7 @@ def test_spike_create_rules_dict_empty_stored_rules():
     assert result == {"entity1": {}, "entity2": {}}
 
 
-def test_spike_create_rules_dict_no_matching_categories():
+def test_create_rules_dict_no_matching_categories():
     """Test when no categories match."""
     condition = RuleCondition()
     rule = Rule(name="rule1", entity_type="entity1", description="description1", conditions=condition)
@@ -34,7 +34,7 @@ def test_spike_create_rules_dict_no_matching_categories():
     assert result == {"entity1": {}}
 
 
-def test_spike_create_rules_dict_no_matching_entity_types():
+def test_create_rules_dict_no_matching_entity_types():
     """Test when no entity types match."""
     condition = RuleCondition()
     rule = Rule(name="rule1", entity_type="non_matching_entity", description="description1", conditions=condition)
@@ -55,7 +55,7 @@ def test_spike_create_rules_dict_no_matching_entity_types():
     assert result == {"entity1": {}}
 
 
-def test_spike_create_rules_dict_multiple_rules_same_category():
+def test_create_rules_dict_multiple_rules_same_category():
     """Test multiple rules in the same category."""
     condition1 = RuleCondition()
     condition2 = RuleCondition()
@@ -89,7 +89,7 @@ def test_spike_create_rules_dict_multiple_rules_same_category():
     }
 
 
-def test_spike_create_rules_dict_multiple_rules_different_entity_types_and_categories():
+def test_create_rules_dict_multiple_rules_different_entity_types_and_categories():
     # Sample data
     condition1 = RuleCondition()
     condition2 = RuleCondition()

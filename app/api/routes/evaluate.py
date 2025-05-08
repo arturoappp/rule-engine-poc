@@ -130,7 +130,7 @@ async def evaluate_with_rules(request: EvaluationWithRulesRequest, service: Rule
         results = service.evaluate_with_rules(
             data=request.data,
             entity_type=request.entity_type,
-            rules=request.rules
+            api_rules=request.rules
         )
 
         # Convert results to response format

@@ -256,7 +256,6 @@ def test_update_rule_categories_exception_handling(rule_service):
 
 def test_add_categories_success(rule_service):
     """Test successfully adding categories to a rule"""
-    # Mock the rule returned by the spike engine
     mock_rule = MagicMock()
     mock_rule.categories = {"Can Run", "Should Run"}
     rule_service.engine.get_stored_rule_by_name_and_entity_type = MagicMock(return_value=mock_rule)
@@ -274,7 +273,6 @@ def test_add_categories_success(rule_service):
 
 def test_add_categories_no_existing_categories(rule_service):
     """Test adding categories to a rule with no existing categories"""
-    # Mock the rule returned by the spike engine
     mock_rule = MagicMock()
     mock_rule.categories = []
     rule_service.engine.get_stored_rule_by_name_and_entity_type = MagicMock(return_value=mock_rule)
@@ -292,7 +290,6 @@ def test_add_categories_no_existing_categories(rule_service):
 
 def test_add_categories_duplicate_categories(rule_service):
     """Test adding categories that already exist in the rule"""
-    # Mock the rule returned by the spike engine
     mock_rule = MagicMock()
     mock_rule.categories = ["Can Run", "Should Run"]
     rule_service.engine.get_stored_rule_by_name_and_entity_type = MagicMock(return_value=mock_rule)
@@ -311,7 +308,6 @@ def test_add_categories_duplicate_categories(rule_service):
 
 def test_add_categories_exception_handling(rule_service):
     """Test exception handling when adding categories"""
-    # Mock the spike engine to raise an exception
     rule_service.engine.get_stored_rule_by_name_and_entity_type = MagicMock(side_effect=Exception("Test exception"))
 
     # Call the method and assert it raises an exception
@@ -327,7 +323,6 @@ def test_add_categories_exception_handling(rule_service):
 
 def test_remove_categories_success(rule_service):
     """Test successfully removing categories from a rule"""
-    # Mock the rule returned by the spike engine
     mock_rule = MagicMock()
     mock_rule.categories = {"Can Run", "Should Run", "Cannot Run"}
     rule_service.engine.get_stored_rule_by_name_and_entity_type = MagicMock(return_value=mock_rule)
@@ -345,7 +340,6 @@ def test_remove_categories_success(rule_service):
 
 def test_remove_categories_no_matching_categories(rule_service):
     """Test removing categories when none match"""
-    # Mock the rule returned by the spike engine
     mock_rule = MagicMock()
     mock_rule.categories = {"Can Run", "Should Run"}
     rule_service.engine.get_stored_rule_by_name_and_entity_type = MagicMock(return_value=mock_rule)
@@ -363,7 +357,6 @@ def test_remove_categories_no_matching_categories(rule_service):
 
 def test_remove_categories_empty_categories(rule_service):
     """Test removing categories when the rule has no categories"""
-    # Mock the rule returned by the spike engine
     mock_rule = MagicMock()
     mock_rule.categories = set()
     rule_service.engine.get_stored_rule_by_name_and_entity_type = MagicMock(return_value=mock_rule)

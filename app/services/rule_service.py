@@ -411,7 +411,7 @@ class RuleService:
             rule_names=rule_names
         )
 
-    def evaluate_with_rules(self, data: dict[str, Any], entity_type: str, rules: list[APIRule]) -> list[RuleResult]:
+    def evaluate_with_rules(self, data: dict[str, Any], entity_type: str, api_rules: list[APIRule]) -> list[RuleResult]:
         """
         Evaluate data against provided rules.
 
@@ -424,38 +424,32 @@ class RuleService:
             List of evaluation results
         """
         try:
-            # Create a temporary rule engine
             temp_engine = RuleEngine()
 
-            # Create SpikeStoredRule from rules
-            spike_rules = [Rule(
+            rules = [Rule(
                 name=rule.name,
-                entity_type=entity_type,
+                entity_type=rule.entity_type,
                 description=rule.description,
                 conditions=rule.conditions
-            ) for rule in rules]
+            ) for rule in api_rules]
 
-            for spike_rule in spike_rules:
-                # Add each rule to the temporary engine
-                temp_engine.add_rule(spike_rule)
+            for rule in rules:
+                temp_engine.add_rule(rule)
 
-            # Convert rules to JSON - using model_dump for Pydantic v2
             rules_json = json.dumps([
                 rule.model_dump(by_alias=True, exclude_none=True)
-                for rule in spike_rules
+                for rule in rules
             ])
 
             # Debugging to see the JSON structure
             logger.debug(f"Rules JSON: {rules_json}")
 
-            # Evaluate data
             return temp_engine.evaluate_data(data, entity_type=entity_type)
 
         except Exception as e:
             logger.error(f"Error evaluating data with provided rules: {e}")
-            # Return an error result with more detailed failure information
             error_result = RuleResult(
-                rule_name=rules[0].name if rules else "Unknown Rule",
+                rule_name=api_rules[0].name if api_rules else "Unknown Rule",
                 success=False,
                 message=f"Error evaluating rule: {str(e)}",
                 input_data={"error": str(e)},

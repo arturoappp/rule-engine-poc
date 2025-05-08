@@ -56,7 +56,7 @@ async def store_rules(request: RuleStoreRequest, service: RuleService = Depends(
     )
 
     if not success:
-        logger.error(f"Failed to store spike rules: {message}")
+        logger.error(f"Failed to store rules: {message}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=message
