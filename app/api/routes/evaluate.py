@@ -104,7 +104,6 @@ async def evaluate_data(request: EvaluationRequest, service: RuleService = Depen
             "entity_type": request.entity_type,
             "categories": request.categories,
             "rule_names": request.rule_names,
-            "rule_names": request.rule_names,
             "total_rules": len(results),
             "passed_rules": passed_count,
             "failed_rules": len(results) - passed_count,
