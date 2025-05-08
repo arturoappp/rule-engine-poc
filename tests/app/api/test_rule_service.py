@@ -70,6 +70,7 @@ def test_store_rules_new(rule_service):
     rules = [
         APIRule(
             name="Test Rule 1",
+            entity_type="Commission Request",
             description="Test Description 1",
             conditions=RuleCondition(
                 path="$.devices[*].vendor",
@@ -80,6 +81,7 @@ def test_store_rules_new(rule_service):
         ),
         APIRule(
             name="Test Rule 2",
+            entity_type="Commission Request",
             description="Test Description 2",
             conditions=RuleCondition(
                 path="$.devices[*].osVersion",
@@ -107,6 +109,7 @@ def test_store_rules_update(rule_service):  # Renamed function
     # Create test rule
     rule = APIRule(
         name="Existing Rule",
+        entity_type="Commission Request",
         description="Updated Description",
         conditions=RuleCondition(
             path="$.devices[*].vendor",

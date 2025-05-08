@@ -43,6 +43,7 @@ def test_store_rules_endpoint(client):
         "rules": [
             {
                 "name": "API Test Rule",
+                "entity_type": "device",
                 "description": "Test Description",
                 "conditions": {
                     "path": "$.devices[*].vendor",
@@ -74,6 +75,7 @@ def test_list_rules_endpoint(client):
         "rules": [
             {
                 "name": "List Test Rule",
+                "entity_type": "device",
                 "description": "Test Description",
                 "conditions": {
                     "path": "$.devices[*].vendor",
