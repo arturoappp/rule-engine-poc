@@ -4,7 +4,7 @@ API models for rule management.
 
 from typing import Dict, List, Any, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 
 class RuleCondition(BaseModel):

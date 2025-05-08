@@ -9,7 +9,7 @@ from typing import Dict, List, Any, Optional, Tuple
 
 from app.api.models.rules import APIRule, Rule
 from app.services.rule_engine import RuleEngine
-from app.utilities.rule_service_util import create_rules_dict, create_rules_dict
+from app.utilities.rule_service_util import create_rules_dict
 from rule_engine.core.failure_info import FailureInfo
 from rule_engine.core.rule_result import RuleResult
 
@@ -22,7 +22,7 @@ class RuleService:
 
     def __init__(self):
         """Initialize the rule service."""
-        self.spike_engine = RuleEngine.get_instance()
+        self.engine = RuleEngine.get_instance()
 
     def validate_rule(self, rule: APIRule) -> Tuple[bool, Optional[List[str]]]:
         """
@@ -297,9 +297,9 @@ class RuleService:
             # Process all rules from request
             for rule in rules:
                 existing_categories = []
-                if self.spike_engine.rule_exists(rule.name, entity_type):
-                    existing_stored_rule = self.spike_engine.get_stored_rule_by_name_and_entity_type(rule.name,
-                                                                                                     entity_type)
+                if self.engine.rule_exists(rule.name, entity_type):
+                    existing_stored_rule = self.engine.get_stored_rule_by_name_and_entity_type(rule.name,
+                                                                                               entity_type)
                     existing_categories = existing_stored_rule.categories
                     updated_rules += 1
                 else:
@@ -318,7 +318,7 @@ class RuleService:
                 else:
                     all_categories_to_include = set(rule.add_to_categories)
 
-                self.spike_engine.add_rule(new_rule, all_categories_to_include)
+                self.engine.add_rule(new_rule, all_categories_to_include)
 
             # Create success message
             message = f"Successfully stored rules: {new_rules} new, {updated_rules} updated"
@@ -338,7 +338,7 @@ class RuleService:
         Returns:
             Dictionary of rules by entity type and category
         """
-        stored_rules = self.spike_engine.get_stored_rules(entity_type, provided_categories)
+        stored_rules = self.engine.get_stored_rules(entity_type, provided_categories)
 
         if entity_type:
             entity_types_to_display = {entity_type}
@@ -400,11 +400,11 @@ class RuleService:
             raise
 
         if categories and rule_names:
-            logger.error(f"Cannot filter by both categories and rule names at the same time. Please provide only one of them.")
+            logger.error("Cannot filter by both categories and rule names at the same time. Please provide only one of them.")
             raise ValueError("Cannot filter by both categories and rule names at the same time. Please provide only one of them.")
 
         # Call the RuleEngine method that contains the filtering logic
-        return self.spike_engine.evaluate_data_with_criteria(
+        return self.engine.evaluate_data_with_criteria(
             data_dict=data_dict,
             entity_type=entity_type,
             categories=categories,
@@ -642,13 +642,13 @@ class RuleService:
             return False, f"Error updating rule categories: {str(e)}"
 
     def _add_categories(self, entity_type: str, rule_name: str, categories: list[str]) -> None:
-        rule_to_add_categories_to = self.spike_engine.get_stored_rule_by_name_and_entity_type(rule_name,
-                                                                                              entity_type)
+        rule_to_add_categories_to = self.engine.get_stored_rule_by_name_and_entity_type(rule_name,
+                                                                                        entity_type)
         categories_set = set(categories)
         rule_to_add_categories_to.categories = set(rule_to_add_categories_to.categories).union(categories_set)
 
     def _remove_categories(self, rule_name, entity_type, categories: list[str]) -> None:
-        rule_to_remove_categories_from = self.spike_engine.get_stored_rule_by_name_and_entity_type(rule_name,
-                                                                                                   entity_type)
+        rule_to_remove_categories_from = self.engine.get_stored_rule_by_name_and_entity_type(rule_name,
+                                                                                             entity_type)
         rule_to_remove_categories_from.categories = {category for category in rule_to_remove_categories_from.categories
                                                      if category not in categories}

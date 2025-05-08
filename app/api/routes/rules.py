@@ -11,7 +11,6 @@ from app.api.models.rules import (
     RuleStoreResponse,
     RuleListRequest,
     RuleListResponse,
-    RuleStoreRequest,
     Rule
 )
 from app.services.rule_service import RuleService

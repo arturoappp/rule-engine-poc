@@ -1,4 +1,4 @@
-from app.api.models.rules import RuleListResponse, RuleStats, RuleListResponse
+from app.api.models.rules import RuleListResponse, RuleStats
 
 
 def format_list_rules_response(rules_by_entity: dict) -> RuleListResponse:
