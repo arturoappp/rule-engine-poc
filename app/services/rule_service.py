@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 from app.api.models.rules import Rule as APIRule, SpikeAPIRule, SpikeRule
 from app.services.spike_rule_engine import SpikeRuleEngine
-from app.utilities.rule_service_util import create_rules_dict, spike_create_rules_dict
+from app.utilities.rule_service_util import create_rules_dict, spike_create_rules_by_entity_and_category_dict
 from rule_engine.core.engine import RuleEngine
 from rule_engine.core.failure_info import FailureInfo
 from rule_engine.core.rule_result import RuleResult
@@ -453,7 +453,7 @@ class RuleService:
 
         return rules_dict
 
-    def spike_get_rules(self, entity_type: Optional[str] = None, provided_categories: Optional[list[str]] = None) -> Dict[str, Dict[str, List[Dict]]]:
+    def spike_get_rules_by_entity_and_category(self, entity_type: Optional[str] = None, provided_categories: Optional[list[str]] = None) -> Dict[str, Dict[str, List[Dict]]]:
         """
         Get all rules from the engine.
 
@@ -475,7 +475,7 @@ class RuleService:
                 if rule.categories:
                     categories_to_display.update(rule.categories)
 
-        rules_dict = spike_create_rules_dict(stored_rules, categories_to_display, entity_types_to_display)
+        rules_dict = spike_create_rules_by_entity_and_category_dict(stored_rules, categories_to_display, entity_types_to_display)
 
         return rules_dict
 

@@ -96,7 +96,7 @@ async def spike_list_rules(rule_list_request: Annotated[SpikeRuleListRequest, Qu
     """List all rules in the engine."""
     entity_type = rule_list_request.entity_type
     categories = rule_list_request.categories
-    rules_by_entity = service.spike_get_rules(entity_type, categories)
+    rules_by_entity = service.spike_get_rules_by_entity_and_category(entity_type, categories)
     response_model = spike_format_list_rules_response(rules_by_entity)
 
     return response_model

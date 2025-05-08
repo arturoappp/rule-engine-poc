@@ -311,7 +311,7 @@ def test_spike_get_rules_calls_spike_create_rules_dict_with_correct_parameters(m
     rule_service = RuleService()
     rule_service.spike_engine = mock_engine
 
-    result = rule_service.spike_get_rules(entity_type, provided_categories)
+    result = rule_service.spike_get_rules_by_entity_and_category(entity_type, provided_categories)
 
     mock_spike_create_rules_dict.assert_called_with(stored_rules, expected_provided_categories_set, expected_entity_types)
     assert result == expected_result

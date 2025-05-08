@@ -21,7 +21,7 @@ def create_rules_dict(engine: RuleEngine, provided_category: str, entity_types: 
     return result
 
 
-def spike_create_rules_dict(stored_rules: list[SpikeStoredRule], categories_to_display: set[str], entity_types_to_display: set[str]) -> Dict[str, Dict[str, List[Dict]]]:
+def spike_create_rules_by_entity_and_category_dict(stored_rules: list[SpikeStoredRule], categories_to_display: set[str], entity_types_to_display: set[str]) -> Dict[str, Dict[str, List[Dict]]]:
     result = {}
     for entity_type in entity_types_to_display:
         result[entity_type] = {}
