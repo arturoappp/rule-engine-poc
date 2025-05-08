@@ -307,7 +307,7 @@ class RuleService:
 
                 new_rule = Rule(
                     name=rule.name,
-                    entity_type=entity_type,
+                    entity_type=rule.entity_type,
                     description=rule.description,
                     conditions=rule.conditions)
 

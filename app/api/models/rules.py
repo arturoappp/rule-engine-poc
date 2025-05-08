@@ -109,6 +109,7 @@ RuleCondition.model_rebuild()
 
 class APIRule(BaseModel):
     name: str
+    entity_type: str
     description: Optional[str] = None
     conditions: RuleCondition
     add_to_categories: Optional[List[str]] = []
