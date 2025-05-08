@@ -259,13 +259,5 @@ class RuleListResponse(BaseModel):
     """Response model for listing rules."""
     entity_types: List[str]
     categories: Dict[str, List[str]]
-    rules: Dict[str, Dict[str, List[Rule]]]
-    stats: Dict[str, RuleStats]
-
-
-class SpikeRuleListResponse(BaseModel):
-    """Response model for listing rules."""
-    entity_types: List[str]
-    categories: Dict[str, List[str]]
     rules: Dict[str, Dict[str, List[SpikeRule]]]
     stats: Dict[str, RuleStats]

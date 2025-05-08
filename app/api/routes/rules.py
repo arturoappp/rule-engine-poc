@@ -7,17 +7,15 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.models.rules import (
     Rule,
-    RuleListRequest,
     RuleValidationResponse,
     RuleStoreRequest,
     RuleStoreResponse,
-    RuleListResponse,
     SpikeRuleListRequest,
-    SpikeRuleListResponse,
+    RuleListResponse,
     SpikeRuleStoreRequest
 )
 from app.services.rule_service import RuleService
-from app.helpers.response_formatter import format_list_rules_response, spike_format_list_rules_response
+from app.helpers.response_formatter import format_list_rules_response
 from app.utilities.logging import logger
 
 router = APIRouter()
@@ -101,36 +99,8 @@ async def spike_store_rules(request: SpikeRuleStoreRequest, service: RuleService
 
 
 @router.get("/rules", response_model=RuleListResponse, response_model_exclude_none=True)
-async def list_rules(rule_list_request: Annotated[RuleListRequest, Query()],
+async def list_rules(rule_list_request: Annotated[SpikeRuleListRequest, Query()],
                      service: RuleService = Depends(get_rule_service)):
-    """List all rules in the engine."""
-    entity_type = rule_list_request.entity_type
-    category = rule_list_request.category
-
-    logger.params.set(entity_type=entity_type, category=category)
-
-    filter_desc = []
-    if entity_type:
-        filter_desc.append(f"entity_type='{entity_type}'")
-    if category:
-        filter_desc.append(f"category='{category}'")
-
-    filter_str = " and ".join(filter_desc) if filter_desc else "no filters"
-    logger.info(f"Listing rules with {filter_str}")
-
-    rules_by_entity = service.get_rules(entity_type, category)
-    response_model = format_list_rules_response(rules_by_entity)
-
-    entity_count = len(response_model.entity_types)
-    rule_count = sum(stat.total_rules for stat in response_model.stats.values())
-    logger.info(f"Returning {rule_count} rules across {entity_count} entity types")
-
-    return response_model
-
-
-@router.get("/spike-rules", response_model=SpikeRuleListResponse, response_model_exclude_none=True)
-async def spike_list_rules(rule_list_request: Annotated[SpikeRuleListRequest, Query()],
-                           service: RuleService = Depends(get_rule_service)):
     """List all rules in the engine."""
     entity_type = rule_list_request.entity_type
     categories = rule_list_request.categories
@@ -150,7 +120,7 @@ async def spike_list_rules(rule_list_request: Annotated[SpikeRuleListRequest, Qu
     logger.info(f"Listing rules with {filter_str}")
 
     rules_by_entity = service.spike_get_rules(entity_type, categories)
-    response_model = spike_format_list_rules_response(rules_by_entity)
+    response_model = format_list_rules_response(rules_by_entity)
 
     entity_count = len(response_model.entity_types)
     rule_count = sum(stat.total_rules for stat in response_model.stats.values())
