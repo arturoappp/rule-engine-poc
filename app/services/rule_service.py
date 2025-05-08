@@ -9,7 +9,7 @@ from typing import Dict, List, Any, Optional, Tuple
 
 from app.api.models.rules import Rule as APIRule, SpikeAPIRule, SpikeRule
 from app.services.spike_rule_engine import SpikeRuleEngine
-from app.utilities.rule_service_util import create_rules_dict, spike_create_rules_dict
+from app.utilities.rule_service_util import create_rules_dict, create_rules_dict
 from rule_engine.core.engine import RuleEngine
 from rule_engine.core.failure_info import FailureInfo
 from rule_engine.core.rule_result import RuleResult
@@ -438,24 +438,7 @@ class RuleService:
             logger.error(f"Error storing rules: {e}")
             return False, f"Error storing rules: {str(e)}", 0
 
-    def get_rules(self, entity_type=None, provided_category=None) -> Dict[str, Dict[str, List[Dict]]]:
-        """
-        Get all rules from the engine.
-
-        Returns:
-            Dictionary of rules by entity type and category
-        """
-        if entity_type is None:
-            # Get all entity types
-            entity_types = self.engine.get_entity_types()
-        else:
-            entity_types = [entity_type]
-
-        rules_dict = create_rules_dict(self.engine, provided_category, entity_types)
-
-        return rules_dict
-
-    def spike_get_rules(self, entity_type: Optional[str] = None, provided_categories: Optional[list[str]] = None) -> \
+    def get_rules(self, entity_type: Optional[str] = None, provided_categories: Optional[list[str]] = None) -> \
             Dict[str, Dict[str, List[Dict]]]:
         """
         Get all rules from the engine.
@@ -478,7 +461,7 @@ class RuleService:
                 if rule.categories:
                     categories_to_display.update(rule.categories)
 
-        rules_dict = spike_create_rules_dict(stored_rules, categories_to_display, entity_types_to_display)
+        rules_dict = create_rules_dict(stored_rules, categories_to_display, entity_types_to_display)
 
         return rules_dict
 

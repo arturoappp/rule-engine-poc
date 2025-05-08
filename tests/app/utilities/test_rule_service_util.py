@@ -1,5 +1,5 @@
 from app.api.models.rules import RuleCondition, SpikeRule, SpikeStoredRule
-from app.utilities.rule_service_util import spike_create_rules_dict
+from app.utilities.rule_service_util import create_rules_dict
 
 
 def test_spike_create_rules_dict_empty_stored_rules():
@@ -8,7 +8,7 @@ def test_spike_create_rules_dict_empty_stored_rules():
     categories = {"category1", "category2"}
     entity_types = {"entity1", "entity2"}
 
-    result = spike_create_rules_dict(stored_rules, categories, entity_types)
+    result = create_rules_dict(stored_rules, categories, entity_types)
 
     assert result == {"entity1": {}, "entity2": {}}
 
@@ -29,7 +29,7 @@ def test_spike_create_rules_dict_no_matching_categories():
     categories = {"category1", "category2"}
     entity_types = {"entity1"}
 
-    result = spike_create_rules_dict(stored_rules, categories, entity_types)
+    result = create_rules_dict(stored_rules, categories, entity_types)
 
     assert result == {"entity1": {}}
 
@@ -50,7 +50,7 @@ def test_spike_create_rules_dict_no_matching_entity_types():
     categories = {"category1"}
     entity_types = {"entity1"}
 
-    result = spike_create_rules_dict(stored_rules, categories, entity_types)
+    result = create_rules_dict(stored_rules, categories, entity_types)
 
     assert result == {"entity1": {}}
 
@@ -80,7 +80,7 @@ def test_spike_create_rules_dict_multiple_rules_same_category():
     categories = {"category1"}
     entity_types = {"entity1"}
 
-    result = spike_create_rules_dict(stored_rules, categories, entity_types)
+    result = create_rules_dict(stored_rules, categories, entity_types)
 
     assert result == {
         "entity1": {
@@ -120,7 +120,7 @@ def test_spike_create_rules_dict_multiple_rules_different_entity_types_and_categ
     entity_types = {commission_entity, decommision_entity}
 
     # Call the function
-    result = spike_create_rules_dict(stored_rules, categories, entity_types)
+    result = create_rules_dict(stored_rules, categories, entity_types)
 
     # Expected result
     expected_result = {

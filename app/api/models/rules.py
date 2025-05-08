@@ -213,14 +213,7 @@ class RuleList(BaseModel):
 class RuleListRequest(BaseModel):
     """Request model for a list of rules."""
     entity_type: Optional[str] = None
-    category: Optional[str] = None
-
-
-class SpikeRuleListRequest(BaseModel):
-    """Request model for a list of rules."""
-    entity_type: Optional[str] = None
-    # makes this an optional list of categories
-    categories: Optional[List[str]] = None
+    categories: Optional[list[str]] = None
 
 
 class RuleValidationResponse(BaseModel):
@@ -232,14 +225,7 @@ class RuleValidationResponse(BaseModel):
 class RuleStoreRequest(BaseModel):
     """Request model for storing rules."""
     entity_type: str
-    default_category: Optional[str] = "default"  # Used only if a rule doesn't specify add_to_categories
-    rules: List[Rule]
-
-
-class SpikeRuleStoreRequest(BaseModel):
-    """Request model for storing rules."""
-    entity_type: str
-    rules: List[SpikeAPIRule]
+    rules: list[SpikeAPIRule]
 
 
 class RuleStoreResponse(BaseModel):

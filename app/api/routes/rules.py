@@ -10,9 +10,9 @@ from app.api.models.rules import (
     RuleValidationResponse,
     RuleStoreRequest,
     RuleStoreResponse,
-    SpikeRuleListRequest,
+    RuleListRequest,
     RuleListResponse,
-    SpikeRuleStoreRequest
+    RuleStoreRequest
 )
 from app.services.rule_service import RuleService
 from app.helpers.response_formatter import format_list_rules_response
@@ -48,33 +48,6 @@ async def validate_rule(rule: Rule, service: RuleService = Depends(get_rule_serv
 @router.post("/rules", response_model=RuleStoreResponse)
 async def store_rules(request: RuleStoreRequest, service: RuleService = Depends(get_rule_service)):
     """Store rules in the engine."""
-    logger.params.set(entity_type=request.entity_type, category=request.default_category)
-    logger.info(f"Processing request to store {len(request.rules)} rules for entity type '{request.entity_type}'")
-
-    success, message, stored_count = service.store_rules(
-        entity_type=request.entity_type,
-        rules=request.rules,
-        default_category=request.default_category
-    )
-
-    if not success:
-        logger.error(f"Failed to store rules: {message}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=message
-        )
-
-    logger.info(f"Successfully stored {stored_count} rules for entity type '{request.entity_type}'")
-    return {
-        "success": success,
-        "message": message,
-        "stored_rules": stored_count
-    }
-
-
-@router.post("/spike-rules", response_model=RuleStoreResponse)
-async def spike_store_rules(request: SpikeRuleStoreRequest, service: RuleService = Depends(get_rule_service)):
-    """Store rules in the engine."""
     logger.params.set(entity_type=request.entity_type)
     logger.info(f"Processing request to store {len(request.rules)} rules for entity type '{request.entity_type}'")
 
@@ -90,7 +63,7 @@ async def spike_store_rules(request: SpikeRuleStoreRequest, service: RuleService
             detail=message
         )
 
-    logger.info(f"Successfully stored {stored_count} spike rules for entity type '{request.entity_type}'")
+    logger.info(f"Successfully stored {stored_count} rules for entity type '{request.entity_type}'")
     return {
         "success": success,
         "message": message,
@@ -99,7 +72,7 @@ async def spike_store_rules(request: SpikeRuleStoreRequest, service: RuleService
 
 
 @router.get("/rules", response_model=RuleListResponse, response_model_exclude_none=True)
-async def list_rules(rule_list_request: Annotated[SpikeRuleListRequest, Query()],
+async def list_rules(rule_list_request: Annotated[RuleListRequest, Query()],
                      service: RuleService = Depends(get_rule_service)):
     """List all rules in the engine."""
     entity_type = rule_list_request.entity_type
@@ -119,7 +92,7 @@ async def list_rules(rule_list_request: Annotated[SpikeRuleListRequest, Query()]
     filter_str = " and ".join(filter_desc) if filter_desc else "no filters"
     logger.info(f"Listing rules with {filter_str}")
 
-    rules_by_entity = service.spike_get_rules(entity_type, categories)
+    rules_by_entity = service.get_rules(entity_type, categories)
     response_model = format_list_rules_response(rules_by_entity)
 
     entity_count = len(response_model.entity_types)
