@@ -3,18 +3,18 @@ Tests for the role_device operator in the rule engine using pytest.
 """
 
 import pytest
-from app.services.spike_rule_engine import SpikeRuleEngine
-from app.api.models.rules import SpikeRule
+from app.services.rule_engine import RuleEngine
+from app.api.models.rules import Rule
 
 
 @pytest.fixture
 def rule_engine():
     """Create a SpikeRuleEngine instance with rules for testing the role_device operator."""
-    engine = SpikeRuleEngine.get_instance()
+    engine = RuleEngine.get_instance()
 
     # Load rules for testing the role_device operator
     role_device_rules = [
-        SpikeRule(
+        Rule(
             name="Standalone Device Rule",
             entity_type="device",
             description="Checks if the device is a standalone device",
@@ -28,7 +28,7 @@ def rule_engine():
                 ]
             }
         ),
-        SpikeRule(
+        Rule(
             name="Primary Device Rule",
             entity_type="device",
             description="Checks if the device is a primary device",
@@ -42,7 +42,7 @@ def rule_engine():
                 ]
             }
         ),
-        SpikeRule(
+        Rule(
             name="Secondary Device Rule",
             entity_type="device",
             description="Checks if the device is a secondary device",

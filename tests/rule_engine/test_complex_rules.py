@@ -3,18 +3,18 @@ Tests for complex rule evaluations with nested logical operators using pytest.
 """
 
 import pytest
-from app.services.spike_rule_engine import SpikeRuleEngine
-from app.api.models.rules import SpikeRule
+from app.services.rule_engine import RuleEngine
+from app.api.models.rules import Rule
 
 
 @pytest.fixture
 def rule_engine():
     """Create a SpikeRuleEngine instance with a complex rule."""
-    engine = SpikeRuleEngine.get_instance()
+    engine = RuleEngine.get_instance()
 
     # Complex rules as SpikeRule objects
     complex_rules = [
-        SpikeRule(
+        Rule(
             name="Complex Device Rule",
             entity_type="device",
             description="Vendor must be Cisco with version 17.x, or non-Cisco with any version above 10.0",

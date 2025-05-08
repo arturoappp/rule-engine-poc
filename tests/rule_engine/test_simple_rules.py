@@ -3,18 +3,18 @@ Tests for simple rule evaluations using pytest.
 """
 
 import pytest
-from app.services.spike_rule_engine import SpikeRuleEngine
-from app.api.models.rules import SpikeRule
+from app.services.rule_engine import RuleEngine
+from app.api.models.rules import Rule
 
 
 @pytest.fixture
 def rule_engine():
     """Create a RuleEngine instance with predefined rules."""
-    engine = SpikeRuleEngine()
+    engine = RuleEngine()
 
     # Simple "equal" rule
     equal_rule = [
-        SpikeRule(
+        Rule(
             name="Equal Rule",
             entity_type="item",
             description="Tests the 'equal' operator",
@@ -34,7 +34,7 @@ def rule_engine():
 
     # Simple "not_equal" rule
     not_equal_rule = [
-        SpikeRule(
+        Rule(
             name="Not Equal Rule",
             entity_type="item",
             description="Tests the 'not_equal' operator",
@@ -102,7 +102,7 @@ def test_not_equal_rule_pass(rule_engine):
         ]
     }
 
-    equal_rule = SpikeRule(
+    equal_rule = Rule(
         name="Equal Rule",
         entity_type="item",
         description="Tests the 'equal' operator",

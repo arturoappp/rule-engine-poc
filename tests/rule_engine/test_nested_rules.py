@@ -3,18 +3,18 @@ Tests for deeply nested rule evaluations using pytest.
 """
 
 import pytest
-from app.services.spike_rule_engine import SpikeRuleEngine
-from app.api.models.rules import SpikeRule
+from app.services.rule_engine import RuleEngine
+from app.api.models.rules import Rule
 
 
 @pytest.fixture
 def rule_engine():
     """Create a SpikeRuleEngine instance with a deeply nested rule."""
-    engine = SpikeRuleEngine.get_instance()
+    engine = RuleEngine.get_instance()
 
     # Deep nested rules as SpikeRule objects
     nested_rules = [
-        SpikeRule(
+        Rule(
             name="Deep Nested Rule",
             entity_type="Decommission Request",
             description="A complex rule with several levels of nesting",

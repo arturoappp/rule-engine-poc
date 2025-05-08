@@ -7,10 +7,9 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 
-from app.api.models.rules import Rule as APIRule, SpikeAPIRule, SpikeRule
-from app.services.spike_rule_engine import SpikeRuleEngine
+from app.api.models.rules import APIRule, Rule
+from app.services.rule_engine import RuleEngine
 from app.utilities.rule_service_util import create_rules_dict, create_rules_dict
-from rule_engine.core.engine import RuleEngine
 from rule_engine.core.failure_info import FailureInfo
 from rule_engine.core.rule_result import RuleResult
 
@@ -23,8 +22,7 @@ class RuleService:
 
     def __init__(self):
         """Initialize the rule service."""
-        self.engine = RuleEngine.get_instance()
-        self.spike_engine = SpikeRuleEngine.get_instance()
+        self.spike_engine = RuleEngine.get_instance()
 
     def validate_rule(self, rule: APIRule) -> Tuple[bool, Optional[List[str]]]:
         """
@@ -280,113 +278,7 @@ class RuleService:
 
         return result
 
-    def store_rules(self, entity_type: str, rules: List[APIRule], default_category: str = "default") -> Tuple[
-            bool, str, int]:
-        """
-        Store rules in the engine, overwriting duplicates with same name across all categories.
-
-        Args:
-            entity_type: Entity type
-            rules: List of rules to store
-            default_category: Default category for rules without specified add_to_categories
-
-        Returns:
-            Tuple of (success, message, stored_rules_count)
-        """
-        try:
-            # Map to track rules by name to avoid duplicates
-            rules_by_name = {}
-
-            # Process all rules from request
-            for rule in rules:
-                # Use the rule's add_to_categories if defined, otherwise use default_category
-                rule_categories = rule.add_to_categories if (hasattr(rule, 'add_to_categories')
-                                                             and rule.add_to_categories) else [default_category]
-
-                # Store rule by name (latest definition wins)
-                rules_by_name[rule.name] = {
-                    "rule": rule,
-                    "categories": rule_categories
-                }
-
-            # Find all rule names we need to update
-            rule_names_to_update = set(rules_by_name.keys())
-
-            # Find all existing rules with these names and their current categories
-            existing_rule_categories = {}
-            all_categories = set(self.engine.get_categories(entity_type))
-
-            for category in all_categories:
-                existing_rules = self.engine.get_rules_by_category(entity_type, category)
-                for existing_rule in existing_rules:
-                    rule_name = existing_rule.get("name", "")
-                    if rule_name in rule_names_to_update:
-                        if rule_name not in existing_rule_categories:
-                            existing_rule_categories[rule_name] = set()
-                        existing_rule_categories[rule_name].add(category)
-
-            # Track stats for new vs. updated rules
-            new_count = len(rule_names_to_update - set(existing_rule_categories.keys()))
-            updated_count = len(rule_names_to_update & set(existing_rule_categories.keys()))
-
-            # Determine all categories that need to be updated
-            categories_to_update = set()
-
-            # For each rule, collect its categories
-            for rule_name, rule_info in rules_by_name.items():
-                # Add new categories for this rule
-                new_categories = set(rule_info["categories"])
-                categories_to_update.update(new_categories)
-
-                # If rule exists, get existing categories
-                if rule_name in existing_rule_categories:
-                    existing_cats = existing_rule_categories[rule_name]
-                    # Merge existing and new categories
-                    merged_categories = existing_cats.union(new_categories)
-                    # Update rule info with merged categories
-                    rules_by_name[rule_name]["categories"] = list(merged_categories)
-                    # Make sure all categories are updated
-                    categories_to_update.update(merged_categories)
-
-            # Now update each category
-            for category in categories_to_update:
-                # Get all current rules in this category
-                existing_rules = self.engine.get_rules_by_category(entity_type, category)
-
-                # Create a new list without any rules we're updating
-                updated_rules = [r for r in existing_rules if r.get("name", "") not in rule_names_to_update]
-
-                # Add our updated rules if they belong in this category
-                for rule_name, rule_info in rules_by_name.items():
-                    if category in rule_info["categories"]:
-                        # Create a rule dictionary
-                        rule_dict = rule_info["rule"].model_dump(by_alias=True, exclude_none=True)
-
-                        # Rename add_to_categories to categories in the output
-                        if "add_to_categories" in rule_dict:
-                            rule_dict["categories"] = rule_info["categories"]
-                            del rule_dict["add_to_categories"]
-                        else:
-                            rule_dict["categories"] = rule_info["categories"]
-
-                        # Add to our updated rules list
-                        updated_rules.append(rule_dict)
-
-                # Update the category with the new rule list
-                rules_json = json.dumps(updated_rules)
-                self.engine.load_rules_from_json(rules_json, entity_type=entity_type, category=category)
-
-            # Create success message
-            message = f"Successfully stored rules: {new_count} new, {updated_count} updated across {len(categories_to_update)} categories"
-
-            # Return the total number of unique rules stored
-            return True, message, len(rules_by_name)
-
-        except Exception as e:
-            logger.error(f"Error storing rules: {e}")
-            return False, f"Error storing rules: {str(e)}", 0
-
-    def spike_store_rules(self, entity_type: str, rules: List[SpikeAPIRule]) -> Tuple[
+    def store_rules(self, entity_type: str, rules: List[APIRule]) -> Tuple[
             bool, str, int]:
         """
         Store rules in the engine, overwriting duplicates with same name across all categories.
@@ -406,14 +298,14 @@ class RuleService:
             for rule in rules:
                 existing_categories = []
                 if self.spike_engine.rule_exists(rule.name, entity_type):
-                    existing_stored_rule = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule.name,
-                                                                                                           entity_type)
+                    existing_stored_rule = self.spike_engine.get_stored_rule_by_name_and_entity_type(rule.name,
+                                                                                                     entity_type)
                     existing_categories = existing_stored_rule.categories
                     updated_rules += 1
                 else:
                     new_rules += 1
 
-                new_rule = SpikeRule(
+                new_rule = Rule(
                     name=rule.name,
                     entity_type=entity_type,
                     description=rule.description,
@@ -446,7 +338,7 @@ class RuleService:
         Returns:
             Dictionary of rules by entity type and category
         """
-        stored_rules = self.spike_engine.get_spike_stored_rules(entity_type, provided_categories)
+        stored_rules = self.spike_engine.get_stored_rules(entity_type, provided_categories)
 
         if entity_type:
             entity_types_to_display = {entity_type}
@@ -519,7 +411,7 @@ class RuleService:
             rule_names=rule_names
         )
 
-    def evaluate_with_rules(self, data: dict[str, Any], entity_type: str, rules: list[SpikeAPIRule]) -> list[RuleResult]:
+    def evaluate_with_rules(self, data: dict[str, Any], entity_type: str, rules: list[APIRule]) -> list[RuleResult]:
         """
         Evaluate data against provided rules.
 
@@ -533,10 +425,10 @@ class RuleService:
         """
         try:
             # Create a temporary rule engine
-            temp_engine = SpikeRuleEngine()
+            temp_engine = RuleEngine()
 
             # Create SpikeStoredRule from rules
-            spike_rules = [SpikeRule(
+            spike_rules = [Rule(
                 name=rule.name,
                 entity_type=entity_type,
                 description=rule.description,
@@ -750,13 +642,13 @@ class RuleService:
             return False, f"Error updating rule categories: {str(e)}"
 
     def _add_categories(self, entity_type: str, rule_name: str, categories: list[str]) -> None:
-        rule_to_add_categories_to = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name,
-                                                                                                    entity_type)
+        rule_to_add_categories_to = self.spike_engine.get_stored_rule_by_name_and_entity_type(rule_name,
+                                                                                              entity_type)
         categories_set = set(categories)
         rule_to_add_categories_to.categories = set(rule_to_add_categories_to.categories).union(categories_set)
 
     def _remove_categories(self, rule_name, entity_type, categories: list[str]) -> None:
-        rule_to_remove_categories_from = self.spike_engine.get_spike_stored_rule_by_name_and_entity_type(rule_name,
-                                                                                                         entity_type)
+        rule_to_remove_categories_from = self.spike_engine.get_stored_rule_by_name_and_entity_type(rule_name,
+                                                                                                   entity_type)
         rule_to_remove_categories_from.categories = {category for category in rule_to_remove_categories_from.categories
                                                      if category not in categories}

@@ -16,13 +16,13 @@ def test_validate_rule_endpoint(client):
     # Create a valid rule
     rule = {
         "name": "Test Rule",
+        "entity_type": "Commission Request",
         "description": "Test Description",
         "conditions": {
             "path": "$.devices[*].vendor",
             "operator": "equal",
             "value": "Cisco Systems"
         },
-        "categories": ["test"]
     }
 
     # Call the endpoint

@@ -6,13 +6,13 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
 from app.api.models.rules import (
-    Rule,
     RuleValidationResponse,
     RuleStoreRequest,
     RuleStoreResponse,
     RuleListRequest,
     RuleListResponse,
-    RuleStoreRequest
+    RuleStoreRequest,
+    Rule
 )
 from app.services.rule_service import RuleService
 from app.helpers.response_formatter import format_list_rules_response
@@ -51,7 +51,7 @@ async def store_rules(request: RuleStoreRequest, service: RuleService = Depends(
     logger.params.set(entity_type=request.entity_type)
     logger.info(f"Processing request to store {len(request.rules)} rules for entity type '{request.entity_type}'")
 
-    success, message, stored_count = service.spike_store_rules(
+    success, message, stored_count = service.store_rules(
         entity_type=request.entity_type,
         rules=request.rules,
     )

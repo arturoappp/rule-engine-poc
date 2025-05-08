@@ -3,18 +3,18 @@ Tests for all operator implementations in the rule engine using pytest.
 """
 
 import pytest
-from app.services.spike_rule_engine import SpikeRuleEngine
-from app.services.spike_rule_engine import SpikeRule
+from app.services.rule_engine import RuleEngine
+from app.services.rule_engine import Rule
 
 
 @pytest.fixture
 def rule_engine():
     """Create a RuleEngine instance with rules for testing various operators."""
-    engine = SpikeRuleEngine()
+    engine = RuleEngine()
 
     # Load a rule for each operator type
     operator_rules = [
-        SpikeRule(
+        Rule(
             name="Equal Operator Rule",
             entity_type="Commission Request",
             conditions={
@@ -27,7 +27,7 @@ def rule_engine():
                 ]
             }
         ),
-        SpikeRule(
+        Rule(
             name="Not Equal Operator Rule",
             entity_type="Commission Request",
             conditions={
@@ -40,7 +40,7 @@ def rule_engine():
                 ]
             }
         ),
-        SpikeRule(
+        Rule(
             name="Greater Than Operator Rule",
             entity_type="Commission Request",
             conditions={
@@ -53,7 +53,7 @@ def rule_engine():
                 ]
             }
         ),
-        SpikeRule(
+        Rule(
             name="Less Than Operator Rule",
             entity_type="Commission Request",
             conditions={
@@ -66,7 +66,7 @@ def rule_engine():
                 ]
             }
         ),
-        SpikeRule(
+        Rule(
             name="Greater Than Equal Operator Rule",
             entity_type="Commission Request",
             conditions={
@@ -79,7 +79,7 @@ def rule_engine():
                 ]
             }
         ),
-        SpikeRule(
+        Rule(
             name="Less Than Equal Operator Rule",
             entity_type="Commission Request",
             conditions={
@@ -92,7 +92,7 @@ def rule_engine():
                 ]
             }
         ),
-        SpikeRule(
+        Rule(
             name="Exists Operator Rule",
             entity_type="Commission Request",
             conditions={
@@ -105,7 +105,7 @@ def rule_engine():
                 ]
             }
         ),
-        SpikeRule(
+        Rule(
             name="Not Empty Operator Rule",
             entity_type="Commission Request",
             conditions={
@@ -118,7 +118,7 @@ def rule_engine():
                 ]
             }
         ),
-        SpikeRule(
+        Rule(
             name="Match Operator Rule",
             entity_type="Commission Request",
             conditions={
@@ -131,7 +131,7 @@ def rule_engine():
                 ]
             }
         ),
-        SpikeRule(
+        Rule(
             name="Contains Operator Rule",
             entity_type="Commission Request",
             conditions={
@@ -462,7 +462,7 @@ def test_value_in_list(rule_engine):
     """Test checking if a value exists in a list."""
     # Add a rule that checks if a value is in a list
     list_rule = [
-        SpikeRule(
+        Rule(
             name="Protocol Check Rule",
             entity_type="Commission Request",
             conditions={

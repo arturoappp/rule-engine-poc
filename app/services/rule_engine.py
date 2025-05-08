@@ -1,27 +1,27 @@
 import json
 from typing import Any, Optional, Union
-from app.api.models.rules import SpikeRule, SpikeStoredRule
+from app.api.models.rules import Rule, StoredRule
 from rule_engine.core.evaluator import RuleEvaluator
 from rule_engine.core.rule_result import RuleResult
 
 from app.utilities.logging import logger
 
 
-class SpikeRuleEngine:
+class RuleEngine:
     _instance = None
 
     @classmethod
     def get_instance(cls):
         if cls._instance is None:
             cls._instance = cls()
-            logger.info("Initializing SpikeRuleEngine singleton instance")
+            logger.info("Initializing RuleEngine singleton instance")
         return cls._instance
 
     def __init__(self):
-        self.spike_rule_repository: dict[str, SpikeStoredRule] = {}
+        self.rule_repository: dict[str, StoredRule] = {}
         logger.debug("RuleEngine repository initialized")
 
-    def add_rules(self, rules: list[SpikeRule]) -> None:
+    def add_rules(self, rules: list[Rule]) -> None:
         logger.info(f"Adding {len(rules)} rules to engine")
         for rule in rules:
             self.add_rule(rule)
@@ -30,11 +30,11 @@ class SpikeRuleEngine:
     # list all rules
     @property
     def all_rules(self):
-        rule_count = len(self.spike_rule_repository)
+        rule_count = len(self.rule_repository)
         logger.debug(f"Getting all rules ({rule_count} total)")
-        return self.spike_rule_repository.values()
+        return self.rule_repository.values()
 
-    def add_rule(self, rule: SpikeRule, categories: Optional[set[str]] = None) -> None:
+    def add_rule(self, rule: Rule, categories: Optional[set[str]] = None) -> None:
         if categories is None:
             categories = set()
 
@@ -48,12 +48,12 @@ class SpikeRuleEngine:
 
         stored_rule_key = f"{rule.entity_type}|{rule.name}"
 
-        if stored_rule_key in self.spike_rule_repository:
-            existing_rule = self.spike_rule_repository[stored_rule_key]
+        if stored_rule_key in self.rule_repository:
+            existing_rule = self.rule_repository[stored_rule_key]
             existing_categories = existing_rule.categories
             logger.info(f"Overwriting existing rule with previous categories: {existing_categories}")
 
-        new_spike_stored_rule = SpikeStoredRule(
+        new_spike_stored_rule = StoredRule(
             rule_name=rule.name,
             entity_type=rule.entity_type,
             description=rule.description,
@@ -62,22 +62,22 @@ class SpikeRuleEngine:
         )
         # TODO: Should we require the user to pass an "overwrite" parameter to allow overwriting existing rules?
         # Would prevent accidental overwrites
-        self.spike_rule_repository[stored_rule_key] = new_spike_stored_rule
+        self.rule_repository[stored_rule_key] = new_spike_stored_rule
         logger.debug(f"Rule successfully added to repository with key: {stored_rule_key}")
 
-    def get_spike_stored_rules_by_names_and_entity_type(self, rule_names: list[str], entity_type: str) -> SpikeStoredRule:
-        stored_rules = [self.get_spike_stored_rule_by_name_and_entity_type(rule_name, entity_type) for rule_name in rule_names]
+    def get_stored_rules_by_names_and_entity_type(self, rule_names: list[str], entity_type: str) -> StoredRule:
+        stored_rules = [self.get_stored_rule_by_name_and_entity_type(rule_name, entity_type) for rule_name in rule_names]
         return stored_rules
 
-    def get_spike_stored_rule_by_name_and_entity_type(self, rule_name: str, entity_type: str) -> SpikeStoredRule:
+    def get_stored_rule_by_name_and_entity_type(self, rule_name: str, entity_type: str) -> StoredRule:
         logger.params.set(entity_type=entity_type, rule_name=rule_name)
 
         stored_rule_key = f"{entity_type}|{rule_name}"
         logger.debug(f"Looking up rule with key: {stored_rule_key}")
 
-        if stored_rule_key in self.spike_rule_repository:
+        if stored_rule_key in self.rule_repository:
             logger.debug(f"Rule found: {stored_rule_key}")
-            return self.spike_rule_repository[stored_rule_key]
+            return self.rule_repository[stored_rule_key]
         else:
             logger.warning(f"Rule not found: {stored_rule_key}")
             raise ValueError(f"Rule with name '{rule_name}' not found for entity type '{entity_type}'")
@@ -85,15 +85,15 @@ class SpikeRuleEngine:
     # check if rule exists
     def rule_exists(self, rule_name: str, entity_type: str) -> bool:
         stored_rule_key = f"{entity_type}|{rule_name}"
-        exists = stored_rule_key in self.spike_rule_repository
+        exists = stored_rule_key in self.rule_repository
 
         logger.debug(f"Checking if rule exists: {stored_rule_key}, result: {exists}")
 
         return exists
 
     # get all rules, but if entity type is not none, get only rules for entity_type, and if category is not none, get only rules for entity_type and category
-    def get_spike_stored_rules(self, entity_type: Optional[str] = None, categories: Optional[list[str]] = None) -> list[
-            SpikeStoredRule]:
+    def get_stored_rules(self, entity_type: Optional[str] = None, categories: Optional[list[str]] = None) -> list[
+            StoredRule]:
         # Set context for logging
         logger.params.set(
             entity_type=entity_type,
@@ -111,15 +111,15 @@ class SpikeRuleEngine:
 
         stored_rules = []
         if entity_type is None and categories is None:
-            stored_rules = [stored_rule for stored_rule in self.spike_rule_repository.values()]
+            stored_rules = [stored_rule for stored_rule in self.rule_repository.values()]
         elif entity_type is not None and categories is None:
-            stored_rules = [stored_rule for _, stored_rule in self.spike_rule_repository.items() if
+            stored_rules = [stored_rule for _, stored_rule in self.rule_repository.items() if
                             stored_rule.entity_type == entity_type]
         elif entity_type is None and categories is not None:
-            stored_rules = [stored_rule for _, stored_rule in self.spike_rule_repository.items() if
+            stored_rules = [stored_rule for _, stored_rule in self.rule_repository.items() if
                             any(category in stored_rule.categories for category in categories)]
         elif entity_type is not None and categories is not None:
-            stored_rules = [stored_rule for key, stored_rule in self.spike_rule_repository.items() if
+            stored_rules = [stored_rule for key, stored_rule in self.rule_repository.items() if
                             stored_rule.entity_type == entity_type and any(
                                 category in stored_rule.categories for category in categories)]
 
@@ -193,7 +193,7 @@ class SpikeRuleEngine:
         # Evaluate with the filtered rules
         return RuleEvaluator.evaluate_data(data_dict, stored_rules_to_evaluate, entity_type)
 
-    def get_stored_rules_to_evaluate(self, entity_type: str, categories: Optional[list[str]] = None, rule_names: Optional[list[str]] = None) -> list[SpikeStoredRule]:
+    def get_stored_rules_to_evaluate(self, entity_type: str, categories: Optional[list[str]] = None, rule_names: Optional[list[str]] = None) -> list[StoredRule]:
         """
         Retrieve rules to evaluate based on entity type, categories, and/or rule names.
 
@@ -208,14 +208,14 @@ class SpikeRuleEngine:
         rules_to_evaluate = set()
 
         if rule_names:
-            stored_rules = self.get_spike_stored_rules_by_names_and_entity_type(rule_names, entity_type)
+            stored_rules = self.get_stored_rules_by_names_and_entity_type(rule_names, entity_type)
             rules_to_evaluate.update(stored_rules)
 
         elif categories:
-            category_rules = self.get_spike_stored_rules(entity_type, categories)
+            category_rules = self.get_stored_rules(entity_type, categories)
             rules_to_evaluate.update(category_rules)
         else:
-            all_rules = self.get_spike_stored_rules(entity_type)
+            all_rules = self.get_stored_rules(entity_type)
             rules_to_evaluate.update(all_rules)
 
         return list(rules_to_evaluate)
