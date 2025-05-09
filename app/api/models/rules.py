@@ -177,7 +177,7 @@ class RuleStats(BaseModel):
 
 class RuleListResponse(BaseModel):
     """Response model for listing rules."""
-    entity_types: List[str]
-    categories: Dict[str, List[str]]
-    rules: Dict[str, Dict[str, List[Rule]]]
-    stats: Dict[str, RuleStats]
+    entity_types: list[str]
+    categories: dict[str, list[str]]
+    rules: list[Rule]
+    stats: dict[str, RuleStats]

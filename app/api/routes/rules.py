@@ -91,8 +91,9 @@ async def list_rules(rule_list_request: Annotated[RuleListRequest, Query()],
     filter_str = " and ".join(filter_desc) if filter_desc else "no filters"
     logger.info(f"Listing rules with {filter_str}")
 
-    rules_by_entity = service.get_rules(entity_type, categories)
-    response_model = format_list_rules_response(rules_by_entity)
+    rules = service.get_rules(entity_type, categories)
+
+    response_model = format_list_rules_response(rules)
 
     entity_count = len(response_model.entity_types)
     rule_count = sum(stat.total_rules for stat in response_model.stats.values())
