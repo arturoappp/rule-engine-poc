@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 import pytest
 from pytest_mock import MockerFixture
-from app.api.models.rules import RuleListResponse
+from app.api.models.rules import RuleListResponse, Rule
 from app.api.routes.rules import get_rule_service
 from main import app
 
@@ -234,35 +234,32 @@ def test_rule_overwrite_functionality(client, mocker: MockerFixture):
 
 
 def test_get_rules_excludes_fields_with_none_value(client, mocker: MockerFixture):
-    test_rule = [
-        {
-            "name": "Equal Rule",
-            "entity_type": "commission_request",
-            "description": "Tests the 'equal' operator",
-            "conditions": {
-                "all": [
-                    {
-                        "path": "$.items[*].value",
-                        "operator": "equal",
-                        "value": 10
-                    }
-                ]
-            }
+    test_rule = Rule(
+        name="Equal Rule",
+        entity_type="commission_request",
+        description="Tests the 'equal' operator",
+        conditions={
+            "all": [
+                {
+                    "path": "$.items[*].value",
+                    "operator": "equal",
+                    "value": 10
+                }
+            ]
         }
-    ]
+    )
 
     mock_service = mocker.MagicMock()
     mock_service.get_rules.return_value = {}
     app.dependency_overrides[get_rule_service] = lambda: mock_service
 
     mock_format_list_rules_response = mocker.patch('app.api.routes.rules.format_list_rules_response')
-    rule_list_response = RuleListResponse(entity_types=["commission_request"],
-                                          categories={"commission_request": ["should_run"]},
-                                          rules={"commission_request": {
-                                              "should_run": test_rule
-                                          }},
-                                          stats={}
-                                          )
+    rule_list_response = RuleListResponse(
+        entity_types=["commission_request"],
+        categories={"commission_request": ["should_run"]},
+        rules=[test_rule],
+        stats={}
+    )
     mock_format_list_rules_response.return_value = rule_list_response
 
     response = client.get("/api/v1/rules")
@@ -275,7 +272,7 @@ def test_get_rules_excludes_fields_with_none_value(client, mocker: MockerFixture
     assert "stats" in data
 
     # Check that the 'conditions' field does not contain None values
-    rules = data["rules"]["commission_request"]["should_run"]
+    rules = data["rules"]
     for rule in rules:
         conditions = rule["conditions"]
         assert "path" not in conditions
@@ -313,12 +310,17 @@ def test_list_rules(mocker: MockerFixture, case, client):
         request_params["entity_type"] = entity_type
     if categories is not None:
         request_params["categories"] = categories
-    rules_by_entity = {}
+    rules_by_entity = []
 
     mock_service = mocker.MagicMock()
     mock_service.get_rules.return_value = rules_by_entity
     mock_format_list_rules_response = mocker.patch('app.api.routes.rules.format_list_rules_response')
-    rule_list_response = RuleListResponse(entity_types=[], categories={}, rules={}, stats={})
+    rule_list_response = RuleListResponse(
+        entity_types=[],
+        categories={},
+        rules=[],
+        stats={}
+    )
     mock_format_list_rules_response.return_value = rule_list_response
     app.dependency_overrides[get_rule_service] = lambda: mock_service
 
