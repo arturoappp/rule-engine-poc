@@ -1,3 +1,4 @@
+from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 import pytest
 from pytest_mock import MockerFixture
@@ -63,8 +64,6 @@ def test_store_rules_endpoint(client):
     data = response.json()
     assert data["success"] is True
     assert data["stored_rules"] == 1
-
-# TODO: Update since
 
 
 def test_list_rules_endpoint(client):
@@ -336,4 +335,56 @@ def test_list_rules(mocker: MockerFixture, case, client):
     assert "rules" in response_data
 
     # Reset the dependency override
+    app.dependency_overrides = {}
+
+
+def test_update_rule_categories_success(client):
+    """Test successful update of rule categories."""
+    mock_rule_service = MagicMock()
+    mock_rule_service.update_rule_categories.return_value = (
+        True,
+        "Categories updated successfully",
+    )
+
+    app.dependency_overrides[get_rule_service] = lambda: mock_rule_service
+
+    request_payload = {
+        "rule_name": "Test Rule",
+        "entity_type": "Test Entity",
+        "categories": ["Category1", "Category2"],
+        "category_action": "add",
+    }
+
+    response = client.post("/api/v1/rules/categories", json=request_payload)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert response_data["success"] is True
+    assert response_data["message"] == "Categories updated successfully"
+    app.dependency_overrides = {}
+
+
+def test_update_rule_categories_failure(client):
+    """Test failure case for updating rule categories."""
+    mock_rule_service = MagicMock()
+    mock_rule_service.update_rule_categories.return_value = (
+        False,
+        "Error updating rule categories: Rule with name 'Test Rule' not found for entity type 'Test Entity'",
+    )
+
+    app.dependency_overrides[get_rule_service] = lambda: mock_rule_service
+
+    request_payload = {
+        "rule_name": "Test Rule",
+        "entity_type": "Test Entity",
+        "categories": ["Category1", "Category2"],
+        "category_action": "add",
+    }
+
+    response = client.post("/api/v1/rules/categories", json=request_payload)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert response_data["success"] is False
+    assert response_data["message"] == "Error updating rule categories: Rule with name 'Test Rule' not found for entity type 'Test Entity'"
     app.dependency_overrides = {}

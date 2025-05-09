@@ -1,5 +1,5 @@
 import pytest
-from app.services.rule_engine import RuleEngine
+from rule_engine.core.rule_engine import RuleEngine
 from app.api.models.rules import Rule, StoredRule
 
 
@@ -76,12 +76,7 @@ def test_get_stored_rules_by_categories(rule_engine, sample_stored_rules):
 def test_get_stored_rules_by_entity_type_and_categories(rule_engine, sample_stored_rules):
     """Test filtering by both entity type and categories."""
     result = rule_engine.get_stored_rules(entity_type="Commission Request", categories=["Should Run"])
-
-    # # Debugging assertions
-    # assert isinstance(result, list), "Result should be a list"
-    # assert all(isinstance(rule, SpikeStoredRule) for rule in result), "All items in result should be SpikeStoredRule instances"
-
-    # Main assertions
+    
     assert len(result) == 2, f"Expected 2 rules, but got {len(result)}"
     assert all(rule.entity_type == "Commission Request" for rule in result), "All rules should have entity_type 'Commission Request'"
     assert all("Should Run" in rule.categories for rule in result), "All rules should include 'Should Run' in categories"

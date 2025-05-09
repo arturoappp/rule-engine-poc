@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 
 from app.api.models.rules import APIRule, Rule, StoredRule
-from app.services.rule_engine import RuleEngine
+from rule_engine.core.rule_engine import RuleEngine
 from rule_engine.core.failure_info import FailureInfo
 from rule_engine.core.rule_result import RuleResult
 
@@ -36,8 +36,6 @@ class RuleService:
         errors = []
         # Check if conditions are valid
         try:
-            # Convert to dictionary and validate - use model_dump() for Pydantic v2
-            # TODO: Find where this needs added for evaluate data, and if it needs an analagous method created
             rule_dict = rule.model_dump(by_alias=True)
 
             # Check for required fields

@@ -60,8 +60,6 @@ class RuleEngine:
             categories=list(categories),
             rule=rule
         )
-        # TODO: Should we require the user to pass an "overwrite" parameter to allow overwriting existing rules?
-        # Would prevent accidental overwrites
         self.rule_repository[stored_rule_key] = new_stored_rule
         logger.debug(f"Rule successfully added to repository with key: {stored_rule_key}")
 
@@ -203,7 +201,7 @@ class RuleEngine:
             rule_names: Optional list of rule names to filter rules.
 
         Returns:
-            A list of SpikeStoredRule objects to evaluate.
+            A list of StoredRule objects to evaluate.
         """
         rules_to_evaluate = set()
 
