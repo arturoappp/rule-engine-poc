@@ -3,8 +3,8 @@ Tests for all operator implementations in the rule engine using pytest.
 """
 
 import pytest
-from app.services.rule_engine import RuleEngine
-from app.services.rule_engine import Rule
+from rule_engine.core.rule_engine import RuleEngine
+from rule_engine.core.rule_engine import Rule
 
 
 @pytest.fixture

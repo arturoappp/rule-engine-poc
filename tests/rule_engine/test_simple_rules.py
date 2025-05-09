@@ -3,7 +3,7 @@ Tests for simple rule evaluations using pytest.
 """
 
 import pytest
-from app.services.rule_engine import RuleEngine
+from rule_engine.core.rule_engine import RuleEngine
 from app.api.models.rules import Rule
 
 

@@ -64,8 +64,6 @@ def test_store_rules_endpoint(client):
     assert data["success"] is True
     assert data["stored_rules"] == 1
 
-# TODO: Update since
-
 
 def test_list_rules_endpoint(client):
     """Test the list rules endpoint"""

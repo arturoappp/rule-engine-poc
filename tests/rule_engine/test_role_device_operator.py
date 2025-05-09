@@ -3,13 +3,13 @@ Tests for the role_device operator in the rule engine using pytest.
 """
 
 import pytest
-from app.services.rule_engine import RuleEngine
+from rule_engine.core.rule_engine import RuleEngine
 from app.api.models.rules import Rule
 
 
 @pytest.fixture
 def rule_engine():
-    """Create a SpikeRuleEngine instance with rules for testing the role_device operator."""
+    """Create a RuleEngine instance with rules for testing the role_device operator."""
     engine = RuleEngine.get_instance()
 
     # Load rules for testing the role_device operator
