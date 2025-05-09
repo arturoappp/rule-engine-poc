@@ -8,7 +8,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.api.routes import rules, evaluate, health, rule_categories
+from app.api.routes import rules, evaluate, health
 from app.core.config import settings
 from app.utilities.logging import init_logging, logger
 
@@ -86,9 +86,7 @@ app.add_middleware(LoggingMiddleware)
 app.include_router(health.router, prefix=settings.API_PREFIX, tags=["Health"])
 app.include_router(rules.router, prefix=settings.API_PREFIX, tags=["Rules"])
 app.include_router(evaluate.router, prefix=settings.API_PREFIX, tags=["Evaluation"])
-app.include_router(rule_categories.router, prefix=settings.API_PREFIX, tags=["Rule Categories"])
 
-#router registration
 logger.info("All routers registered successfully")
 
 if __name__ == "__main__":
