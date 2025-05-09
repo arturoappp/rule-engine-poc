@@ -3,7 +3,8 @@ Tests for simple rule evaluations using pytest.
 """
 
 import pytest
-from rule_engine.core.engine import RuleEngine
+from rule_engine.core.rule_engine import RuleEngine
+from app.api.models.rules import Rule
 
 
 @pytest.fixture
@@ -12,45 +13,44 @@ def rule_engine():
     engine = RuleEngine()
 
     # Simple "equal" rule
-    equal_rule = """
-    [
-        {
-            "name": "Equal Rule",
-            "description": "Tests the 'equal' operator",
-            "conditions": {
+    equal_rule = [
+        Rule(
+            name="Equal Rule",
+            entity_type="item",
+            description="Tests the 'equal' operator",
+            conditions={
                 "all": [
-                    {
-                        "path": "$.items[*].value",
-                        "operator": "equal",
-                        "value": 10
-                    }
+                        {
+                            "path": "$.items[*].value",
+                            "operator": "equal",
+                            "value": 10
+                        }
                 ]
             }
-        }
+        )
     ]
-    """
 
-    engine.load_rules_from_json(equal_rule, entity_type="item", category="test")
+    engine.add_rules(equal_rule)
 
     # Simple "not_equal" rule
-    not_equal_rule = """
-    [
-        {
-            "name": "Not Equal Rule",
-            "description": "Tests the 'not_equal' operator",
-            "conditions": {
+    not_equal_rule = [
+        Rule(
+            name="Not Equal Rule",
+            entity_type="item",
+            description="Tests the 'not_equal' operator",
+            conditions={
                 "all": [
-                    {
-                        "path": "$.items[*].value",
-                        "operator": "not_equal",
-                        "value": 5
-                    }
+                        {
+                            "path": "$.items[*].value",
+                            "operator": "not_equal",
+                            "value": 5
+                        }
                 ]
             }
-        }
+        )
     ]
-    """
-    engine.load_rules_from_json(not_equal_rule, entity_type="item", category="test")
+
+    engine.add_rules(not_equal_rule)
 
     return engine
 
@@ -65,7 +65,7 @@ def test_equal_rule_pass(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="item", categories=["test"])
+    results = rule_engine.evaluate_data(data, entity_type="item")
     equal_rule_result = next((r for r in results if r.rule_name == "Equal Rule"), None)
 
     assert equal_rule_result is not None
@@ -83,7 +83,7 @@ def test_equal_rule_fail(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="item", categories=["test"])
+    results = rule_engine.evaluate_data(data, entity_type="item")
     equal_rule_result = next((r for r in results if r.rule_name == "Equal Rule"), None)
 
     assert equal_rule_result is not None
@@ -102,7 +102,20 @@ def test_not_equal_rule_pass(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="item", categories=["test"])
+    equal_rule = Rule(
+        name="Equal Rule",
+        entity_type="item",
+        description="Tests the 'equal' operator",
+        conditions={
+                    "all": [
+                        {"operator": "equal", "path": "$.items[*].value", "value": 10}
+                    ]
+        }
+    )
+
+    rule_engine.add_rules([equal_rule])
+
+    results = rule_engine.evaluate_data(data, entity_type="item")
     not_equal_rule_result = next((r for r in results if r.rule_name == "Not Equal Rule"), None)
 
     assert not_equal_rule_result is not None
@@ -120,7 +133,7 @@ def test_not_equal_rule_fail(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="item", categories=["test"])
+    results = rule_engine.evaluate_data(data, entity_type="item")
     not_equal_rule_result = next((r for r in results if r.rule_name == "Not Equal Rule"), None)
 
     assert not_equal_rule_result is not None

@@ -4,7 +4,7 @@ API models for rule management.
 
 from typing import Dict, List, Any, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 
 class RuleCondition(BaseModel):
@@ -107,111 +107,47 @@ class RuleCondition(BaseModel):
 RuleCondition.model_rebuild()
 
 
-class SpikeAPIRule(BaseModel):
+class APIRule(BaseModel):
     name: str
+    entity_type: str
     description: Optional[str] = None
     conditions: RuleCondition
     add_to_categories: Optional[List[str]] = []
 
 
-class SpikeRule(BaseModel):
+class Rule(BaseModel):
     name: str
     entity_type: str
     description: Optional[str] = None
     conditions: RuleCondition
 
 
-class SpikeStoredRule(BaseModel):
+class StoredRule(BaseModel):
     rule_name: str
     entity_type: str
     description: Optional[str] = None
     categories: set[str]
-    rule: SpikeRule  # The rule itself, can be a complex structure
+    rule: Rule  # The rule itself, can be a complex structure
 
+    def __hash__(self):
+        # Use a unique combination of attributes to compute the hash
+        return hash((self.rule_name, self.entity_type))
 
-class Rule(BaseModel):
-    """Model for a rule."""
-    name: str
-    description: Optional[str] = None
-    conditions: RuleCondition
-    add_to_categories: Optional[List[str]] = Field(default_factory=lambda: ["default"])
-
-    model_config = {
-        "json_schema_extra": {
-            "examples": [
-                {
-                    "name": "Cisco Version Rule",
-                    "description": "Ensures Cisco devices are running the required OS version",
-                    "add_to_categories": ["version", "compliance"],
-                    "conditions": {
-                        "any": [
-                            {
-                                "path": "$.devices[*].vendor",
-                                "operator": "not_equal",
-                                "value": "Cisco Systems"
-                            },
-                            {
-                                "all": [
-                                    {
-                                        "path": "$.devices[*].vendor",
-                                        "operator": "equal",
-                                        "value": "Cisco Systems"
-                                    },
-                                    {
-                                        "path": "$.devices[*].osVersion",
-                                        "operator": "equal",
-                                        "value": "17.3.6"
-                                    }
-                                ]
-                            }
-                        ]
-                    }
-                }
-            ]
-        }
-    }
-
-    @field_validator('name')
-    @classmethod
-    def name_must_not_be_empty(cls, v):
-        """Validate that name is not empty."""
-        if not v.strip():
-            raise ValueError("Rule name must not be empty")
-        return v
-
-    def model_dump(self, **kwargs):
-        """Customize model dump to remove null values."""
-        # We don't add exclude_none here, we pass it through kwargs
-        data = super().model_dump(**kwargs)
-
-        # Ensure that conditions don't have null values
-        if 'conditions' in data and isinstance(data['conditions'], dict):
-            # Remove null attributes from conditions
-            conditions = {
-                k: v for k, v in data['conditions'].items()
-                if v is not None
-            }
-            data['conditions'] = conditions
-
-        return data
+    def __eq__(self, other):
+        if not isinstance(other, StoredRule):
+            return False
+        return self.rule_name == other.rule_name and self.entity_type == other.entity_type
 
 
 class RuleList(BaseModel):
     """Model for a list of rules."""
-    rules: List[Rule]
+    rules: list[Rule]
 
 
 class RuleListRequest(BaseModel):
     """Request model for a list of rules."""
     entity_type: Optional[str] = None
-    category: Optional[str] = None
-
-
-class SpikeRuleListRequest(BaseModel):
-    """Request model for a list of rules."""
-    entity_type: Optional[str] = None
-    # makes this an optional list of categories
-    categories: Optional[List[str]] = None
+    categories: Optional[list[str]] = None
 
 
 class RuleValidationResponse(BaseModel):
@@ -223,14 +159,7 @@ class RuleValidationResponse(BaseModel):
 class RuleStoreRequest(BaseModel):
     """Request model for storing rules."""
     entity_type: str
-    default_category: Optional[str] = "default"  # Used only if a rule doesn't specify add_to_categories
-    rules: List[Rule]
-
-
-class SpikeRuleStoreRequest(BaseModel):
-    """Request model for storing rules."""
-    entity_type: str
-    rules: List[SpikeAPIRule]
+    rules: list[APIRule]
 
 
 class RuleStoreResponse(BaseModel):
@@ -251,12 +180,4 @@ class RuleListResponse(BaseModel):
     entity_types: List[str]
     categories: Dict[str, List[str]]
     rules: Dict[str, Dict[str, List[Rule]]]
-    stats: Dict[str, RuleStats]
-
-
-class SpikeRuleListResponse(BaseModel):
-    """Response model for listing rules."""
-    entity_types: List[str]
-    categories: Dict[str, List[str]]
-    rules: Dict[str, Dict[str, List[SpikeRule]]]
     stats: Dict[str, RuleStats]

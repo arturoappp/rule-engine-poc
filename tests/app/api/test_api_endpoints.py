@@ -1,7 +1,8 @@
+from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 import pytest
 from pytest_mock import MockerFixture
-from app.api.models.rules import RuleListResponse, SpikeRuleListResponse
+from app.api.models.rules import RuleListResponse
 from app.api.routes.rules import get_rule_service
 from main import app
 
@@ -16,13 +17,13 @@ def test_validate_rule_endpoint(client):
     # Create a valid rule
     rule = {
         "name": "Test Rule",
+        "entity_type": "Commission Request",
         "description": "Test Description",
         "conditions": {
             "path": "$.devices[*].vendor",
             "operator": "equal",
             "value": "Cisco Systems"
         },
-        "categories": ["test"]
     }
 
     # Call the endpoint
@@ -40,10 +41,10 @@ def test_store_rules_endpoint(client):
     # Create request data
     request_data = {
         "entity_type": "device",
-        "default_category": "default",
         "rules": [
             {
                 "name": "API Test Rule",
+                "entity_type": "device",
                 "description": "Test Description",
                 "conditions": {
                     "path": "$.devices[*].vendor",
@@ -65,51 +66,22 @@ def test_store_rules_endpoint(client):
     assert data["stored_rules"] == 1
 
 
-def test_spike_store_rules_endpoint(client):
-    """Test the store rules endpoint"""
-    # Create request data
-    request_data = {
-        "entity_type": "device",
-        "rules": [
-            {
-                "name": "API Test Rule",
-                "description": "Test Description",
-                "conditions": {
-                    "path": "$.devices[*].vendor",
-                    "operator": "equal",
-                    "value": "Cisco Systems"
-                },
-                "categories": ["test_category"]
-            }
-        ]
-    }
-
-    # Call the endpoint
-    response = client.post("/api/v1/spike-rules", json=request_data)
-
-    # Check result
-    assert response.status_code == 200
-    data = response.json()
-    assert data["success"] is True
-    assert data["stored_rules"] == 1
-
-
 def test_list_rules_endpoint(client):
     """Test the list rules endpoint"""
     # Save a rule
     store_data = {
         "entity_type": "device",
-        "default_category": "default",
         "rules": [
             {
                 "name": "List Test Rule",
+                "entity_type": "device",
                 "description": "Test Description",
                 "conditions": {
                     "path": "$.devices[*].vendor",
                     "operator": "equal",
                     "value": "Cisco Systems"
                 },
-                "categories": ["default"]
+                "add_to_categories": ["default"]
             }
         ]
     }
@@ -132,81 +104,26 @@ def test_list_rules_endpoint(client):
                 for rule in rules:
                     if rule["name"] == "List Test Rule":
                         found = True
-                        # The field could be 'categories' or 'add_to_categories'
-                        # We check which exists and then its content
-                        categories_field = None
-                        if "categories" in rule:
-                            categories_field = "categories"
-                        elif "add_to_categories" in rule:
-                            categories_field = "add_to_categories"
-
-                        # Verify there is a field with categories
-                        assert categories_field is not None, "No categories field found in rule"
-
-                        # Verify the default category is present
-                        assert "default" in rule[categories_field], f"Default category not found in {categories_field}"
 
     assert found, "Added rule not found in list response"
 
 
-def test_spike_list_rules_endpoint(client):
-    """Test the list rules endpoint"""
-    # Save a rule
-    store_data = {
-        "entity_type": "device",
-        "default_category": "default",
-        "rules": [
-            {
-                "name": "List Test Rule",
-                "description": "Test Description",
-                "conditions": {
-                    "path": "$.devices[*].vendor",
-                    "operator": "equal",
-                    "value": "Cisco Systems"
-                },
-                "add_to_categories": ["default"]
-            }
-        ]
-    }
-    client.post("/api/v1/spike-rules", json=store_data)
-
-    # Now get the list of rules
-    response = client.get("/api/v1/spike-rules")
-
-    # Verify result
-    assert response.status_code == 200
-    data = response.json()
-    assert "entity_types" in data
-    assert "rules" in data
-
-    # Verify if our rule is in the response
-    found = False
-    for entity_type, categories in data["rules"].items():
-        if entity_type == "device":
-            for category, rules in categories.items():
-                for rule in rules:
-                    if rule["name"] == "List Test Rule":
-                        found = True
-
-    assert found, "Added rule not found in list response"
-
-
-def test_rule_overwrite_functionality(client):
+def test_rule_overwrite_functionality(client, mocker: MockerFixture):
     """Test the rule overwriting functionality"""
     # Prepare initial data
     initial_data = {
         "entity_type": "NDC_Request",
-        "default_category": "default",
         "rules": [
             {
                 "name": "OVERWRITE TEST RULE",
+                "entity_type": "NDC_Request",
                 "description": "Initial version",
                 "conditions": {
                     "path": "$.requests[*].managementIP",
                     "operator": "exists",
                     "value": True
                 },
-                "categories": ["default"]  # Changed to test with categories we know work
+                "add_to_categories": ["default"]
             }
         ]
     }
@@ -215,72 +132,10 @@ def test_rule_overwrite_functionality(client):
     # Now save an updated version with the same name
     updated_data = {
         "entity_type": "NDC_Request",
-        "default_category": "default",
         "rules": [
             {
                 "name": "OVERWRITE TEST RULE",
-                "description": "Updated version",
-                "conditions": {
-                    "path": "$.requests[*].managementIP",
-                    "operator": "match",
-                    "value": "^192\\.168\\..*$"
-                },
-                "categories": ["default"]  # Use the same category to verify overwriting
-            }
-        ]
-    }
-    response = client.post("/api/v1/rules", json=updated_data)
-    assert response.status_code == 200
-
-    # Get the list of rules and verify if the rule was correctly overwritten
-    list_response = client.get("/api/v1/rules")
-    data = list_response.json()
-
-    # Look for the rule in categories
-    rule_found = None
-
-    # Search in all entities and categories
-    for entity_type, categories in data["rules"].items():
-        if entity_type == "NDC_Request":
-            for category, rules in categories.items():
-                for rule in rules:
-                    if rule["name"] == "OVERWRITE TEST RULE":
-                        if category == "default":
-                            rule_found = rule
-
-    # Verify the rule exists and has been updated
-    assert rule_found is not None, "Rule not found in default category"
-    assert rule_found["description"] == "Updated version"
-    assert rule_found["conditions"]["operator"] == "match"
-    assert rule_found["conditions"]["value"] == "^192\\.168\\..*$"
-
-
-def test_spike_rule_overwrite_functionality(client):
-    """Test the rule overwriting functionality"""
-    # Prepare initial data
-    initial_data = {
-        "entity_type": "NDC_Request",
-        "rules": [
-            {
-                "name": "OVERWRITE TEST RULE",
-                "description": "Initial version",
-                "conditions": {
-                    "path": "$.requests[*].managementIP",
-                    "operator": "exists",
-                    "value": True
-                },
-                "add_to_categories": ["default"]  # Changed to test with categories we know work
-            }
-        ]
-    }
-    client.post("/api/v1/spike-rules", json=initial_data)
-
-    # Now save an updated version with the same name
-    updated_data = {
-        "entity_type": "NDC_Request",
-        "rules": [
-            {
-                "name": "OVERWRITE TEST RULE",
+                "entity_type": "NDC_Request",
                 "description": "Updated version",
                 "conditions": {
                     "path": "$.requests[*].managementIP",
@@ -291,11 +146,11 @@ def test_spike_rule_overwrite_functionality(client):
             }
         ]
     }
-    response = client.post("/api/v1/spike-rules", json=updated_data)
+    response = client.post("/api/v1/rules", json=updated_data)
     assert response.status_code == 200
 
     # Get the list of rules and verify if the rule was correctly overwritten
-    list_response = client.get("/api/v1/spike-rules")
+    list_response = client.get("/api/v1/rules")
     data = list_response.json()
 
     # Look for the rule in categories
@@ -316,11 +171,10 @@ def test_spike_rule_overwrite_functionality(client):
     assert rule_found["conditions"]["operator"] == "match"
     assert rule_found["conditions"]["value"] == "^192\\.168\\..*$"
 
-
-def test_get_rules_excludes_fields_with_none_value(client, mocker: MockerFixture):
     test_rule = [
         {
             "name": "Equal Rule",
+            "entity_type": "commission_request",
             "description": "Tests the 'equal' operator",
             "conditions": {
                 "all": [
@@ -379,7 +233,7 @@ def test_get_rules_excludes_fields_with_none_value(client, mocker: MockerFixture
             assert "not" not in condition
 
 
-def test_spike_get_rules_excludes_fields_with_none_value(client, mocker: MockerFixture):
+def test_get_rules_excludes_fields_with_none_value(client, mocker: MockerFixture):
     test_rule = [
         {
             "name": "Equal Rule",
@@ -398,20 +252,20 @@ def test_spike_get_rules_excludes_fields_with_none_value(client, mocker: MockerF
     ]
 
     mock_service = mocker.MagicMock()
-    mock_service.get_spike_rules.return_value = {}
+    mock_service.get_rules.return_value = {}
     app.dependency_overrides[get_rule_service] = lambda: mock_service
 
-    mock_spike_format_list_rules_response = mocker.patch('app.api.routes.rules.spike_format_list_rules_response')
-    rule_list_response = SpikeRuleListResponse(entity_types=["commission_request"],
-                                               categories={"commission_request": ["should_run"]},
-                                               rules={"commission_request": {
-                                                   "should_run": test_rule
-                                               }},
-                                               stats={}
-                                               )
-    mock_spike_format_list_rules_response.return_value = rule_list_response
+    mock_format_list_rules_response = mocker.patch('app.api.routes.rules.format_list_rules_response')
+    rule_list_response = RuleListResponse(entity_types=["commission_request"],
+                                          categories={"commission_request": ["should_run"]},
+                                          rules={"commission_request": {
+                                              "should_run": test_rule
+                                          }},
+                                          stats={}
+                                          )
+    mock_format_list_rules_response.return_value = rule_list_response
 
-    response = client.get("/api/v1/spike-rules")
+    response = client.get("/api/v1/rules")
     assert response.status_code == 200
     data = response.json()
     # Check that the response structure is correct
@@ -442,14 +296,7 @@ def test_spike_get_rules_excludes_fields_with_none_value(client, mocker: MockerF
             assert "not" not in condition
 
 
-# Define your test cases
 test_cases = [
-    {"entity_type": "commission", "category": "should_run"},
-    {"entity_type": "decommission"},
-    {"category": "could_run"},
-    {},
-]
-spike_test_cases = [
     {"entity_type": "commission", "categories": ["should_run"]},
     {"entity_type": "decommission"},
     {"category": "could_run"},
@@ -460,12 +307,12 @@ spike_test_cases = [
 @pytest.mark.parametrize("case", test_cases)
 def test_list_rules(mocker: MockerFixture, case, client):
     entity_type = case.get("entity_type", None)
-    category = case.get("category", None)
+    categories = case.get("categories", None)
     request_params = {}
     if entity_type is not None:
         request_params["entity_type"] = entity_type
-    if category is not None:
-        request_params["category"] = category
+    if categories is not None:
+        request_params["categories"] = categories
     rules_by_entity = {}
 
     mock_service = mocker.MagicMock()
@@ -479,7 +326,7 @@ def test_list_rules(mocker: MockerFixture, case, client):
     assert response.status_code == 200
 
     # Verify service.get_rules is called with the correct values
-    mock_service.get_rules.assert_called_with(entity_type, category)
+    mock_service.get_rules.assert_called_with(entity_type, categories)
     mock_format_list_rules_response.assert_called_with(rules_by_entity)
     # Verify the response model
     response_data = response.json()
@@ -491,35 +338,53 @@ def test_list_rules(mocker: MockerFixture, case, client):
     app.dependency_overrides = {}
 
 
-@pytest.mark.parametrize("case", spike_test_cases)
-def test_spike_list_rules(mocker: MockerFixture, case, client):
-    entity_type = case.get("entity_type", None)
-    categories = case.get("categories", None)
-    request_params = {}
-    if entity_type is not None:
-        request_params["entity_type"] = entity_type
-    if categories is not None:
-        request_params["categories"] = categories
-    rules_by_entity = {}
+def test_update_rule_categories_success(client):
+    """Test successful update of rule categories."""
+    mock_rule_service = MagicMock()
+    mock_rule_service.update_rule_categories.return_value = (
+        True,
+        "Categories updated successfully",
+    )
 
-    mock_service = mocker.MagicMock()
-    mock_service.spike_get_rules.return_value = rules_by_entity
-    mock_spike_format_list_rules_response = mocker.patch('app.api.routes.rules.spike_format_list_rules_response')
-    rule_list_response = SpikeRuleListResponse(entity_types=[], categories={}, rules={}, stats={})
-    mock_spike_format_list_rules_response.return_value = rule_list_response
-    app.dependency_overrides[get_rule_service] = lambda: mock_service
+    app.dependency_overrides[get_rule_service] = lambda: mock_rule_service
 
-    response = client.get("/api/v1/spike-rules", params=request_params)
+    request_payload = {
+        "rule_name": "Test Rule",
+        "entity_type": "Test Entity",
+        "categories": ["Category1", "Category2"],
+        "category_action": "add",
+    }
+
+    response = client.post("/api/v1/rules/categories", json=request_payload)
+
     assert response.status_code == 200
-
-    # Verify service.get_rules is called with the correct values
-    mock_service.spike_get_rules.assert_called_with(entity_type, categories)
-    mock_spike_format_list_rules_response.assert_called_with(rules_by_entity)
-    # Verify the response model
     response_data = response.json()
-    assert "entity_types" in response_data
-    assert "categories" in response_data
-    assert "rules" in response_data
+    assert response_data["success"] is True
+    assert response_data["message"] == "Categories updated successfully"
+    app.dependency_overrides = {}
 
-    # Reset the dependency override
+
+def test_update_rule_categories_failure(client):
+    """Test failure case for updating rule categories."""
+    mock_rule_service = MagicMock()
+    mock_rule_service.update_rule_categories.return_value = (
+        False,
+        "Error updating rule categories: Rule with name 'Test Rule' not found for entity type 'Test Entity'",
+    )
+
+    app.dependency_overrides[get_rule_service] = lambda: mock_rule_service
+
+    request_payload = {
+        "rule_name": "Test Rule",
+        "entity_type": "Test Entity",
+        "categories": ["Category1", "Category2"],
+        "category_action": "add",
+    }
+
+    response = client.post("/api/v1/rules/categories", json=request_payload)
+
+    assert response.status_code == 200
+    response_data = response.json()
+    assert response_data["success"] is False
+    assert response_data["message"] == "Error updating rule categories: Rule with name 'Test Rule' not found for entity type 'Test Entity'"
     app.dependency_overrides = {}

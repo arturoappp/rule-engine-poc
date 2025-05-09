@@ -3,7 +3,7 @@ Endpoints for data evaluation.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import List, Optional, Dict, Any
+from typing import Optional, Dict, Any
 
 from app.api.models.evaluate import (
     EvaluationRequest,
@@ -129,7 +129,7 @@ async def evaluate_with_rules(request: EvaluationWithRulesRequest, service: Rule
         results = service.evaluate_with_rules(
             data=request.data,
             entity_type=request.entity_type,
-            rules=request.rules
+            api_rules=request.rules
         )
 
         # Convert results to response format
