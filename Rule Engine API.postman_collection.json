@@ -1,10 +1,9 @@
 {
 	"info": {
-		"_postman_id": "54e876ca-3d5c-4784-820d-24f163878c24",
+		"_postman_id": "ccb1f352-1390-4b4e-8b1d-6b0bc65e2f46",
 		"name": "Rule Engine API",
 		"description": "A collection for testing the Rule Engine API endpoints",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "16726580"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
 		{
@@ -48,7 +47,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"Cisco Version Rule\",\n  \"description\": \"Ensures Cisco devices are running the required OS version\",\n  \"conditions\": {\n    \"any\": [\n      {\n        \"path\": \"$.devices[*].vendor\",\n        \"operator\": \"not_equal\",\n        \"value\": \"Cisco Systems\"\n      },\n      {\n        \"all\": [\n          {\n            \"path\": \"$.devices[*].vendor\",\n            \"operator\": \"equal\",\n            \"value\": \"Cisco Systems\"\n          },\n          {\n            \"path\": \"$.devices[*].osVersion\",\n            \"operator\": \"equal\",\n            \"value\": \"17.3.6\"\n          }\n        ]\n      }\n    ]\n  }\n}"
+							"raw": "{\n  \"name\": \"Cisco Version Rule\",\n  \"entity_type\": \"Commission Request\",\n  \"description\": \"Ensures Cisco devices are running the required OS version\",\n  \"conditions\": {\n    \"any\": [\n      {\n        \"path\": \"$.devices[*].vendor\",\n        \"operator\": \"not_equal\",\n        \"value\": \"Cisco Systems\"\n      },\n      {\n        \"all\": [\n          {\n            \"path\": \"$.devices[*].vendor\",\n            \"operator\": \"equal\",\n            \"value\": \"Cisco Systems\"\n          },\n          {\n            \"path\": \"$.devices[*].osVersion\",\n            \"operator\": \"equal\",\n            \"value\": \"17.3.6\"\n          }\n        ]\n      }\n    ]\n  }\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/rules/validate",
@@ -78,7 +77,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"entity_type\": \"NDC_Request\",\n  \"default_category\": \"general\",\n  \"rules\": [\n    {\n      \"name\": \"SHOULD RUN OPENNMS TASK2\",\n      \"description\": \"Checks if an OpenNMS task should be run based on FQDN existence and function code restrictions\",\n      \"categories\": [\"taskValidation\", \"networkMonitoring\"],\n      \"conditions\": {\n        \"all\": [\n          {\n            \"path\": \"$.requests[*].fqdn\",\n            \"operator\": \"exists\",\n            \"value\": true\n          },\n          {\n            \"not\": {\n              \"path\": \"$.requests[*].functionCode\",\n              \"operator\": \"in_list\",\n              \"value\": [\"LAN\", \"SEC\", \"WLN\", \"WLF\"]\n            }\n          }\n        ]\n      }\n    },\n    {\n      \"name\": \"VALIDATE IP ADDRESS FORMAT\",\n      \"description\": \"Ensures management IP addresses follow proper IPv4 format\",\n      \"categories\": [\"taskValidation\", \"securityValidation\", \"dataQuality\"],\n      \"conditions\": {\n        \"all\": [\n          {\n            \"path\": \"$.requests[*].managementIP\",\n            \"operator\": \"exists\",\n            \"value\": true\n          },\n          {\n            \"path\": \"$.requests[*].managementIP\",\n            \"operator\": \"match\",\n            \"value\": \"^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\\\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$\"\n          }\n        ]\n      }\n    },\n    {\n      \"name\": \"VERIFY TECHNICIAN ASSIGNMENT\",\n      \"description\": \"Checks that all requests have both a technician and a technician group assigned\",\n      \"categories\": [\"taskValidation\", \"workflowValidation\"],\n      \"conditions\": {\n        \"all\": [\n          {\n            \"path\": \"$.requests[*].l1Technician\",\n            \"operator\": \"exists\",\n            \"value\": true\n          },\n          {\n            \"path\": \"$.requests[*].l1TechnicianGroup\",\n            \"operator\": \"exists\",\n            \"value\": true\n          }\n        ]\n      }\n    }\n  ]\n}"
+							"raw": "{\n  \"entity_type\": \"Commission Request\",\n  \"rules\": [\n  {\n    \"name\": \"Cisco Version Rule\",\n    \"description\": \"Ensures Cisco devices are running the required OS version\",\n    \"add_to_categories\": [\"Should Run\"],\n    \"conditions\": {\n        \"any\": [\n        {\n            \"path\": \"$.devices[*].vendor\",\n            \"operator\": \"not_equal\",\n            \"value\": \"Cisco Systems\"\n        },\n        {\n            \"all\": [\n            {\n                \"path\": \"$.devices[*].vendor\",\n                \"operator\": \"equal\",\n                \"value\": \"Cisco Systems\"\n            },\n            {\n                \"path\": \"$.devices[*].osVersion\",\n                \"operator\": \"equal\",\n                \"value\": \"17.3.6\"\n            }\n            ]\n        }\n        ]\n    }\n  },\n  {\n    \"name\": \"Cisco Version Rule 2\",\n    \"description\": \"Ensures Cisco devices are running the required OS version\",\n    \"add_to_categories\": [\"Should Run\", \"Could Run\"],\n    \"conditions\": {\n        \"any\": [\n        {\n            \"path\": \"$.devices[*].vendor\",\n            \"operator\": \"not_equal\",\n            \"value\": \"Cisco Systems\"\n        },\n        {\n            \"any\": [\n            {\n                \"path\": \"$.devices[*].vendor\",\n                \"operator\": \"equal\",\n                \"value\": \"Cisco Systems\"\n            },\n            {\n                \"path\": \"$.devices[*].osVersion\",\n                \"operator\": \"equal\",\n                \"value\": \"17.3.6\"\n            }\n            ]\n        }\n        ]\n    }\n  }\n  ]\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/rules",
@@ -162,7 +161,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"entity_type\": \"device\",\n  \"rules\": [\n    {\n      \"name\": \"All Devices Must Have Management IP2\",\n      \"conditions\": {\n        \"all\": [\n          {\n            \"path\": \"$.devices[*].mgmtIP\",\n            \"operator\": \"equal\",\n            \"value\": \"192.168.1.16\"\n          }\n        ]\n      }\n    }\n  ],\n  \"data\": {\n    \"devices\": [\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"17.3.6\",\n        \"mgmtIP\": \"192.168.1.16\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"osVersion\": \"10.0.19045\",\n            \"mgmtIP\": \"192.168.1.1\"\n      }\n    ]\n  }\n}"
+							"raw": "{\n  \"entity_type\": \"device\",\n  \"rules\": [\n    {\n      \"name\": \"All Devices Must Have Management IP\",\n      \"conditions\": {\n        \"all\": [\n          {\n            \"path\": \"$.devices[*].mgmtIP\",\n            \"operator\": \"exists\",\n            \"value\": true\n          }\n        ]\n      }\n    }\n  ],\n  \"data\": {\n    \"devices\": [\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"17.3.6\",\n        \"mgmtIP\": \"192.168.1.1\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"osVersion\": \"10.0.19045\"\n      }\n    ]\n  }\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/evaluate/with-rules",

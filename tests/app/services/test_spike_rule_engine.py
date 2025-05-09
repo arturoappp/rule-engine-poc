@@ -1,40 +1,40 @@
 import pytest
-from app.services.spike_rule_engine import SpikeRuleEngine
-from app.api.models.rules import SpikeRule, SpikeStoredRule
+from app.services.rule_engine import RuleEngine
+from app.api.models.rules import Rule, StoredRule
 
 
 @pytest.fixture
-def spike_rule_engine():
-    return SpikeRuleEngine()
+def rule_engine():
+    return RuleEngine()
 
 
 @pytest.fixture
 def sample_rules():
     return [
-        SpikeRule(name="Rule1", entity_type="Commission Request", description="Description1", conditions={"condition": {}}),
-        SpikeRule(name="Rule2", entity_type="Decommission Request", description="Description2", conditions={"condition": {}}),
-        SpikeRule(name="Rule3", entity_type="Commission Request", description="Description3", conditions={"condition": {}}),
+        Rule(name="Rule1", entity_type="Commission Request", description="Description1", conditions={"condition": {}}),
+        Rule(name="Rule2", entity_type="Decommission Request", description="Description2", conditions={"condition": {}}),
+        Rule(name="Rule3", entity_type="Commission Request", description="Description3", conditions={"condition": {}}),
     ]
 
 
 @pytest.fixture
-def sample_stored_rules(spike_rule_engine, sample_rules):
+def sample_stored_rules(rule_engine, sample_rules):
     stored_rules = [
-        SpikeStoredRule(
+        StoredRule(
             rule_name=sample_rules[0].name,
             entity_type=sample_rules[0].entity_type,
             description=sample_rules[0].description,
             categories=["Should Run", "Can Run"],
             rule=sample_rules[0],
         ),
-        SpikeStoredRule(
+        StoredRule(
             rule_name=sample_rules[1].name,
             entity_type=sample_rules[1].entity_type,
             description=sample_rules[1].description,
             categories=["Should Run"],
             rule=sample_rules[1],
         ),
-        SpikeStoredRule(
+        StoredRule(
             rule_name=sample_rules[2].name,
             entity_type=sample_rules[2].entity_type,
             description=sample_rules[2].description,
@@ -44,38 +44,38 @@ def sample_stored_rules(spike_rule_engine, sample_rules):
     ]
 
     for stored_rule in stored_rules:
-        spike_rule_engine.spike_rule_repository[f"{stored_rule.entity_type}|{stored_rule.rule_name}"] = stored_rule
+        rule_engine.rule_repository[f"{stored_rule.entity_type}|{stored_rule.rule_name}"] = stored_rule
 
     return stored_rules
 
 
-def test_get_spike_stored_rules_no_filters(spike_rule_engine, sample_stored_rules):
+def test_get_stored_rules_no_filters(rule_engine, sample_stored_rules):
 
-    result = spike_rule_engine.get_spike_stored_rules()
+    result = rule_engine.get_stored_rules()
 
     assert len(result) == len(sample_stored_rules)
     assert all(rule in result for rule in sample_stored_rules)
 
 
-def test_get_spike_stored_rules_by_entity_type(spike_rule_engine, sample_stored_rules):
+def test_get_stored_rules_by_entity_type(rule_engine, sample_stored_rules):
 
-    result = spike_rule_engine.get_spike_stored_rules(entity_type="Commission Request")
+    result = rule_engine.get_stored_rules(entity_type="Commission Request")
 
     assert len(result) == 2
     assert all(rule.entity_type == "Commission Request" for rule in result)
 
 
-def test_get_spike_stored_rules_by_categories(spike_rule_engine, sample_stored_rules):
+def test_get_stored_rules_by_categories(rule_engine, sample_stored_rules):
 
-    result = spike_rule_engine.get_spike_stored_rules(categories=["Should Run"])
+    result = rule_engine.get_stored_rules(categories=["Should Run"])
 
     assert len(result) == 3
     assert all("Should Run" in rule.categories for rule in result)
 
 
-def test_get_spike_stored_rules_by_entity_type_and_categories(spike_rule_engine, sample_stored_rules):
+def test_get_stored_rules_by_entity_type_and_categories(rule_engine, sample_stored_rules):
     """Test filtering by both entity type and categories."""
-    result = spike_rule_engine.get_spike_stored_rules(entity_type="Commission Request", categories=["Should Run"])
+    result = rule_engine.get_stored_rules(entity_type="Commission Request", categories=["Should Run"])
 
     # # Debugging assertions
     # assert isinstance(result, list), "Result should be a list"
@@ -87,8 +87,8 @@ def test_get_spike_stored_rules_by_entity_type_and_categories(spike_rule_engine,
     assert all("Should Run" in rule.categories for rule in result), "All rules should include 'Should Run' in categories"
 
 
-def test_get_spike_stored_rules_no_match(spike_rule_engine):
+def test_get_stored_rules_no_match(rule_engine):
 
-    result = spike_rule_engine.get_spike_stored_rules(entity_type="NonexistentType")
+    result = rule_engine.get_stored_rules(entity_type="NonexistentType")
 
     assert len(result) == 0

@@ -3,38 +3,39 @@ Tests for deeply nested rule evaluations using pytest.
 """
 
 import pytest
-from rule_engine.core.engine import RuleEngine
+from app.services.rule_engine import RuleEngine
+from app.api.models.rules import Rule
 
 
 @pytest.fixture
 def rule_engine():
-    """Create a RuleEngine instance with a deeply nested rule."""
-    engine = RuleEngine()
+    """Create a SpikeRuleEngine instance with a deeply nested rule."""
+    engine = RuleEngine.get_instance()
 
-    # Deep nested rule with multiple levels
-    nested_rule = """
-    [
-        {
-            "name": "Deep Nested Rule",
-            "description": "A complex rule with several levels of nesting",
-            "conditions": {
+    # Deep nested rules as SpikeRule objects
+    nested_rules = [
+        Rule(
+            name="Deep Nested Rule",
+            entity_type="Decommission Request",
+            description="A complex rule with several levels of nesting",
+            conditions={
                 "all": [
                     {
                         "any": [
                             {
-                                "path": "$.configs[*].type",
+                                "path": "$.Decommission Requests[*].type",
                                 "operator": "equal",
                                 "value": "firewall"
                             },
                             {
                                 "all": [
                                     {
-                                        "path": "$.configs[*].type",
+                                        "path": "$.Decommission Requests[*].type",
                                         "operator": "equal",
                                         "value": "router"
                                     },
                                     {
-                                        "path": "$.configs[*].security_level",
+                                        "path": "$.Decommission Requests[*].security_level",
                                         "operator": "greater_than_equal",
                                         "value": 3
                                     }
@@ -45,33 +46,32 @@ def rule_engine():
                     {
                         "none": [
                             {
-                                "path": "$.configs[*].status",
+                                "path": "$.Decommission Requests[*].status",
                                 "operator": "equal",
                                 "value": "deprecated"
                             },
                             {
                                 "not": {
-                                    "path": "$.configs[*].compliance_checked",
+                                    "path": "$.Decommission Requests[*].compliance_checked",
                                     "operator": "equal",
-                                    "value": true
+                                    "value": True
                                 }
                             }
                         ]
                     }
                 ]
             }
-        }
+        )
     ]
-    """
-    engine.load_rules_from_json(nested_rule, entity_type="config", category="nested")
 
+    engine.add_rules(nested_rules)
     return engine
 
 
 def test_nested_rule_firewall_pass(rule_engine):
-    """Test case where firewall configs pass the nested rule."""
+    """Test case where firewall Decommission Requests pass the nested rule."""
     data = {
-        "configs": [
+        "Decommission Requests": [
             {
                 "id": "cfg-1",
                 "type": "firewall",
@@ -81,7 +81,7 @@ def test_nested_rule_firewall_pass(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="config", categories=["nested"])
+    results = rule_engine.evaluate_data(data, entity_type="Decommission Request")
     rule_result = next((r for r in results if r.rule_name == "Deep Nested Rule"), None)
 
     assert rule_result is not None
@@ -90,9 +90,9 @@ def test_nested_rule_firewall_pass(rule_engine):
 
 
 def test_nested_rule_router_high_security_pass(rule_engine):
-    """Test case where router configs with high security pass the nested rule."""
+    """Test case where router Decommission Requests with high security pass the nested rule."""
     data = {
-        "configs": [
+        "Decommission Requests": [
             {
                 "id": "cfg-1",
                 "type": "router",
@@ -103,7 +103,7 @@ def test_nested_rule_router_high_security_pass(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="config", categories=["nested"])
+    results = rule_engine.evaluate_data(data, entity_type="Decommission Request")
     rule_result = next((r for r in results if r.rule_name == "Deep Nested Rule"), None)
 
     assert rule_result is not None
@@ -112,9 +112,9 @@ def test_nested_rule_router_high_security_pass(rule_engine):
 
 
 def test_nested_rule_router_low_security_fail(rule_engine):
-    """Test case where router configs with low security fail the nested rule."""
+    """Test case where router Decommission Requests with low security fail the nested rule."""
     data = {
-        "configs": [
+        "Decommission Requests": [
             {
                 "id": "cfg-1",
                 "type": "router",
@@ -125,7 +125,7 @@ def test_nested_rule_router_low_security_fail(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="config", categories=["nested"])
+    results = rule_engine.evaluate_data(data, entity_type="Decommission Request")
     rule_result = next((r for r in results if r.rule_name == "Deep Nested Rule"), None)
 
     assert rule_result is not None
@@ -134,9 +134,9 @@ def test_nested_rule_router_low_security_fail(rule_engine):
 
 
 def test_nested_rule_fail_deprecated(rule_engine):
-    """Test case where configs fail due to deprecated status."""
+    """Test case where Decommission Requests fail due to deprecated status."""
     data = {
-        "configs": [
+        "Decommission Requests": [
             {
                 "id": "cfg-1",
                 "type": "firewall",
@@ -146,7 +146,7 @@ def test_nested_rule_fail_deprecated(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="config", categories=["nested"])
+    results = rule_engine.evaluate_data(data, entity_type="Decommission Request")
     rule_result = next((r for r in results if r.rule_name == "Deep Nested Rule"), None)
 
     assert rule_result is not None
@@ -155,9 +155,9 @@ def test_nested_rule_fail_deprecated(rule_engine):
 
 
 def test_nested_rule_fail_compliance(rule_engine):
-    """Test case where configs fail due to missing compliance check."""
+    """Test case where Decommission Requests fail due to missing compliance check."""
     data = {
-        "configs": [
+        "Decommission Requests": [
             {
                 "id": "cfg-1",
                 "type": "firewall",
@@ -167,7 +167,7 @@ def test_nested_rule_fail_compliance(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="config", categories=["nested"])
+    results = rule_engine.evaluate_data(data, entity_type="Decommission Request")
     rule_result = next((r for r in results if r.rule_name == "Deep Nested Rule"), None)
 
     assert rule_result is not None
@@ -176,9 +176,9 @@ def test_nested_rule_fail_compliance(rule_engine):
 
 
 def test_nested_rule_mixed_entities(rule_engine):
-    """Test case with mixed passing and failing configs."""
+    """Test case with mixed passing and failing Decommission Requests."""
     data = {
-        "configs": [
+        "Decommission Requests": [
             {
                 "id": "cfg-1",
                 "type": "firewall",
@@ -208,16 +208,16 @@ def test_nested_rule_mixed_entities(rule_engine):
         ]
     }
 
-    results = rule_engine.evaluate_data(data, entity_type="config", categories=["nested"])
+    results = rule_engine.evaluate_data(data, entity_type="Decommission Request")
     rule_result = next((r for r in results if r.rule_name == "Deep Nested Rule"), None)
 
     assert rule_result is not None
     assert not rule_result.success
 
-    # Check that exactly 2 configs failed
+    # Check that exactly 2 Decommission Requests failed
     assert len(rule_result.failing_elements) == 2
 
-    # Check failing config IDs
+    # Check failing Decommission Request IDs
     failing_ids = [element["id"] for element in rule_result.failing_elements]
     assert "cfg-2" in failing_ids
     assert "cfg-3" in failing_ids
