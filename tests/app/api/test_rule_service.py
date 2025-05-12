@@ -95,7 +95,7 @@ def test_store_rules_new(rule_service):
     rule_service.engine.get_rules_by_category.return_value = []
 
     # Store the rules
-    success, message, count = rule_service.store_rules("Commission Request", rules)
+    success, message, count = rule_service.store_rules(rules)
 
     # Check result
     assert success is True
@@ -119,7 +119,7 @@ def test_store_rules_update(rule_service):  # Renamed function
     )
 
     # Store the rule
-    success, message, count = rule_service.store_rules("Commission Request", [rule])
+    success, message, count = rule_service.store_rules([rule])
 
     # Check result
     assert success is True
@@ -147,7 +147,7 @@ def test_store_rules_multi_category(rule_service):
     rule_service.engine.get_rules_by_category.return_value = []
 
     # Store the rule
-    success, message, count = rule_service.store_rules("Commission Request", [rule])
+    success, message, count = rule_service.store_rules([rule])
 
     # Check result
     assert success is True

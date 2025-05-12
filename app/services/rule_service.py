@@ -275,7 +275,7 @@ class RuleService:
 
         return result
 
-    def store_rules(self, entity_type: str, rules: List[APIRule]) -> Tuple[
+    def store_rules(self, rules: List[APIRule]) -> Tuple[
             bool, str, int]:
         """
         Store rules in the engine, overwriting duplicates with same name across all categories.
@@ -294,9 +294,9 @@ class RuleService:
             # Process all rules from request
             for rule in rules:
                 existing_categories = []
-                if self.engine.rule_exists(rule.name, entity_type):
+                if self.engine.rule_exists(rule.name, rule.entity_type):
                     existing_stored_rule = self.engine.get_stored_rule_by_name_and_entity_type(rule.name,
-                                                                                               entity_type)
+                                                                                               rule.entity_type)
                     existing_categories = existing_stored_rule.categories
                     updated_rules += 1
                 else:

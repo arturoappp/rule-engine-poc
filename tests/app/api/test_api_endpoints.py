@@ -40,7 +40,6 @@ def test_store_rules_endpoint(client):
     """Test the store rules endpoint"""
     # Create request data
     request_data = {
-        "entity_type": "device",
         "rules": [
             {
                 "name": "API Test Rule",
@@ -94,7 +93,6 @@ def test_rule_overwrite_functionality(client, mocker: MockerFixture):
     """Test the rule overwriting functionality"""
     # Prepare initial data
     initial_data = {
-        "entity_type": "NDC_Request",
         "rules": [
             {
                 "name": "OVERWRITE TEST RULE",
@@ -302,7 +300,7 @@ def test_update_rule_categories_failure(client):
 
     response = client.post("/api/v1/rules/categories", json=request_payload)
 
-    assert response.status_code == 200
+    assert response.status_code == 400
     response_data = response.json()
     assert response_data["success"] is False
     assert response_data["message"] == "Error updating rule categories: Rule with name 'Test Rule' not found for entity type 'Test Entity'"
