@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 import pytest
 from pytest_mock import MockerFixture
-from app.api.models.rules import RuleListResponse, Rule, RuleViewModel
+from app.api.models.rules import RuleListResponse, RuleViewModel
 from app.api.routes.rules import get_rule_service
 from main import app
 
@@ -179,7 +179,6 @@ def test_get_rules_excludes_fields_with_none_value(client, mocker: MockerFixture
     data = response.json()
     # Check that the response structure is correct
     assert "rules" in data
-    assert "stats" in data
 
     # Check that the 'conditions' field does not contain None values
     rules = data["rules"]
@@ -241,7 +240,6 @@ def test_list_rules(mocker: MockerFixture, case, client):
     # Verify the response model
     response_data = response.json()
     assert "rules" in response_data
-    assert "stats" in response_data
     # Reset the dependency override
     app.dependency_overrides = {}
 

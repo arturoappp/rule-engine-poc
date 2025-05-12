@@ -2,7 +2,7 @@
 API models for rule management.
 """
 
-from typing import Dict, List, Any, Optional
+from typing import List, Any, Optional
 from fastapi import Query
 
 from pydantic import BaseModel, Field, model_validator
@@ -175,13 +175,6 @@ class RuleStoreResponse(BaseModel):
     stored_rules: int
 
 
-class RuleStats(BaseModel):
-    """Model for rule statistics."""
-    total_rules: int
-    rules_by_category: Dict[str, int]
-
-
 class RuleListResponse(BaseModel):
     """Response model for listing rules."""
     rules: list[RuleViewModel]
-    stats: dict[str, RuleStats]

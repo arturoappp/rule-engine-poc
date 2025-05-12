@@ -94,7 +94,7 @@ async def list_rules(rule_list_request: Annotated[RuleListRequest, Query()],
 
     response_model = format_list_rules_response(rules)
 
-    rule_count = sum(stat.total_rules for stat in response_model.stats.values())
+    rule_count = len(rules)
     logger.info(f"Returning {rule_count} rules")
 
     return response_model

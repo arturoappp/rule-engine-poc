@@ -1,5 +1,5 @@
 from app.helpers.response_formatter import format_list_rules_response
-from app.api.models.rules import Rule, RuleListResponse, RuleStats, RuleViewModel, StoredRule
+from app.api.models.rules import Rule, RuleListResponse, RuleViewModel, StoredRule
 
 
 def test_format_list_rules_response_with_empty_stored_rules():
@@ -8,7 +8,6 @@ def test_format_list_rules_response_with_empty_stored_rules():
 
     assert isinstance(result, RuleListResponse)
     assert result.rules == []
-    assert result.stats == {}
 
 
 def test_format_list_rules_response_with_single_stored_rule():
@@ -38,12 +37,6 @@ def test_format_list_rules_response_with_single_stored_rule():
 
     assert isinstance(result, RuleListResponse)
     assert result.rules == [expected_rule_view_model]
-    assert result.stats == {
-        "Entity1": RuleStats(
-            total_rules=1,
-            rules_by_category={"Category1": 1}
-        )
-    }
 
 
 def test_format_list_rules_response_with_multiple_stored_rules():
@@ -116,13 +109,3 @@ def test_format_list_rules_response_with_multiple_stored_rules():
 
     assert isinstance(result, RuleListResponse)
     assert result.rules == [ruleViewModel1, ruleViewModel2, ruleViewModel3]
-    assert result.stats == {
-        "Entity1": RuleStats(
-            total_rules=2,
-            rules_by_category={"Category1": 2, "Category2": 1}
-        ),
-        "Entity2": RuleStats(
-            total_rules=1,
-            rules_by_category={"Category2": 1}
-        )
-    }
