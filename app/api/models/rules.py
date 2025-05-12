@@ -3,6 +3,7 @@ API models for rule management.
 """
 
 from typing import Dict, List, Any, Optional
+from fastapi import Query
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -122,6 +123,15 @@ class Rule(BaseModel):
     conditions: RuleCondition
 
 
+class RuleViewModel(BaseModel):
+    """Model for displaying rules in the UI."""
+    rule_name: str
+    entity_type: str
+    description: Optional[str] = None
+    conditions: RuleCondition
+    categories_associated_with: set[str] = Field(default_factory=set)
+
+
 class StoredRule(BaseModel):
     rule_name: str
     entity_type: str
@@ -147,7 +157,7 @@ class RuleList(BaseModel):
 class RuleListRequest(BaseModel):
     """Request model for a list of rules."""
     entity_type: Optional[str] = None
-    categories: Optional[list[str]] = None
+    categories: Optional[list[str]] = Query(default=None)  # Use Query to indicate it's a list
 
 
 class RuleValidationResponse(BaseModel):
@@ -176,7 +186,5 @@ class RuleStats(BaseModel):
 
 class RuleListResponse(BaseModel):
     """Response model for listing rules."""
-    entity_types: list[str]
-    categories: dict[str, list[str]]
-    rules: list[Rule]
+    rules: list[RuleViewModel]
     stats: dict[str, RuleStats]
