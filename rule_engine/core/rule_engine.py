@@ -112,7 +112,7 @@ class RuleEngine:
             stored_rules = [stored_rule for stored_rule in self.rule_repository.values()]
         elif entity_type is not None and categories is None:
             stored_rules = [stored_rule for _, stored_rule in self.rule_repository.items() if
-                            stored_rule.entity_type == entity_type]
+                            stored_rule.rule.entity_type == entity_type]
         elif entity_type is None and categories is not None:
             stored_rules = [stored_rule for _, stored_rule in self.rule_repository.items() if
                             any(category in stored_rule.categories for category in categories)]

@@ -133,20 +133,17 @@ class RuleViewModel(BaseModel):
 
 
 class StoredRule(BaseModel):
-    rule_name: str
-    entity_type: str
-    description: Optional[str] = None
     categories: set[str]
     rule: Rule  # The rule itself, can be a complex structure
 
     def __hash__(self):
-        # Use a unique combination of attributes to compute the hash
-        return hash((self.rule_name, self.entity_type))
+        # Use a unique combination of attributes from the rule to compute the hash
+        return hash((self.rule.name, self.rule.entity_type))
 
     def __eq__(self, other):
         if not isinstance(other, StoredRule):
             return False
-        return self.rule_name == other.rule_name and self.entity_type == other.entity_type
+        return self.rule.name == other.rule.name and self.rule.entity_type == other.rule.entity_type
 
 
 class RuleList(BaseModel):

@@ -185,7 +185,7 @@ def test_update_rule_categories_add_success(rule_service):
     success, message = rule_service.update_rule_categories(rule_name, entity_type, categories, "add")
 
     assert success is True
-    assert "Successfully updated categories" in message
+    assert "Successfully added categories" in message  # Updated assertion
     rule_service._add_categories.assert_called_once_with(entity_type, rule_name, categories)
     rule_service._remove_categories.assert_not_called()
 
@@ -202,7 +202,7 @@ def test_update_rule_categories_remove_success(rule_service):
     success, message = rule_service.update_rule_categories(rule_name, entity_type, categories, "remove")
 
     assert success is True
-    assert "Successfully updated categories" in message
+    assert "Successfully removed categories" in message  # Updated assertion
     rule_service._remove_categories.assert_called_once_with(rule_name, entity_type, categories)
     rule_service._add_categories.assert_not_called()
 
