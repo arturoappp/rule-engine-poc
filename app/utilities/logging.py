@@ -10,7 +10,7 @@ BASE_LOGGING_ATTRS = '%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(linen
 DD_ENABLED = bool(getattr(find_spec('ddtrace'), "loader", None))
 DD_LOGGING_ATTRS = '[dd.service=%(dd.service)s dd.env=%(dd.env)s dd.version=%(dd.version)s dd.trace_id=%(dd.trace_id)s dd.span_id=%(dd.span_id)s]'
 
-_LOGGERS_CONTEXT_DATA = {"rule-engine-api": ["entity_type", "rule_name", "category"]}
+_LOGGERS_CONTEXT_DATA = {"rule-engine-api": ["entity_type"]}  # add ["rule_name", "category"]} if necessary
 
 
 class ArgsFilter(logging.Filter):
@@ -74,7 +74,7 @@ def init_logging():
     """
     Initialize logging configuration for FastAPI application.
     """
-    main_loggers = ["rule-engine-api"]
+    main_loggers = ["rule-engine-api", "uvicorn.access"]
     loggers = [*main_loggers]
 
     for logger_name in loggers:
