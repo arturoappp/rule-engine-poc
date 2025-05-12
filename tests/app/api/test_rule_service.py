@@ -1,4 +1,3 @@
-# tests/test_rule_service.py
 from unittest.mock import Mock, MagicMock
 import pytest
 
@@ -161,7 +160,7 @@ def test_store_rules_multi_category(rule_service):
 ])
 def test_get_rules_calls_create_rules_dict_with_correct_parameters(mocker: MockerFixture, entity_type, provided_categories):
     expected_result = {}
-   
+
     mock_engine = MagicMock()
     mock_engine.get_stored_rules.return_value = expected_result
 

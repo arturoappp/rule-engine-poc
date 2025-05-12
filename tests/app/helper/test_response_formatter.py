@@ -1,10 +1,5 @@
-from codecs import ignore_errors
 
-import pytest
-from pytest_mock import MockerFixture
-from app.api.models.rules import RuleCondition, RuleListResponse, RuleStats, StoredRule
 from app.helpers.response_formatter import format_list_rules_response
-from app.api.models.rules import Rule
 from app.api.models.rules import Rule, RuleListResponse, RuleStats, StoredRule
 
 

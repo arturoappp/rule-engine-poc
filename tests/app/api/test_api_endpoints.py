@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 import pytest
 from pytest_mock import MockerFixture
-from app.api.models.rules import RuleListResponse, Rule, StoredRule
+from app.api.models.rules import RuleListResponse, Rule
 from app.api.routes.rules import get_rule_service
 from main import app
 

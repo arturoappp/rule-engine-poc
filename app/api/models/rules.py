@@ -158,7 +158,6 @@ class RuleValidationResponse(BaseModel):
 
 class RuleStoreRequest(BaseModel):
     """Request model for storing rules."""
-    entity_type: str
     rules: list[APIRule]
 
 

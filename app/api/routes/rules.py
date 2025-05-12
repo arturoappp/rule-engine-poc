@@ -48,11 +48,9 @@ async def validate_rule(rule: Rule, service: RuleService = Depends(get_rule_serv
 @router.post("/rules", response_model=RuleStoreResponse)
 async def store_rules(request: RuleStoreRequest, service: RuleService = Depends(get_rule_service)):
     """Store rules in the engine."""
-    logger.params.set(entity_type=request.entity_type)
-    logger.info(f"Processing request to store {len(request.rules)} rules for entity type '{request.entity_type}'")
+    logger.info(f"Processing request to store {len(request.rules)} rules")
 
     success, message, stored_count = service.store_rules(
-        entity_type=request.entity_type,
         rules=request.rules,
     )
 
@@ -63,7 +61,7 @@ async def store_rules(request: RuleStoreRequest, service: RuleService = Depends(
             detail=message
         )
 
-    logger.info(f"Successfully stored {stored_count} rules for entity type '{request.entity_type}'")
+    logger.info(f"Successfully stored {stored_count} rules")
     return {
         "success": success,
         "message": message,
@@ -128,5 +126,9 @@ async def update_rule_categories(request: RuleCategoriesRequest, service: RuleSe
         logger.info(f"Successfully {request.category_action}ed categories for rule '{request.rule_name}'")
     else:
         logger.warning(f"Failed to {request.category_action} categories for rule '{request.rule_name}': {message}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=message
+        )
 
     return RuleCategoriesResponse(success=success, message=message)
