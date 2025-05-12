@@ -111,7 +111,6 @@ def test_rule_overwrite_functionality(client, mocker: MockerFixture):
 
     # Now save an updated version with the same name
     updated_data = {
-        "entity_type": "NDC_Request",
         "rules": [
             {
                 "name": "OVERWRITE TEST RULE",
