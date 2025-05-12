@@ -610,7 +610,7 @@ class RuleService:
                 return False, f"Invalid category action: {category_action}. Must be either 'add' or 'remove'"
 
             message_action = "added" if category_action == "add" else "removed"
-            return True, f"Successfully {message_action} categories {categories}, for {entity_type} rule {rule_name}"
+            return True, f"Successfully {message_action} categories {categories}, for {entity_type} rule '{rule_name}'"
         except Exception as e:
             logger.error("Error updating rule categories: %s", e)
             return False, f"Error updating rule categories: {str(e)}"
