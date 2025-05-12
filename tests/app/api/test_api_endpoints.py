@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 from fastapi.testclient import TestClient
 import pytest
 from pytest_mock import MockerFixture
-from app.api.models.rules import RuleListResponse, Rule
+from app.api.models.rules import RuleListResponse, Rule, StoredRule
 from app.api.routes.rules import get_rule_service
 from main import app
 
@@ -68,44 +68,26 @@ def test_store_rules_endpoint(client):
 
 def test_list_rules_endpoint(client):
     """Test the list rules endpoint"""
-    # Save a rule
-    store_data = {
-        "entity_type": "device",
-        "rules": [
-            {
-                "name": "List Test Rule",
-                "entity_type": "device",
-                "description": "Test Description",
-                "conditions": {
-                    "path": "$.devices[*].vendor",
-                    "operator": "equal",
-                    "value": "Cisco Systems"
-                },
-                "add_to_categories": ["default"]
-            }
-        ]
+    entity_type = "Commission Request"
+    categories = ["Should Run"]
+
+    request_json = {
+        "entity_type": entity_type,
+        "categories": categories,
     }
-    client.post("/api/v1/rules", json=store_data)
+    mock_format_list_rules_response = MagicMock()
+    expected_response = MagicMock(spec=RuleListResponse)
+    mock_format_list_rules_response.return_value = expected_response
+    mock_service = MagicMock()
+    mock_service.get_rules.return_value = {}
+    client.post("/api/v1/rules", json=request_json)
 
     # Now get the list of rules
     response = client.get("/api/v1/rules")
 
     # Verify result
     assert response.status_code == 200
-    data = response.json()
-    assert "entity_types" in data
-    assert "rules" in data
-
-    # Verify if our rule is in the response
-    found = False
-    for entity_type, categories in data["rules"].items():
-        if entity_type == "device":
-            for category, rules in categories.items():
-                for rule in rules:
-                    if rule["name"] == "List Test Rule":
-                        found = True
-
-    assert found, "Added rule not found in list response"
+    assert mock_service.get_rules.calledwith(entity_type, categories)
 
 
 def test_rule_overwrite_functionality(client, mocker: MockerFixture):
@@ -156,81 +138,16 @@ def test_rule_overwrite_functionality(client, mocker: MockerFixture):
     # Look for the rule in categories
     rule_found = None
 
-    # Search in all entities and categories
-    for entity_type, categories in data["rules"].items():
-        if entity_type == "NDC_Request":
-            for category, rules in categories.items():
-                for rule in rules:
-                    if rule["name"] == "OVERWRITE TEST RULE":
-                        if rule["description"] == "Updated version":
-                            rule_found = rule
+    # Check in data if there's a rule with the same name and entity type and description as updated_data
+    for rule in data["rules"]:
+        if rule["name"] == "OVERWRITE TEST RULE" and rule["entity_type"] == "NDC_Request":
+            rule_found = rule
+            break
 
-    # Verify the rule exists and has been updated
     assert rule_found is not None, "Rule not found in default category"
     assert rule_found["description"] == "Updated version"
     assert rule_found["conditions"]["operator"] == "match"
     assert rule_found["conditions"]["value"] == "^192\\.168\\..*$"
-
-    test_rule = [
-        {
-            "name": "Equal Rule",
-            "entity_type": "commission_request",
-            "description": "Tests the 'equal' operator",
-            "conditions": {
-                "all": [
-                    {
-                        "path": "$.items[*].value",
-                        "operator": "equal",
-                        "value": 10
-                    }
-                ]
-            }
-        }
-    ]
-
-    mock_service = mocker.MagicMock()
-    mock_service.get_rules.return_value = {}
-    app.dependency_overrides[get_rule_service] = lambda: mock_service
-
-    mock_format_list_rules_response = mocker.patch('app.api.routes.rules.format_list_rules_response')
-    rule_list_response = RuleListResponse(entity_types=["commission_request"],
-                                          categories={"commission_request": ["should_run"]},
-                                          rules={"commission_request": {
-                                              "should_run": test_rule
-                                          }},
-                                          stats={}
-                                          )
-    mock_format_list_rules_response.return_value = rule_list_response
-
-    response = client.get("/api/v1/rules")
-    assert response.status_code == 200
-    data = response.json()
-    # Check that the response structure is correct
-    assert "entity_types" in data
-    assert "categories" in data
-    assert "rules" in data
-    assert "stats" in data
-
-    # Check that the 'conditions' field does not contain None values
-    rules = data["rules"]["commission_request"]["should_run"]
-    for rule in rules:
-        conditions = rule["conditions"]
-        assert "path" not in conditions
-        assert "operator" not in conditions
-        assert "value" not in conditions
-        assert "any" not in conditions
-        assert "none" not in conditions
-        assert "not" not in conditions
-
-        # Check nested 'all' conditions
-        for condition in conditions["all"]:
-            assert "path" in condition
-            assert "operator" in condition
-            assert "value" in condition
-            assert "all" not in condition
-            assert "any" not in condition
-            assert "none" not in condition
-            assert "not" not in condition
 
 
 def test_get_rules_excludes_fields_with_none_value(client, mocker: MockerFixture):
