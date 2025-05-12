@@ -1,6 +1,5 @@
-
 from app.helpers.response_formatter import format_list_rules_response
-from app.api.models.rules import Rule, RuleListResponse, RuleStats, StoredRule
+from app.api.models.rules import Rule, RuleListResponse, RuleStats, RuleViewModel, StoredRule
 
 
 def test_format_list_rules_response_with_empty_stored_rules():
@@ -8,8 +7,6 @@ def test_format_list_rules_response_with_empty_stored_rules():
     result = format_list_rules_response(stored_rules)
 
     assert isinstance(result, RuleListResponse)
-    assert result.entity_types == []
-    assert result.categories == {}
     assert result.rules == []
     assert result.stats == {}
 
@@ -30,12 +27,17 @@ def test_format_list_rules_response_with_single_stored_rule():
     )
     stored_rules = [stored_rule]
 
+    expected_rule_view_model = RuleViewModel(
+        rule_name="rule1",
+        entity_type="Entity1",
+        description="Test rule",
+        conditions={},
+        categories_associated_with={"Category1"}  # Updated to include categories
+    )
     result = format_list_rules_response(stored_rules)
 
     assert isinstance(result, RuleListResponse)
-    assert result.entity_types == ["Entity1"]
-    assert result.categories == {"Entity1": ["Category1"]}
-    assert result.rules == [rule]
+    assert result.rules == [expected_rule_view_model]
     assert result.stats == {
         "Entity1": RuleStats(
             total_rules=1,
@@ -63,39 +65,57 @@ def test_format_list_rules_response_with_multiple_stored_rules():
         description="Test rule 3",
         conditions={}
     )
+
     stored_rules = [
         StoredRule(
-            rule_name="rule1",
-            entity_type="Entity1",
-            description="Test rule 1",
+            rule_name=rule1.name,
+            entity_type=rule1.entity_type,
+            description=rule1.description,
             categories={"Category1", "Category2"},
             rule=rule1
         ),
         StoredRule(
-            rule_name="rule3",
-            entity_type="Entity1",
-            description="Test rule 3",
+            rule_name=rule3.name,
+            entity_type=rule3.entity_type,
+            description=rule3.description,
             categories={"Category1"},
             rule=rule3
         ),
         StoredRule(
-            rule_name="rule2",
-            entity_type="Entity2",
-            description="Test rule 2",
+            rule_name=rule2.name,
+            entity_type=rule2.entity_type,
+            description=rule2.description,
             categories={"Category2"},
             rule=rule2
         ),
     ]
 
+    ruleViewModel1 = RuleViewModel(
+        rule_name="rule1",
+        entity_type="Entity1",
+        description="Test rule 1",
+        conditions={},
+        categories_associated_with={"Category1", "Category2"}  # Updated to include categories
+    )
+    ruleViewModel2 = RuleViewModel(
+        rule_name="rule2",
+        entity_type="Entity2",
+        description="Test rule 2",
+        conditions={},
+        categories_associated_with={"Category2"}  # Updated to include categories
+    )
+    ruleViewModel3 = RuleViewModel(
+        rule_name="rule3",
+        entity_type="Entity1",
+        description="Test rule 3",
+        conditions={},
+        categories_associated_with={"Category1"}  # Updated to include categories
+    )
+
     result = format_list_rules_response(stored_rules)
 
     assert isinstance(result, RuleListResponse)
-    assert result.entity_types == ["Entity1", "Entity2"]
-    assert result.categories == {
-        "Entity1": ["Category1", "Category2"],
-        "Entity2": ["Category2"]
-    }
-    assert result.rules == [rule1, rule2, rule3]
+    assert result.rules == [ruleViewModel1, ruleViewModel2, ruleViewModel3]
     assert result.stats == {
         "Entity1": RuleStats(
             total_rules=2,
