@@ -300,8 +300,10 @@ def test_update_rule_categories_failure(client):
 
     response = client.post("/api/v1/rules/categories", json=request_payload)
 
+    # Expect a 400 status code for failure
     assert response.status_code == 400
     response_data = response.json()
-    assert response_data["success"] is False
-    assert response_data["message"] == "Error updating rule categories: Rule with name 'Test Rule' not found for entity type 'Test Entity'"
+    assert "detail" in response_data
+    assert response_data["detail"] == "Error updating rule categories: Rule with name 'Test Rule' not found for entity type 'Test Entity'"
+
     app.dependency_overrides = {}
