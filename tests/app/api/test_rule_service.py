@@ -1,4 +1,3 @@
-# tests/test_rule_service.py
 from unittest.mock import Mock, MagicMock
 import pytest
 
@@ -96,7 +95,7 @@ def test_store_rules_new(rule_service):
     rule_service.engine.get_rules_by_category.return_value = []
 
     # Store the rules
-    success, message, count = rule_service.store_rules("Commission Request", rules)
+    success, message, count = rule_service.store_rules(rules)
 
     # Check result
     assert success is True
@@ -120,7 +119,7 @@ def test_store_rules_update(rule_service):  # Renamed function
     )
 
     # Store the rule
-    success, message, count = rule_service.store_rules("Commission Request", [rule])
+    success, message, count = rule_service.store_rules([rule])
 
     # Check result
     assert success is True
@@ -148,44 +147,29 @@ def test_store_rules_multi_category(rule_service):
     rule_service.engine.get_rules_by_category.return_value = []
 
     # Store the rule
-    success, message, count = rule_service.store_rules("Commission Request", [rule])
+    success, message, count = rule_service.store_rules([rule])
 
     # Check result
     assert success is True
     assert count == 1
 
 
-@pytest.mark.parametrize("entity_type, provided_categories, expected_entity_types", [
-    ('commission', ['should'], {'commission'}),
-    (None, None, {'commission', 'decommission'})
+@pytest.mark.parametrize("entity_type, provided_categories", [
+    ('commission', ['should']),
+    (None, None)
 ])
-def test_get_rules_calls_create_rules_dict_with_correct_parameters(mocker: MockerFixture, entity_type, provided_categories, expected_entity_types):
-    if entity_type is None:
-        entity_type1 = 'commission'
-        entity_type2 = 'decommission'
-    else:
-        entity_type1 = entity_type
-        entity_type2 = entity_type
+def test_get_rules_calls_create_rules_dict_with_correct_parameters(mocker: MockerFixture, entity_type, provided_categories):
     expected_result = {}
-    mock_stored_rule1 = MagicMock()
-    mock_stored_rule1.entity_type = entity_type1
-    mock_stored_rule1.categories = provided_categories
-    mock_stored_rule2 = MagicMock()
-    mock_stored_rule2.entity_type = entity_type2
-    mock_stored_rule2.categories = provided_categories
-    stored_rules = [mock_stored_rule1, mock_stored_rule2]
-    expected_provided_categories_set = set(provided_categories) if provided_categories else set()
-    mock_create_rules_dict = mocker.patch('app.services.rule_service.create_rules_dict')
-    mock_create_rules_dict.return_value = expected_result
+
     mock_engine = MagicMock()
-    mock_engine.get_stored_rules.return_value = stored_rules
+    mock_engine.get_stored_rules.return_value = expected_result
 
     rule_service = RuleService()
     rule_service.engine = mock_engine
 
     result = rule_service.get_rules(entity_type, provided_categories)
 
-    mock_create_rules_dict.assert_called_with(stored_rules, expected_provided_categories_set, expected_entity_types)
+    mock_engine.get_stored_rules.assert_called_with(entity_type, provided_categories)
     assert result == expected_result
 
 
@@ -201,7 +185,7 @@ def test_update_rule_categories_add_success(rule_service):
     success, message = rule_service.update_rule_categories(rule_name, entity_type, categories, "add")
 
     assert success is True
-    assert "Successfully updated categories" in message
+    assert "Successfully added categories" in message  # Updated assertion
     rule_service._add_categories.assert_called_once_with(entity_type, rule_name, categories)
     rule_service._remove_categories.assert_not_called()
 
@@ -218,7 +202,7 @@ def test_update_rule_categories_remove_success(rule_service):
     success, message = rule_service.update_rule_categories(rule_name, entity_type, categories, "remove")
 
     assert success is True
-    assert "Successfully updated categories" in message
+    assert "Successfully removed categories" in message  # Updated assertion
     rule_service._remove_categories.assert_called_once_with(rule_name, entity_type, categories)
     rule_service._add_categories.assert_not_called()
 

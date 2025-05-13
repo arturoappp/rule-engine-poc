@@ -47,6 +47,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         # Initialize context parameters
@@ -80,6 +81,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         logger.info(f"Response {request.method} {request.url.path}: {response.status_code}")
 
         return response
+
 
 app.add_middleware(LoggingMiddleware)
 

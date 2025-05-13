@@ -1,28 +1,25 @@
-from app.api.models.rules import RuleListResponse, RuleStats
+from app.api.models.rules import RuleListResponse, RuleViewModel, StoredRule
 
 
-def format_list_rules_response(rules_by_entity: dict) -> RuleListResponse:
-    # Format response
-    entity_types = list(rules_by_entity.keys())
-    categories = {}
-    stats = {}
+def format_list_rules_response(stored_rules: list[StoredRule]) -> RuleListResponse:
+    sorted_stored_rules = sorted(stored_rules, key=lambda stored_rule: stored_rule.rule.name)
+    rule_view_models = create_rule_view_models(sorted_stored_rules)
 
-    # Get categories and statistics for each entity type
-    for entity_type, categories_rules in rules_by_entity.items():
-        categories[entity_type] = list(categories_rules.keys())
-
-        # Calcular estadísticas
-        entity_stats = {
-            "total_rules": 0,
-            "rules_by_category": {}
-        }
-
-        for category, rules_list in categories_rules.items():
-            category_rule_count = len(rules_list)
-            entity_stats["rules_by_category"][category] = category_rule_count
-            entity_stats["total_rules"] += category_rule_count
-
-        stats[entity_type] = RuleStats(total_rules=entity_stats["total_rules"], rules_by_category=entity_stats["rules_by_category"])
-
-    response_model = RuleListResponse(entity_types=entity_types, categories=categories, rules=rules_by_entity, stats=stats)
+    response_model = RuleListResponse(
+        rules=rule_view_models,
+    )
     return response_model
+
+
+def create_rule_view_models(sorted_stored_rules: list[StoredRule]) -> list[RuleViewModel]:
+    rule_view_models = []
+    for stored_rule in sorted_stored_rules:
+        rule_view_model = RuleViewModel(
+            rule_name=stored_rule.rule.name,
+            entity_type=stored_rule.rule.entity_type,
+            description=stored_rule.rule.description,
+            conditions=stored_rule.rule.conditions,
+            categories_associated_with=sorted(stored_rule.categories),
+        )
+        rule_view_models.append(rule_view_model)
+    return rule_view_models

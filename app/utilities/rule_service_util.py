@@ -8,8 +8,8 @@ def create_rules_dict(stored_rules: list[StoredRule], categories_to_display: set
         result[entity_type] = {}
 
         for category in categories_to_display:
-            filtered_stored_rules = [stored_rule for stored_rule in stored_rules if category in stored_rule.categories and stored_rule.entity_type == entity_type]
-            rules = [Rule(name=rule.rule_name, entity_type=rule.entity_type, description=rule.description, conditions=rule.rule.conditions) for rule in filtered_stored_rules]
+            filtered_stored_rules = [stored_rule for stored_rule in stored_rules if category in stored_rule.categories and stored_rule.rule.entity_type == entity_type]
+            rules = [Rule(name=stored_rule.rule.name, entity_type=stored_rule.rule.entity_type, description=stored_rule.rule.description, conditions=stored_rule.rule.conditions) for stored_rule in filtered_stored_rules]
             if len(rules) > 0:
                 result[entity_type][category] = rules
     return result

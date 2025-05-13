@@ -2,7 +2,8 @@
 API models for rule management.
 """
 
-from typing import Dict, List, Any, Optional
+from typing import List, Any, Optional
+from fastapi import Query
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -122,21 +123,27 @@ class Rule(BaseModel):
     conditions: RuleCondition
 
 
-class StoredRule(BaseModel):
+class RuleViewModel(BaseModel):
+    """Model for displaying rules in the UI."""
     rule_name: str
     entity_type: str
     description: Optional[str] = None
+    conditions: RuleCondition
+    categories_associated_with: set[str] = Field(default_factory=set)
+
+
+class StoredRule(BaseModel):
     categories: set[str]
     rule: Rule  # The rule itself, can be a complex structure
 
     def __hash__(self):
-        # Use a unique combination of attributes to compute the hash
-        return hash((self.rule_name, self.entity_type))
+        # Use a unique combination of attributes from the rule to compute the hash
+        return hash((self.rule.name, self.rule.entity_type))
 
     def __eq__(self, other):
         if not isinstance(other, StoredRule):
             return False
-        return self.rule_name == other.rule_name and self.entity_type == other.entity_type
+        return self.rule.name == other.rule.name and self.rule.entity_type == other.rule.entity_type
 
 
 class RuleList(BaseModel):
@@ -147,7 +154,7 @@ class RuleList(BaseModel):
 class RuleListRequest(BaseModel):
     """Request model for a list of rules."""
     entity_type: Optional[str] = None
-    categories: Optional[list[str]] = None
+    categories: Optional[list[str]] = Query(default=None)  # Use Query to indicate it's a list
 
 
 class RuleValidationResponse(BaseModel):
@@ -158,7 +165,6 @@ class RuleValidationResponse(BaseModel):
 
 class RuleStoreRequest(BaseModel):
     """Request model for storing rules."""
-    entity_type: str
     rules: list[APIRule]
 
 
@@ -169,15 +175,6 @@ class RuleStoreResponse(BaseModel):
     stored_rules: int
 
 
-class RuleStats(BaseModel):
-    """Model for rule statistics."""
-    total_rules: int
-    rules_by_category: Dict[str, int]
-
-
 class RuleListResponse(BaseModel):
     """Response model for listing rules."""
-    entity_types: List[str]
-    categories: Dict[str, List[str]]
-    rules: Dict[str, Dict[str, List[Rule]]]
-    stats: Dict[str, RuleStats]
+    rules: list[RuleViewModel]

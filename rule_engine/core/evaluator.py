@@ -58,7 +58,7 @@ class RuleEvaluator:
 
         Args:
             data: Data dictionary to evaluate
-            rules: List of rules to evaluate
+            stored_rules: List of stored rules to evaluate
             entity_type: Entity type to extract from the data
 
         Returns:
@@ -81,7 +81,7 @@ class RuleEvaluator:
                 else:
                     message = f"{len(failing_entities)} of {len(entities)} entities do not fulfill the rule"
 
-                rule_name = stored_rule.rule_name
+                rule_name = stored_rule.rule.name
                 result = RuleResult(
                     rule_name=rule_name,
                     success=success,

@@ -7,9 +7,8 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional, Tuple
 
-from app.api.models.rules import APIRule, Rule
+from app.api.models.rules import APIRule, Rule, StoredRule
 from rule_engine.core.rule_engine import RuleEngine
-from app.utilities.rule_service_util import create_rules_dict
 from rule_engine.core.failure_info import FailureInfo
 from rule_engine.core.rule_result import RuleResult
 
@@ -276,7 +275,7 @@ class RuleService:
 
         return result
 
-    def store_rules(self, entity_type: str, rules: List[APIRule]) -> Tuple[
+    def store_rules(self, rules: List[APIRule]) -> Tuple[
             bool, str, int]:
         """
         Store rules in the engine, overwriting duplicates with same name across all categories.
@@ -295,9 +294,9 @@ class RuleService:
             # Process all rules from request
             for rule in rules:
                 existing_categories = []
-                if self.engine.rule_exists(rule.name, entity_type):
+                if self.engine.rule_exists(rule.name, rule.entity_type):
                     existing_stored_rule = self.engine.get_stored_rule_by_name_and_entity_type(rule.name,
-                                                                                               entity_type)
+                                                                                               rule.entity_type)
                     existing_categories = existing_stored_rule.categories
                     updated_rules += 1
                 else:
@@ -328,32 +327,14 @@ class RuleService:
             logger.error(f"Error storing rules: {e}")
             return False, f"Error storing rules: {str(e)}", 0
 
-    def get_rules(self, entity_type: Optional[str] = None, provided_categories: Optional[list[str]] = None) -> \
-            Dict[str, Dict[str, List[Dict]]]:
+    def get_rules(self, entity_type: Optional[str] = None, provided_categories: Optional[list[str]] = None) -> list[StoredRule]:
         """
         Get all rules from the engine.
 
         Returns:
             Dictionary of rules by entity type and category
         """
-        stored_rules = self.engine.get_stored_rules(entity_type, provided_categories)
-
-        if entity_type:
-            entity_types_to_display = {entity_type}
-        else:
-            entity_types_to_display = {rule.entity_type for rule in stored_rules if rule.entity_type}
-
-        categories_to_display = set()
-        if provided_categories:
-            categories_to_display = set(provided_categories)
-        else:
-            for rule in stored_rules:
-                if rule.categories:
-                    categories_to_display.update(rule.categories)
-
-        rules_dict = create_rules_dict(stored_rules, categories_to_display, entity_types_to_display)
-
-        return rules_dict
+        return self.engine.get_stored_rules(entity_type, provided_categories)
 
     def evaluate_data(self, data: Dict[str, Any], entity_type: str, categories: Optional[List[str]] = None) -> List[
             RuleResult]:
@@ -628,7 +609,8 @@ class RuleService:
             else:
                 return False, f"Invalid category action: {category_action}. Must be either 'add' or 'remove'"
 
-            return True, f"Successfully updated categories {categories}, for {entity_type} rule {rule_name}"
+            message_action = "added" if category_action == "add" else "removed"
+            return True, f"Successfully {message_action} categories {categories}, for {entity_type} rule '{rule_name}'"
         except Exception as e:
             logger.error("Error updating rule categories: %s", e)
             return False, f"Error updating rule categories: {str(e)}"

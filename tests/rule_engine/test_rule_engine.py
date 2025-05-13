@@ -24,33 +24,32 @@ def sample_stored_rules(rule_engine, sample_rules):
             rule_name=sample_rules[0].name,
             entity_type=sample_rules[0].entity_type,
             description=sample_rules[0].description,
-            categories=["Should Run", "Can Run"],
-            rule=sample_rules[0],
+            categories={"Should Run", "Can Run"},
+            rule=sample_rules[0],  # Rule object holds the rule data
         ),
         StoredRule(
             rule_name=sample_rules[1].name,
             entity_type=sample_rules[1].entity_type,
             description=sample_rules[1].description,
-            categories=["Should Run"],
-            rule=sample_rules[1],
+            categories={"Should Run"},
+            rule=sample_rules[1],  # Rule object holds the rule data
         ),
         StoredRule(
             rule_name=sample_rules[2].name,
             entity_type=sample_rules[2].entity_type,
             description=sample_rules[2].description,
-            categories=["Should Run"],
-            rule=sample_rules[2],
+            categories={"Should Run"},
+            rule=sample_rules[2],  # Rule object holds the rule data
         ),
     ]
 
     for stored_rule in stored_rules:
-        rule_engine.rule_repository[f"{stored_rule.entity_type}|{stored_rule.rule_name}"] = stored_rule
+        rule_engine.rule_repository[f"{stored_rule.rule.entity_type}|{stored_rule.rule.name}"] = stored_rule
 
     return stored_rules
 
 
 def test_get_stored_rules_no_filters(rule_engine, sample_stored_rules):
-
     result = rule_engine.get_stored_rules()
 
     assert len(result) == len(sample_stored_rules)
@@ -58,32 +57,29 @@ def test_get_stored_rules_no_filters(rule_engine, sample_stored_rules):
 
 
 def test_get_stored_rules_by_entity_type(rule_engine, sample_stored_rules):
-
     result = rule_engine.get_stored_rules(entity_type="Commission Request")
 
     assert len(result) == 2
-    assert all(rule.entity_type == "Commission Request" for rule in result)
+    assert all(stored_rule.rule.entity_type == "Commission Request" for stored_rule in result)
 
 
 def test_get_stored_rules_by_categories(rule_engine, sample_stored_rules):
-
     result = rule_engine.get_stored_rules(categories=["Should Run"])
 
     assert len(result) == 3
-    assert all("Should Run" in rule.categories for rule in result)
+    assert all("Should Run" in stored_rule.categories for stored_rule in result)
 
 
 def test_get_stored_rules_by_entity_type_and_categories(rule_engine, sample_stored_rules):
     """Test filtering by both entity type and categories."""
     result = rule_engine.get_stored_rules(entity_type="Commission Request", categories=["Should Run"])
-    
+
     assert len(result) == 2, f"Expected 2 rules, but got {len(result)}"
-    assert all(rule.entity_type == "Commission Request" for rule in result), "All rules should have entity_type 'Commission Request'"
+    assert all(stored_rule.rule.entity_type == "Commission Request" for stored_rule in result), "All rules should have entity_type 'Commission Request'"
     assert all("Should Run" in rule.categories for rule in result), "All rules should include 'Should Run' in categories"
 
 
 def test_get_stored_rules_no_match(rule_engine):
-
     result = rule_engine.get_stored_rules(entity_type="NonexistentType")
 
     assert len(result) == 0
