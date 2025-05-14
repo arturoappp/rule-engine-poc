@@ -7,32 +7,6 @@
 	},
 	"item": [
 		{
-			"name": "Health Check",
-			"item": [
-				{
-					"name": "Health Check",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{baseUrl}}/api/v1/health",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"api",
-								"v1",
-								"health"
-							]
-						},
-						"description": "Check the health of the service"
-					},
-					"response": []
-				}
-			],
-			"description": "Health check endpoints"
-		},
-		{
 			"name": "Rules",
 			"item": [
 				{
@@ -132,7 +106,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"entity_type\": \"device\",\n  \"categories\": [\"version\"],\n  \"data\": {\n    \"devices\": [\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"17.3.6\",\n        \"mgmtIP\": \"192.168.1.1\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"osVersion\": \"10.0.19045\",\n        \"mgmtIP\": \"10.0.0.1\"\n      },\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"16.9.5\",\n        \"mgmtIP\": \"192.168.1.3\"\n      }\n    ]\n  }\n}"
+							"raw": "{\n    \"entity_type\": \"Commission Request\",\n    \"rule_names\": [\n        \"All Devices Must Have Management IP\"\n        ],\n    \"data\": {\n    \"Commission Requests\": [\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"17.3.6\",\n        \"mgmtIP\": \"192.168.1.1\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"osVersion\": \"10.0.19045\",\n        \"mgmtIP\": \"10.0.0.1\"\n      },\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"16.9.5\",\n        \"mgmtIP\": \"192.168.1.3\"\n      }\n    ]\n  }\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/evaluate",
@@ -181,6 +155,27 @@
 				}
 			],
 			"description": "Data evaluation endpoints"
+		},
+		{
+			"name": "Rule Categories",
+			"item": [
+				{
+					"name": "Add Categories",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Remove Categories",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
 		},
 		{
 			"name": "Complex Examples",
@@ -276,6 +271,32 @@
 				}
 			],
 			"description": "Complex examples showcasing advanced rule engine capabilities"
+		},
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"health"
+							]
+						},
+						"description": "Check the health of the service"
+					},
+					"response": []
+				}
+			],
+			"description": "Health check endpoints"
 		}
 	],
 	"event": [
