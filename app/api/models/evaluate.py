@@ -109,3 +109,27 @@ class EvaluationResponse(BaseModel):
     passed_rules: int
     failed_rules: int
     results: List[RuleEvaluationResult]
+
+class RuleFailureDetails(BaseModel):
+    rule_name: str
+    failure_details: List[FailureDetail]
+
+
+class DataEvaluationSummary(BaseModel):
+    rules_passed: int
+    rules_failed: int
+
+
+class DataEvaluationItem(BaseModel):
+    data: Dict[str, Any]
+    evaluation_summary: DataEvaluationSummary
+    rules_passed: List[str]
+    rules_failed: List[RuleFailureDetails]
+
+
+class DataEvaluationResponse(BaseModel):
+    entity_type: str
+    categories: Optional[List[str]] = None
+    rule_names: Optional[List[str]] = None
+    total_rules: int
+    results: List[DataEvaluationItem]
