@@ -21,7 +21,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"Cisco Version Rule\",\n  \"entity_type\": \"Commission Request\",\n  \"description\": \"Ensures Cisco devices are running the required OS version\",\n  \"conditions\": {\n    \"any\": [\n      {\n        \"path\": \"$.devices[*].vendor\",\n        \"operator\": \"not_equal\",\n        \"value\": \"Cisco Systems\"\n      },\n      {\n        \"all\": [\n          {\n            \"path\": \"$.devices[*].vendor\",\n            \"operator\": \"equal\",\n            \"value\": \"Cisco Systems\"\n          },\n          {\n            \"path\": \"$.devices[*].osVersion\",\n            \"operator\": \"equal\",\n            \"value\": \"17.3.6\"\n          }\n        ]\n      }\n    ]\n  }\n}"
+							"raw": "{\n      \"name\": \"Secondary Device Check\",\n      \"entity_type\": \"Commission Request\",\n      \"description\": \"Checks if the device is a secondary device\",\n      \"conditions\": {\n        \"all\": [\n          {\n            \"operator\": \"role_device\",\n            \"value\": \"secondary\"\n          }\n        ]\n      }\n    }\n"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/rules/validate",
@@ -51,7 +51,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"entity_type\": \"Commission Request\",\n  \"rules\": [\n  {\n    \"name\": \"Cisco Version Rule\",\n    \"description\": \"Ensures Cisco devices are running the required OS version\",\n    \"add_to_categories\": [\"Should Run\"],\n    \"conditions\": {\n        \"any\": [\n        {\n            \"path\": \"$.devices[*].vendor\",\n            \"operator\": \"not_equal\",\n            \"value\": \"Cisco Systems\"\n        },\n        {\n            \"all\": [\n            {\n                \"path\": \"$.devices[*].vendor\",\n                \"operator\": \"equal\",\n                \"value\": \"Cisco Systems\"\n            },\n            {\n                \"path\": \"$.devices[*].osVersion\",\n                \"operator\": \"equal\",\n                \"value\": \"17.3.6\"\n            }\n            ]\n        }\n        ]\n    }\n  },\n  {\n    \"name\": \"Cisco Version Rule 2\",\n    \"description\": \"Ensures Cisco devices are running the required OS version\",\n    \"add_to_categories\": [\"Should Run\", \"Could Run\"],\n    \"conditions\": {\n        \"any\": [\n        {\n            \"path\": \"$.devices[*].vendor\",\n            \"operator\": \"not_equal\",\n            \"value\": \"Cisco Systems\"\n        },\n        {\n            \"any\": [\n            {\n                \"path\": \"$.devices[*].vendor\",\n                \"operator\": \"equal\",\n                \"value\": \"Cisco Systems\"\n            },\n            {\n                \"path\": \"$.devices[*].osVersion\",\n                \"operator\": \"equal\",\n                \"value\": \"17.3.6\"\n            }\n            ]\n        }\n        ]\n    }\n  }\n  ]\n}"
+							"raw": "{\n  \"rules\": [\n   {\n      \"name\": \"All Devices Must Have Management IP\",\n      \"entity_type\": \"Commission Request\",\n      \"conditions\": {\n        \"all\": [\n          {\n            \"path\": \"$.devices[*].mgmtIP\",\n            \"operator\": \"exists\",\n            \"value\": true\n          }\n        ]\n      },\n      \"add_to_categories\": [\n          \"Could Run\"\n      ]\n    },\n     {\n      \"name\": \"All Devices Must Have OS Version\",\n      \"entity_type\": \"Decommission Request\",\n      \"conditions\": {\n        \"all\": [\n          {\n            \"path\": \"$.devices[*].osVersion\",\n            \"operator\": \"exists\",\n            \"value\": true\n          }\n        ]\n      },\n      \"add_to_categories\": [\n          \"Should Run\"\n      ]\n    }\n  ]\n}\n"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/rules",
@@ -82,6 +82,23 @@
 								"api",
 								"v1",
 								"rules"
+							],
+							"query": [
+								{
+									"key": "entity_type",
+									"value": "Commission Request",
+									"disabled": true
+								},
+								{
+									"key": "categories",
+									"value": "Could Run",
+									"disabled": true
+								},
+								{
+									"key": "categories",
+									"value": "Should Run",
+									"disabled": true
+								}
 							]
 						},
 						"description": "List all rules in the engine"
@@ -162,16 +179,58 @@
 				{
 					"name": "Add Categories",
 					"request": {
-						"method": "GET",
-						"header": []
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"rule_name\": \"All Devices Must Have Management IP\",\r\n    \"entity_type\": \"Commission Request\",\r\n    \"categories\":  [\"Should Run\"],\r\n    \"category_action\": \"add\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rules/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rules",
+								"categories"
+							]
+						}
 					},
 					"response": []
 				},
 				{
 					"name": "Remove Categories",
 					"request": {
-						"method": "GET",
-						"header": []
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"rule_name\": \"All Devices Must Have Management IP\",\r\n    \"entity_type\": \"Commission Request\",\r\n    \"categories\": [\"Should Run\"],\r\n    \"category_action\": \"remove\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/rules/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"rules",
+								"categories"
+							]
+						}
 					},
 					"response": []
 				}
@@ -192,7 +251,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"name\": \"Complex Configuration Rule\",\n  \"description\": \"A complex rule with deeply nested conditions\",\n  \"conditions\": {\n    \"all\": [\n      {\n        \"any\": [\n          {\n            \"path\": \"$.configs[*].type\",\n            \"operator\": \"equal\",\n            \"value\": \"firewall\"\n          },\n          {\n            \"all\": [\n              {\n                \"path\": \"$.configs[*].type\",\n                \"operator\": \"equal\",\n                \"value\": \"router\"\n              },\n              {\n                \"path\": \"$.configs[*].security_level\",\n                \"operator\": \"greater_than_equal\",\n                \"value\": 3\n              }\n            ]\n          }\n        ]\n      },\n      {\n        \"none\": [\n          {\n            \"path\": \"$.configs[*].status\",\n            \"operator\": \"equal\",\n            \"value\": \"deprecated\"\n          },\n          {\n            \"not\": {\n              \"path\": \"$.configs[*].compliance_checked\",\n              \"operator\": \"equal\",\n              \"value\": true\n            }\n          }\n        ]\n      }\n    ]\n  }\n}"
+							"raw": "{\n  \"name\": \"Complex Configuration Rule\",\n  \"entity_type\": \"Commission Request\",\n  \"description\": \"A complex rule with deeply nested conditions\",\n  \"conditions\": {\n    \"all\": [\n      {\n        \"any\": [\n          {\n            \"path\": \"$.configs[*].type\",\n            \"operator\": \"equal\",\n            \"value\": \"firewall\"\n          },\n          {\n            \"all\": [\n              {\n                \"path\": \"$.configs[*].type\",\n                \"operator\": \"equal\",\n                \"value\": \"router\"\n              },\n              {\n                \"path\": \"$.configs[*].security_level\",\n                \"operator\": \"greater_than_equal\",\n                \"value\": 3\n              }\n            ]\n          }\n        ]\n      },\n      {\n        \"none\": [\n          {\n            \"path\": \"$.configs[*].status\",\n            \"operator\": \"equal\",\n            \"value\": \"deprecated\"\n          },\n          {\n            \"not\": {\n              \"path\": \"$.configs[*].compliance_checked\",\n              \"operator\": \"equal\",\n              \"value\": true\n            }\n          }\n        ]\n      }\n    ]\n  }\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/rules/validate",
@@ -222,7 +281,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"entity_type\": \"network\",\n  \"category\": \"security\",\n  \"rules\": [\n    {\n      \"name\": \"Firewall Rule\",\n      \"description\": \"Check if firewall is enabled\",\n      \"conditions\": {\n        \"all\": [\n          {\n            \"path\": \"$.networks[*].firewall_enabled\",\n            \"operator\": \"equal\",\n            \"value\": true\n          }\n        ]\n      }\n    },\n    {\n      \"name\": \"Encryption Rule\",\n      \"description\": \"Check if encryption is enabled\",\n      \"conditions\": {\n        \"all\": [\n          {\n            \"path\": \"$.networks[*].encryption\",\n            \"operator\": \"equal\",\n            \"value\": \"AES-256\"\n          }\n        ]\n      }\n    },\n    {\n      \"name\": \"VPN Rule\",\n      \"description\": \"Check if VPN is set up\",\n      \"conditions\": {\n        \"all\": [\n          {\n            \"path\": \"$.networks[*].vpn_configured\",\n            \"operator\": \"equal\",\n            \"value\": true\n          }\n        ]\n      }\n    }\n  ]\n}"
+							"raw": "{\n  \"entity_type\": \"network\",\n  \"category\": \"security\",\n  \"rules\": [\n    {\n      \"name\": \"Firewall Rule\",\n      \"entity_type\": \"Commission Request\",\n      \"description\": \"Check if firewall is enabled\",\n      \"conditions\": {\n        \"all\": [\n          {\n            \"path\": \"$.networks[*].firewall_enabled\",\n            \"operator\": \"equal\",\n            \"value\": true\n          }\n        ]\n      }\n    },\n    {\n      \"name\": \"Encryption Rule\",\n      \"entity_type\": \"Commission Request\",\n      \"description\": \"Check if encryption is enabled\",\n      \"conditions\": {\n        \"all\": [\n          {\n            \"path\": \"$.networks[*].encryption\",\n            \"operator\": \"equal\",\n            \"value\": \"AES-256\"\n          }\n        ]\n      }\n    },\n    {\n      \"name\": \"VPN Rule\",\n      \"entity_type\": \"Commission Request\",\n      \"description\": \"Check if VPN is set up\",\n      \"conditions\": {\n        \"all\": [\n          {\n            \"path\": \"$.networks[*].vpn_configured\",\n            \"operator\": \"equal\",\n            \"value\": true\n          }\n        ]\n      }\n    }\n  ]\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/rules",
