@@ -1,9 +1,10 @@
 {
 	"info": {
-		"_postman_id": "ccb1f352-1390-4b4e-8b1d-6b0bc65e2f46",
-		"name": "Rule Engine API",
+		"_postman_id": "3a170684-cc8d-4773-b717-6bd4cd269c8a",
+		"name": "Rule Engine API Copy",
 		"description": "A collection for testing the Rule Engine API endpoints",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "16726580"
 	},
 	"item": [
 		{
@@ -134,6 +135,96 @@
 								"api",
 								"v1",
 								"evaluate"
+							]
+						},
+						"description": "Evaluate data against stored rules"
+					},
+					"response": []
+				},
+				{
+					"name": "Evaluate Data by Data - Coomission",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"entity_type\": \"Commission Request\",\n    \"rule_names\": [\n        \"All Devices Must Have Management IP\"\n        ],\n    \"data\": {\n    \"Commission Requests\": [\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"17.3.6\",\n        \"mgmtIP\": \"192.168.1.1\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"osVersion\": \"10.0.19045\",\n        \"mgmtIP\": \"10.0.0.1\"\n      },\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"16.9.5\"\n      }\n    ]\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/evaluate/by-data",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"evaluate",
+								"by-data"
+							]
+						},
+						"description": "Evaluate data against stored rules"
+					},
+					"response": []
+				},
+				{
+					"name": "Evaluate Data by Data - Coomission [category]",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"entity_type\": \"Commission Request\",\n    \"categories\": [\"Could Run\"],\n    \"data\": {\n    \"Commission Requests\": [\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"17.3.6\",\n        \"mgmtIP\": \"192.168.1.1\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"osVersion\": \"10.0.19045\",\n        \"mgmtIP\": \"10.0.0.1\"\n      },\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"16.9.5\"\n      }\n    ]\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/evaluate/by-data",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"evaluate",
+								"by-data"
+							]
+						},
+						"description": "Evaluate data against stored rules"
+					},
+					"response": []
+				},
+				{
+					"name": "Evaluate Data by Data - Decomission",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"entity_type\": \"Decommission Request\",\n    \"rule_names\": [\n        \"All Devices Must Have OS Version\"\n        ],\n    \"data\": {\n    \"Decommission Requests\": [\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"17.3.6\",\n        \"mgmtIP\": \"192.168.1.1\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"osVersion\": \"10.0.19045\",\n        \"mgmtIP\": \"10.0.0.1\"\n      },\n      {\n        \"vendor\": \"Cisco Systems\"\n      }\n    ]\n  }\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/evaluate/by-data",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"evaluate",
+								"by-data"
 							]
 						},
 						"description": "Evaluate data against stored rules"
