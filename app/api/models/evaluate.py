@@ -132,4 +132,5 @@ class DataEvaluationResponse(BaseModel):
     categories: Optional[List[str]] = None
     rule_names: Optional[List[str]] = None
     total_rules: int
+    total_data_objects: int
     results: List[DataEvaluationItem]

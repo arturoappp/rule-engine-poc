@@ -1,14 +1,16 @@
-def entity_matches(entity1, entity2):
-    if entity1 is None or entity2 is None:
-        return False
+from typing import Dict, List, Any
 
-    for key in entity1:
-        if key in entity2 and entity1[key] != entity2[key]:
-            return False
 
-    for key in entity2:
-        if key in entity1 and entity2[key] != entity1[key]:
-            return False
+def _get_entity_key(entity_type: str) -> str:
+    return f"{entity_type}s" if not entity_type.endswith('s') else entity_type
 
-    common_keys = set(entity1.keys()) & set(entity2.keys())
-    return len(common_keys) > 0
+
+def _extract_entities(data: Dict[str, Any], entity_type: str) -> List[Dict[str, Any]]:
+    entity_key = _get_entity_key(entity_type)
+
+    if entity_key in data and isinstance(data[entity_key], list):
+        return data[entity_key]
+    elif entity_type in data and isinstance(data[entity_type], list):
+        return data[entity_type]
+
+    return []
