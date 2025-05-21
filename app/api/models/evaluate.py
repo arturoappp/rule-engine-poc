@@ -110,6 +110,7 @@ class EvaluationResponse(BaseModel):
     failed_rules: int
     results: List[RuleEvaluationResult]
 
+
 class RuleFailureDetails(BaseModel):
     rule_name: str
     failure_details: List[FailureDetail]
