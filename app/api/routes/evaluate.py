@@ -2,18 +2,21 @@
 Endpoints for data evaluation.
 """
 
+from typing import Optional, Dict, Any, List
+
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Optional, Dict, Any
 
 from app.api.models.evaluate import (
     EvaluationRequest,
     EvaluationWithRulesRequest,
     EvaluationResponse,
     RuleEvaluationResult,
-    FailureDetail
+    FailureDetail, DataEvaluationResponse, DataEvaluationItem, DataEvaluationSummary, RuleFailureDetails
 )
+from app.helpers.helper import _get_entity_key, _extract_entities
 from app.services.rule_service import RuleService
 from app.utilities.logging import logger
+from rule_engine.core.rule_result import RuleResult
 
 router = APIRouter()
 
@@ -21,6 +24,94 @@ router = APIRouter()
 def get_rule_service() -> RuleService:
     """Dependency for the rule service."""
     return RuleService()
+
+
+@router.post("/evaluate/by-data", response_model=DataEvaluationResponse)
+async def evaluate_data_by_item(request: EvaluationRequest, service: RuleService = Depends(get_rule_service)):
+    """
+    Evaluate data against stored rules, organizing results by data item rather than by rule.
+
+    For each data item, shows which rules passed and which rules failed with their details.
+    Rules can be filtered by categories or specific rule names.
+    At least one of categories or rule_names must be provided.
+    """
+    categories_str = ", ".join(request.categories) if request.categories else "None"
+    rule_names_str = ", ".join(request.rule_names) if request.rule_names else "None"
+    logger.params.set(
+        entity_type=request.entity_type,
+        category=categories_str
+    )
+
+    logger.info(
+        f"Evaluating data by item for entity_type={request.entity_type}, categories={categories_str}, rule_names={rule_names_str}")
+
+    try:
+        if request.categories is None and request.rule_names is None:
+            logger.warning("Request missing both categories and rule_names")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="At least one of 'categories' or 'rule_names' must be provided"
+            )
+
+        all_entities = _extract_entities(request.data, request.entity_type)
+
+        if not all_entities:
+            logger.warning(f"No entities found in data for entity_type={request.entity_type}")
+            return DataEvaluationResponse(
+                entity_type=request.entity_type,
+                categories=request.categories,
+                rule_names=request.rule_names,
+                total_rules=0,
+                total_data_objects=0,
+                results=[]
+            )
+
+        original_results = service.evaluate_data_with_criteria(
+            data=request.data,
+            entity_type=request.entity_type,
+            categories=request.categories,
+            rule_names=request.rule_names
+        )
+
+        if not original_results:
+            logger.info("No rules evaluated for request")
+            return DataEvaluationResponse(
+                entity_type=request.entity_type,
+                categories=request.categories,
+                rule_names=request.rule_names,
+                total_rules=0,
+                total_data_objects=len(all_entities),
+                results=[]
+            )
+
+        # Evaluate each entity individually
+        entity_key = _get_entity_key(request.entity_type)
+        data_evaluation_results = _evaluate_entities(
+            all_entities=all_entities,
+            entity_key=entity_key,
+            entity_type=request.entity_type,
+            original_results=original_results,
+            service=service
+        )
+
+        logger.info(
+            f"Data evaluation completed: {len(original_results)} rules processed for {len(data_evaluation_results)} entities")
+
+        return DataEvaluationResponse(
+            entity_type=request.entity_type,
+            categories=request.categories,
+            rule_names=request.rule_names,
+            total_rules=len(original_results),
+            total_data_objects=len(all_entities),
+            results=data_evaluation_results
+        )
+
+    except Exception as e:
+        logger.error(f"Error evaluating data by item: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Error evaluating data: {str(e)}"
+        )
 
 
 @router.post("/evaluate", response_model=EvaluationResponse)
@@ -177,6 +268,73 @@ async def evaluate_with_rules(request: EvaluationWithRulesRequest, service: Rule
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Error evaluating data: {str(e)}"
         )
+
+
+def _evaluate_entities(
+        all_entities: List[Dict[str, Any]],
+        entity_key: str,
+        entity_type: str,
+        original_results: List[RuleResult],
+        service: RuleService
+) -> List[DataEvaluationItem]:
+    data_evaluation_results = []
+
+    for entity in all_entities:
+        rules_passed = []
+        rules_failed = []
+
+        single_entity_data = {
+            entity_key: [entity]
+        }
+
+        for rule_result in original_results:
+            rule_name = rule_result.rule_name
+
+            single_entity_results = service.evaluate_data_with_criteria(
+                data=single_entity_data,
+                entity_type=entity_type,
+                rule_names=[rule_name]
+            )
+
+            if not single_entity_results:
+                continue
+
+            single_result = single_entity_results[0]
+
+            if single_result.success:
+                rules_passed.append(rule_name)
+            else:
+                failure_details = [
+                    FailureDetail(
+                        operator=detail.operator,
+                        path=detail.path,
+                        expected_value=detail.expected_value,
+                        actual_value=detail.actual_value
+                    ) for detail in single_result.failure_details
+                ]
+
+                rule_failure = RuleFailureDetails(
+                    rule_name=rule_name,
+                    failure_details=failure_details
+                )
+
+                rules_failed.append(rule_failure)
+
+        evaluation_summary = DataEvaluationSummary(
+            rules_passed=len(rules_passed),
+            rules_failed=len(rules_failed)
+        )
+
+        data_evaluation_item = DataEvaluationItem(
+            data=entity,
+            evaluation_summary=evaluation_summary,
+            rules_passed=rules_passed,
+            rules_failed=rules_failed
+        )
+
+        data_evaluation_results.append(data_evaluation_item)
+
+    return data_evaluation_results
 
 
 @router.get("/evaluate/stats", response_model=Dict[str, Any])
