@@ -110,6 +110,7 @@ class EvaluationResponse(BaseModel):
     failed_rules: int
     results: List[RuleEvaluationResult]
 
+
 class RuleFailureDetails(BaseModel):
     rule_name: str
     failure_details: List[FailureDetail]
@@ -134,6 +135,7 @@ class DataEvaluationResponse(BaseModel):
     total_rules: int
     total_data_objects: int
     results: List[DataEvaluationItem]
+
 
 class EvaluationWithRulesResponse(BaseModel):
     entity_type: str
