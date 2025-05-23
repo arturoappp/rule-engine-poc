@@ -134,3 +134,9 @@ class DataEvaluationResponse(BaseModel):
     total_rules: int
     total_data_objects: int
     results: List[DataEvaluationItem]
+
+class EvaluationWithRulesResponse(BaseModel):
+    entity_type: str
+    total_rules: int
+    total_data_objects: int
+    results: List[DataEvaluationItem]
