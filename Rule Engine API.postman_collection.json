@@ -1,7 +1,7 @@
 {
 	"info": {
-		"_postman_id": "3a170684-cc8d-4773-b717-6bd4cd269c8a",
-		"name": "Rule Engine API Copy",
+		"_postman_id": "7964ed69-0da7-4b80-8996-6283b835a65a",
+		"name": "Rule Engine API Copy 3",
 		"description": "A collection for testing the Rule Engine API endpoints",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
 		"_exporter_id": "16726580"
@@ -153,18 +153,17 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"entity_type\": \"Commission Request\",\n    \"rule_names\": [\n        \"All Devices Must Have Management IP\"\n        ],\n    \"data\": {\n    \"Commission Requests\": [\n      {\n        \"vendor\": \"Microsoft\",\n        \"osVersion\": \"17.3.6\"\n      },\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"10.0.19045\",\n        \"mgmtIP\": \"10.0.0.1\"\n      },\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"16.9.5\",\n        \"mgmtIP\": \"10.0.0.11\"\n      }\n    ]\n  }\n}"
+							"raw": "{\n    \"entity_type\": \"Commission Request\",\n    \"rule_names\": [\n        \"All Devices Must Have Management IP\"\n        ],\n    \"data\": {\n    \"Commission Requests\": [\n      {\n        \"vendor\": \"Microsoft\",\n        \"osVersion\": \"17.3.6\",\n        \"mgmtIP\": \"10.0.0.1\"\n      },\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"10.0.19045\",\n        \"mgmtIP\": \"10.0.0.1\"\n      },\n      {\n        \"vendor\": \"Cisco Systems4\",\n        \"osVersion\": \"16.9.5\",\n        \"mgmtIP\": \"10.0.0.11\"\n      }\n    ]\n  }\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/evaluate/by-data",
+							"raw": "{{baseUrl}}/api/v1/evaluate",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
 								"v1",
-								"evaluate",
-								"by-data"
+								"evaluate"
 							]
 						},
 						"description": "Evaluate data against stored rules"
@@ -186,15 +185,14 @@
 							"raw": "{\n    \"entity_type\": \"Commission Request\",\n    \"categories\": [\"Could Run\"],\n    \"data\": {\n    \"Commission Requests\": [\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"17.3.6\",\n        \"mgmtIP\": \"192.168.1.1\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"osVersion\": \"10.0.19045\",\n        \"mgmtIP\": \"10.0.0.1\"\n      },\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"16.9.5\"\n      }\n    ]\n  }\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/evaluate/by-data",
+							"raw": "{{baseUrl}}/api/v1/evaluate",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
 								"v1",
-								"evaluate",
-								"by-data"
+								"evaluate"
 							]
 						},
 						"description": "Evaluate data against stored rules"
@@ -216,15 +214,14 @@
 							"raw": "{\n    \"entity_type\": \"Decommission Request\",\n    \"rule_names\": [\n        \"All Devices Must Have OS Version\"\n        ],\n    \"data\": {\n    \"Decommission Requests\": [\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"17.3.6\",\n        \"mgmtIP\": \"192.168.1.1\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"osVersion\": \"10.0.19045\",\n        \"mgmtIP\": \"10.0.0.1\"\n      },\n      {\n        \"vendor\": \"Cisco Systems\"\n      }\n    ]\n  }\n}"
 						},
 						"url": {
-							"raw": "{{baseUrl}}/api/v1/evaluate/by-data",
+							"raw": "{{baseUrl}}/api/v1/evaluate",
 							"host": [
 								"{{baseUrl}}"
 							],
 							"path": [
 								"api",
 								"v1",
-								"evaluate",
-								"by-data"
+								"evaluate"
 							]
 						},
 						"description": "Evaluate data against stored rules"
@@ -243,7 +240,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"entity_type\": \"device\",\n  \"rules\": [\n    {\n      \"name\": \"All Devices Must Have Management IP\",\n      \"conditions\": {\n        \"all\": [\n          {\n            \"path\": \"$.devices[*].mgmtIP\",\n            \"operator\": \"exists\",\n            \"value\": true\n          }\n        ]\n      }\n    }\n  ],\n  \"data\": {\n    \"devices\": [\n      {\n        \"vendor\": \"Cisco Systems\",\n        \"osVersion\": \"17.3.6\",\n        \"mgmtIP\": \"192.168.1.1\"\n      },\n      {\n        \"vendor\": \"Microsoft\",\n        \"osVersion\": \"10.0.19045\"\n      }\n    ]\n  }\n}"
+							"raw": "{\n    \"entity_type\": \"device\",\n    \"rules\": [\n        {\n            \"name\": \"All Devices Must Have Management IP\",\n            \"entity_type\": \"device\",\n            \"conditions\": {\n                \"all\": [\n                    {\n                        \"path\": \"$.devices[*].mgmtIP\",\n                        \"operator\": \"exists\",\n                        \"value\": true\n                    },\n                    {\n                        \"path\": \"$.devices[*].vendor\",\n                        \"operator\": \"equal\",\n                        \"value\": \"Cisco Systems\"\n                    },\n                    {\n                        \"path\": \"$.devices[*].mgmtIP\",\n                        \"operator\": \"exact_length\",\n                        \"value\": 8\n                    }\n                ]\n            }\n        }\n    ],\n    \"data\": {\n        \"devices\": [\n            {\n                \"vendor\": \"Cisco Systems\",\n                \"osVersion\": \"17.3.6\",\n                \"mgmtIP\": \"192.168.1.1\"\n            },\n                        {\n                \"vendor\": \"Cisco Systems\",\n                \"osVersion\": \"17.3.6\",\n                \"mgmtIP\": \"19.168.1\"\n            },\n            {\n                \"vendor\": \"Microsoft\",\n                \"osVersion\": \"10.0.19045\"\n            }\n        ]\n    }\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/v1/evaluate/with-rules",
