@@ -1,13 +1,14 @@
 from typing import Dict, List, Any
 
 from app.api.models.evaluate import DataEvaluationItem, RuleFailureDetails, DataEvaluationSummary, FailureDetail
+from rule_engine.core.rule_result import RuleResult
 
 
 def _get_entity_key(entity_type: str) -> str:
     return f"{entity_type}s" if not entity_type.endswith('s') else entity_type
 
 
-def _extract_entities(data: Dict[str, Any], entity_type: str) -> List[Dict[str, Any]]:
+def extract_entities(data: Dict[str, Any], entity_type: str) -> List[Dict[str, Any]]:
     entity_key = _get_entity_key(entity_type)
 
     if entity_key in data and isinstance(data[entity_key], list):
@@ -18,9 +19,9 @@ def _extract_entities(data: Dict[str, Any], entity_type: str) -> List[Dict[str, 
     return []
 
 
-def _organize_results_by_entity(
+def organize_results_by_entity(
         all_entities: List[Dict[str, Any]],
-        all_results: List[Any]
+        all_results: List[RuleResult]
 ) -> List[DataEvaluationItem]:
     data_evaluation_results = []
 
@@ -64,7 +65,7 @@ def _organize_results_by_entity(
     return data_evaluation_results
 
 
-def _entity_failed_rule(entity: Dict[str, Any], rule_result: Any, entity_index: int) -> bool:
+def _entity_failed_rule(entity: Dict[str, Any], rule_result: RuleResult, entity_index: int) -> bool:
     if rule_result.success:
         return False
 
@@ -89,7 +90,7 @@ def _entities_match(entity1: Dict[str, Any], entity2: Dict[str, Any]) -> bool:
 
 def _get_entity_specific_failures(
         entity: Dict[str, Any],
-        rule_result: Any,
+        rule_result: RuleResult,
         entity_index: int
 ) -> List[FailureDetail]:
     entity_failures = []

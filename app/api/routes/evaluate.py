@@ -13,7 +13,7 @@ from app.api.models.evaluate import (
     RuleEvaluationResult,
     FailureDetail, DataEvaluationResponse, EvaluationWithRulesResponse
 )
-from app.helpers.helper import _extract_entities, _organize_results_by_entity
+from app.helpers.helper import extract_entities, organize_results_by_entity
 from app.services.rule_service import RuleService
 from app.utilities.logging import logger
 
@@ -52,7 +52,7 @@ async def evaluate_data_by_item(request: EvaluationRequest, service: RuleService
                 detail="At least one of 'categories' or 'rule_names' must be provided"
             )
 
-        all_entities = _extract_entities(request.data, request.entity_type)
+        all_entities = extract_entities(request.data, request.entity_type)
 
         if not all_entities:
             logger.warning(f"No entities found in data for entity_type={request.entity_type}")
@@ -83,7 +83,7 @@ async def evaluate_data_by_item(request: EvaluationRequest, service: RuleService
                 results=[]
             )
 
-        data_evaluation_results = _organize_results_by_entity(
+        data_evaluation_results = organize_results_by_entity(
             all_entities=all_entities,
             all_results=all_results
         )
@@ -118,7 +118,7 @@ async def evaluate_with_rules_by_data(request: EvaluationWithRulesRequest,
 
     try:
         # Extract entities from data
-        all_entities = _extract_entities(request.data, request.entity_type)
+        all_entities = extract_entities(request.data, request.entity_type)
 
         if not all_entities:
             logger.warning(f"No entities found in data for entity_type={request.entity_type}")
@@ -144,7 +144,7 @@ async def evaluate_with_rules_by_data(request: EvaluationWithRulesRequest,
                 results=[]
             )
 
-        data_evaluation_results = _organize_results_by_entity(
+        data_evaluation_results = organize_results_by_entity(
             all_entities=all_entities,
             all_results=all_results
         )
