@@ -50,6 +50,38 @@ async def store_rules(request: RuleStoreRequest, service: RuleService = Depends(
     """Store rules in the engine."""
     logger.info(f"Processing request to store {len(request.rules)} rules")
 
+    # Validate all rules before storing them
+    validation_errors = []
+    for i, rule in enumerate(request.rules):
+        logger.info(f"Validating rule '{rule.name}' before storing")
+        valid, errors = service.validate_rule(rule)
+
+        if not valid:
+            logger.warning(f"Rule '{rule.name}' validation failed with errors: {errors}")
+            validation_errors.append({
+                "rule_index": i,
+                "rule_name": rule.name,
+                "errors": errors
+            })
+
+    # If any rule failed validation, don't store any rules
+    if validation_errors:
+        error_message = f"Validation failed for {len(validation_errors)} rule(s)"
+        detailed_errors = []
+        for error in validation_errors:
+            detailed_errors.append(
+                f"Rule '{error['rule_name']}' (index {error['rule_index']}): {', '.join(error['errors'])}")
+
+        full_error_message = f"{error_message}. Details: {'; '.join(detailed_errors)}"
+        logger.error(f"Failed to store rules due to validation errors: {full_error_message}")
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=full_error_message
+        )
+
+    # All rules are valid, proceed to store them
+    logger.info("All rules passed validation, proceeding to store")
     success, message, stored_count = service.store_rules(
         rules=request.rules,
     )
