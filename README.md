@@ -1,16 +1,69 @@
 # Rule Engine NDC
 
-A modular and flexible rule engine for evaluating conditions against data.
+A modular and flexible rule engine API for evaluating conditions against data, built with FastAPI and designed for microservices architecture.
+
+## Table of Contents
+- [Features](#features)
+- [Architecture](#architecture)
+- [Technology Stack](#technology-stack)
+- [Installation](#installation)
+- [API Documentation](#api-documentation)
+- [Rule Engine Core](#rule-engine-core)
+- [Testing](#testing)
+- [Contributing](#contributing)
 
 ## Features
 
+### Core Features
+- RESTful API built with FastAPI framework
 - Modular design with clear separation of concerns
 - Support for complex nested conditions with logical operators (AND, OR, NOT, NONE)
-- Various operators for comparing values (equality, inequality, numeric comparisons, etc.)
-- Easily extensible with new operators and condition types
-- Simplified path syntax for accessing entity properties
-- Detailed evaluation results with failing elements
+- Various operators for comparing values (equality, inequality, numeric comparisons, regex, etc.)
+- Rule categorization and management system
+- Detailed evaluation results with failing elements and failure reasons
 - JSON-based rule definitions for easy creation and sharing
+- Singleton pattern for rule engine instance management
+- Comprehensive logging with contextual information
+
+### API Features
+- Health check endpoint for service monitoring
+- Rule validation before storage
+- Bulk rule storage with overwrite capability
+- Rule filtering by entity type and categories
+- Dynamic category management (add/remove)
+- Evaluation against stored rules or provided rules
+- Detailed failure analysis and statistics
+
+## Architecture
+
+### High-Level Architecture
+![high_level_architecture](docs/high_level_architecture.png)
+
+
+### API Request Flow
+
+![request_flow](docs/request_flow.png)
+
+### Rule Evaluation Flow
+
+![evaluation_flow](docs/evaluation_flow.png)
+
+### Component Diagram
+
+![component_diagram](docs/component_diagram.png)
+
+### Class Diagram for Models
+
+![class_diagram_for_models](docs/class_diagram_for_models.png)
+
+## Technology Stack
+
+- **Framework**: FastAPI (Modern, fast web framework for building APIs)
+- **Validation**: Pydantic v2 (Data validation using Python type annotations)
+- **Testing**: Pytest with pytest-mock
+- **HTTP Client**: TestClient from FastAPI for integration tests
+- **Logging**: Custom logging with contextual parameters
+- **Python**: 3.9+
 
 ## Installation
 
@@ -19,200 +72,245 @@ A modular and flexible rule engine for evaluating conditions against data.
 git clone git@github.com:EMOrg-Prd/NDCv4-rules-ms.git
 cd NDCv4-rules-ms
 
-# Install packages
+# Create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+# On Unix or MacOS:
+source venv/bin/activate
+
+# Install dependencies
 pip install -r requirements.txt
+
+# Run the application
+uvicorn main:app --reload --port 8080
+
+# Or use the run script
+python main.py
 ```
 
-For VS Code, in order for the source modules to be found, add the following to settings.json:
+### Environment Configuration
 
-"terminal.integrated.env.windows": {
-        "PYTHONPATH": "${workspaceFolder}"
-}
+Create a `.env` file in the root directory (optional):
 
-If using Pycharm, adding to the PYTHONPATH is automatically done by the IDE
-
-## Usage
-
-### Basic Usage
-
-```python
-from rule_engine import RuleEngine
-
-# Create a rule engine
-engine = RuleEngine()
-
-# Load rules from a JSON string
-engine.load_rules_from_json(rules_json, entity_type="device", category="validation")
-
-# Load rules from a file
-engine.load_rules_from_file("rules/device_rules.json", entity_type="device")
-
-# Evaluate data against the rules
-results = engine.evaluate_data(data, entity_type="device")
-
-# Process the results
-for result in results:
-    print(f"{result.rule_name}: {'PASS' if result.success else 'FAIL'} - {result.message}")
-    
-    # Get failing elements
-    if not result.success:
-        for element in result.failing_elements:
-            print(f"  Failed element: {element}")
+```env
+PROJECT_NAME="Rule Engine API"
+PROJECT_DESCRIPTION="A flexible rule engine for evaluating conditions against data"
+VERSION="1.0.0"
+API_PREFIX="/api/v1"
+PORT=8080
+ENVIRONMENT="development"
+ALLOWED_ORIGINS=["*"]
 ```
 
-## Defining Rules
+## API Documentation
 
-Rules in the rule engine are defined using a structured JSON format. This section explains how to create, modify, and combine rules for different use cases.
+### Base URL
+```
+http://localhost:8080/api/v1
+```
 
-### Basic Rule Structure
+### OpenAPI Documentation
+- Swagger UI: `http://localhost:8080/docs`
+- ReDoc: `http://localhost:8080/redoc`
 
-A rule consists of a name, optional description, and conditions:
+### Endpoints
 
+#### Health Check
+
+```http
+GET /api/v1/health
+```
+
+**Response:**
 ```json
 {
-  "name": "Simple Rule",
-  "description": "A simple rule example",
-  "conditions": {
-    "path": "$.devices[*].status",
-    "operator": "equal",
-    "value": "active"
-  }
+  "status": "ok",
+  "version": "1.0.0"
 }
 ```
 
+#### Rule Management
 
-### Workflow and Usage
-![Diagrama](docs/d1.svg)
+##### Validate Rule
 
-### Available Operators
+```http
+POST /api/v1/rules/validate
+```
 
-The rule engine supports various operators for different data types:
-
-| Operator | Aliases | Description | Example |
-|----------|---------|-------------|---------|
-| `equal` | `eq` | Tests if values are equal | `{"operator": "equal", "value": "Cisco"}` |
-| `not_equal` | `neq` | Tests if values are not equal | `{"operator": "not_equal", "value": "down"}` |
-| `greater_than` | `gt` | Tests if value is greater than target | `{"operator": "gt", "value": 90}` |
-| `less_than` | `lt` | Tests if value is less than target | `{"operator": "lt", "value": 10}` |
-| `greater_than_equal` | `gte` | Tests if value is greater than or equal to target | `{"operator": "gte", "value": 100}` |
-| `less_than_equal` | `lte` | Tests if value is less than or equal to target | `{"operator": "lte", "value": 50}` |
-| `exists` | - | Tests if a value exists (is not null) | `{"operator": "exists", "value": true}` |
-| `not_empty` | - | Tests if a collection or string is not empty | `{"operator": "not_empty", "value": true}` |
-| `match` | `matches` | Tests if a string matches a regex pattern | `{"operator": "match", "value": "^[A-Z]{3}-\\d{4}$"}` |
-| `contains` | - | Tests if a string/array contains a value | `{"operator": "contains", "value": "error"}` |
-
-### Path Syntax
-
-Paths use a simplified JSONPath-like syntax to access entity properties:
-
-- `$.devices[*].vendor` - Access the vendor property for each device
-- `status` - Access a top-level property named "status"
-- `network.interfaces[0].ipAddress` - Access a nested property
-
-### Logical Operators for Complex Rules
-
-The rule engine supports logical operators to create complex conditions:
-
-#### AND Logic (`all`)
-
-All conditions must be satisfied:
-
+**Request Body:**
 ```json
 {
-  "name": "AND Example",
+  "name": "Device Compliance Rule",
+  "entity_type": "device",
+  "description": "Ensures devices meet compliance standards",
   "conditions": {
     "all": [
       {
         "path": "$.devices[*].vendor",
         "operator": "equal",
         "value": "Cisco Systems"
-      },
-      {
-        "path": "$.devices[*].status",
-        "operator": "equal",
-        "value": "active"
       }
     ]
   }
 }
 ```
 
-#### OR Logic (`any`)
-
-At least one condition must be satisfied:
-
+**Response:**
 ```json
 {
-  "name": "OR Example",
-  "conditions": {
-    "any": [
-      {
-        "path": "$.devices[*].status",
-        "operator": "equal",
-        "value": "active"
-      },
-      {
-        "path": "$.devices[*].status",
-        "operator": "equal",
-        "value": "standby"
-      }
-    ]
-  }
+  "valid": true,
+  "errors": null
 }
 ```
 
-#### NOT Logic (`not`)
+##### Store Rules
 
-The condition must not be satisfied:
+```http
+POST /api/v1/rules
+```
 
+**Request Body:**
 ```json
 {
-  "name": "NOT Example",
-  "conditions": {
-    "not": {
-      "path": "$.devices[*].status",
-      "operator": "equal",
-      "value": "down"
+  "rules": [
+    {
+      "name": "Management IP Required",
+      "entity_type": "device",
+      "description": "All devices must have a management IP",
+      "conditions": {
+        "path": "$.devices[*].mgmtIP",
+        "operator": "exists",
+        "value": true
+      },
+      "add_to_categories": ["compliance", "network"]
     }
-  }
+  ]
 }
 ```
 
-#### NONE Logic (`none`)
-
-None of the conditions can be satisfied:
-
+**Response:**
 ```json
 {
-  "name": "NONE Example",
-  "conditions": {
-    "none": [
-      {
-        "path": "$.devices[*].status",
-        "operator": "equal",
-        "value": "down"
+  "success": true,
+  "message": "Successfully stored rules: 1 new, 0 updated",
+  "stored_rules": 1
+}
+```
+
+##### List Rules
+
+```http
+GET /api/v1/rules?entity_type=device&categories=compliance&categories=network
+```
+
+**Response:**
+```json
+{
+  "rules": [
+    {
+      "rule_name": "Management IP Required",
+      "entity_type": "device",
+      "description": "All devices must have a management IP",
+      "conditions": {
+        "path": "$.devices[*].mgmtIP",
+        "operator": "exists",
+        "value": true
       },
+      "categories_associated_with": ["compliance", "network"]
+    }
+  ]
+}
+```
+
+##### Update Rule Categories
+
+```http
+POST /api/v1/rules/categories
+```
+
+**Request Body:**
+```json
+{
+  "rule_name": "Management IP Required",
+  "entity_type": "device",
+  "categories": ["security", "audit"],
+  "category_action": "add"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Successfully added categories ['security', 'audit'] for device rule 'Management IP Required'"
+}
+```
+
+#### Rule Evaluation
+
+##### Evaluate with Stored Rules
+
+```http
+POST /api/v1/evaluate
+```
+
+**Request Body:**
+```json
+{
+  "entity_type": "device",
+  "categories": ["compliance"],
+  "data": {
+    "devices": [
       {
-        "path": "$.devices[*].status",
-        "operator": "equal",
-        "value": "error"
+        "id": "device-001",
+        "vendor": "Cisco Systems",
+        "osVersion": "17.3.6",
+        "mgmtIP": "192.168.1.1"
       }
     ]
   }
 }
 ```
 
-### Nested Logical Operators
-
-Logical operators can be nested to create complex rule structures:
-
+**Response:**
 ```json
 {
-  "name": "Complex Nested Rule",
-  "description": "Checks for Cisco devices with proper versioning OR non-critical devices",
-  "conditions": {
-    "any": [
-      {
+  "entity_type": "device",
+  "categories": ["compliance"],
+  "rule_names": null,
+  "total_rules": 1,
+  "passed_rules": 1,
+  "failed_rules": 0,
+  "results": [
+    {
+      "rule_name": "Management IP Required",
+      "success": true,
+      "message": "All entities fulfill the rule",
+      "failing_elements": [],
+      "failure_details": []
+    }
+  ]
+}
+```
+
+##### Evaluate with Provided Rules
+
+```http
+POST /api/v1/evaluate/with-rules
+```
+
+**Request Body:**
+```json
+{
+  "entity_type": "device",
+  "rules": [
+    {
+      "name": "Cisco Version Check",
+      "entity_type": "device",
+      "conditions": {
         "all": [
           {
             "path": "$.devices[*].vendor",
@@ -221,187 +319,168 @@ Logical operators can be nested to create complex rule structures:
           },
           {
             "path": "$.devices[*].osVersion",
-            "operator": "equal",
-            "value": "17.3.6"
-          }
-        ]
-      },
-      {
-        "all": [
-          {
-            "not": {
-              "path": "$.devices[*].criticality",
-              "operator": "equal",
-              "value": "high"
-            }
-          },
-          {
-            "path": "$.devices[*].status",
-            "operator": "equal",
-            "value": "active"
+            "operator": "match",
+            "value": "^17\\."
           }
         ]
       }
-    ]
-  }
-}
-```
-
-This rule checks for either:
-1. Cisco devices running version 17.3.6 OR
-2. Non-critical devices that are active
-
-### Common Rule Patterns
-
-#### Validation Rules
-
-Ensure required fields exist:
-
-```json
-{
-  "name": "Required Fields Rule",
-  "conditions": {
-    "all": [
+    }
+  ],
+  "data": {
+    "devices": [
       {
-        "path": "$.tasks[*].id",
-        "operator": "exists",
-        "value": true
-      },
-      {
-        "path": "$.tasks[*].priority",
-        "operator": "exists",
-        "value": true
-      },
-      {
-        "path": "$.tasks[*].assignee",
-        "operator": "exists",
-        "value": true
+        "id": "device-001",
+        "vendor": "Cisco Systems",
+        "osVersion": "16.9.5"
       }
     ]
   }
 }
 ```
 
-#### Range Rules
-
-Check if values fall within a specific range:
-
+**Response:**
 ```json
 {
-  "name": "Utilization Range Rule",
-  "conditions": {
-    "all": [
-      {
-        "path": "$.resources[*].cpuUtilization",
-        "operator": "greater_than_equal",
-        "value": 0
-      },
-      {
-        "path": "$.resources[*].cpuUtilization",
-        "operator": "less_than_equal",
-        "value": 90
+  "entity_type": "device",
+  "categories": null,
+  "total_rules": 1,
+  "passed_rules": 0,
+  "failed_rules": 1,
+  "results": [
+    {
+      "rule_name": "Cisco Version Check",
+      "success": false,
+      "message": "1 of 1 entities do not fulfill the rule",
+      "failing_elements": [
+        {
+          "id": "device-001",
+          "vendor": "Cisco Systems",
+          "osVersion": "16.9.5"
+        }
+      ],
+      "failure_details": [
+        {
+          "operator": "match",
+          "path": "$.devices[*].osVersion",
+          "expected_value": "^17\\.",
+          "actual_value": "16.9.5"
+        }
+      ]
+    }
+  ]
+}
+```
+
+#### Statistics and Analysis
+
+##### Get Evaluation Statistics
+
+```http
+GET /api/v1/evaluate/stats
+```
+
+**Response:**
+```json
+{
+  "total_rules": 15,
+  "entity_types": 3,
+  "supported_operators": [
+    "equal", "not_equal", "greater_than", "less_than",
+    "greater_than_equal", "less_than_equal", "exists",
+    "not_empty", "match", "contains", "role_device"
+  ],
+  "max_rules_per_request": 100,
+  "rule_stats_by_entity": {
+    "device": {
+      "total_rules": 8,
+      "categories": {
+        "compliance": 5,
+        "security": 3
       }
-    ]
+    }
   }
 }
 ```
 
-#### Format Validation Rules
+##### Get Rule Failure Details
 
-Validate that fields match a specific format:
+```http
+GET /api/v1/evaluate/failure-details/Management%20IP%20Required?entity_type=device
+```
 
+**Response:**
 ```json
 {
-  "name": "ID Format Rule",
-  "conditions": {
-    "path": "$.users[*].id",
-    "operator": "match",
-    "value": "^[A-Z]{2}-\\d{6}$"
+  "rule_name": "Management IP Required",
+  "found": true,
+  "entity_type": "device",
+  "category": "compliance",
+  "description": "All devices must have a management IP",
+  "conditions_count": 1,
+  "operators_used": ["exists"],
+  "paths_used": ["$.devices[*].mgmtIP"],
+  "structure": [
+    {
+      "type": "simple",
+      "path": "$.devices[*].mgmtIP",
+      "operator": "exists",
+      "expected_value": true,
+      "parent_path": ""
+    }
+  ],
+  "rule_definition": {
+    "name": "Management IP Required",
+    "conditions": {
+      "path": "$.devices[*].mgmtIP",
+      "operator": "exists",
+      "value": true
+    }
   }
 }
 ```
 
-This rule validates that all user IDs match the pattern like "AB-123456".
+### API Models (Pydantic Schemas)
 
-### Organizing Rules with Categories
+The API uses Pydantic for request/response validation. Key models include:
 
-When loading rules, you can organize them with categories:
+- **Rule**: Basic rule structure with name, entity_type, description, and conditions
+- **APIRule**: Extended rule model with category management
+- **RuleCondition**: Recursive model supporting simple and composite conditions
+- **EvaluationRequest**: Request model for data evaluation
+- **EvaluationResponse**: Detailed response with pass/fail results
+- **RuleValidationResponse**: Validation results with specific errors
+- **FailureDetail**: Detailed information about evaluation failures
 
-```python
-# Single rule with category
-engine.load_rules_from_json(RULE_JSON, entity_type="device", category="compliance")
+## Rule Engine Core
 
-# Multiple rules from file with category
-engine.load_rules_from_file("network_rules.json", entity_type="network", category="security")
-```
+### Supported Operators
 
-Categories allow you to:
-- Group related rules
-- Selectively evaluate rules by category
-- Apply different rule sets based on context
+| Operator | Description | Example |
+|----------|-------------|---------|
+| `equal` | Tests if values are equal | `{"operator": "equal", "value": "Cisco"}` |
+| `not_equal` | Tests if values are not equal | `{"operator": "not_equal", "value": "down"}` |
+| `greater_than` | Tests if value is greater than target | `{"operator": "greater_than", "value": 90}` |
+| `less_than` | Tests if value is less than target | `{"operator": "less_than", "value": 10}` |
+| `greater_than_equal` | Tests if value is greater than or equal | `{"operator": "greater_than_equal", "value": 100}` |
+| `less_than_equal` | Tests if value is less than or equal | `{"operator": "less_than_equal", "value": 50}` |
+| `exists` | Tests if a value exists (is not null) | `{"operator": "exists", "value": true}` |
+| `not_empty` | Tests if a collection or string is not empty | `{"operator": "not_empty", "value": true}` |
+| `match` | Tests if a string matches a regex pattern | `{"operator": "match", "value": "^[A-Z]{3}-\\d{4}$"}` |
+| `contains` | Tests if a string/array contains a value | `{"operator": "contains", "value": "error"}` |
+| `in_list` | Tests if a value exists in a list | `{"operator": "in_list", "value": ["HTTP", "HTTPS"]}` |
+| `role_device` | Special operator for device role validation | `{"operator": "role_device", "value": "primary"}` |
 
-### Tips for Creating Readable Rules
-
-1. **Use descriptive names and add descriptions**:
-   ```json
-   {
-     "name": "Cisco IOS Compliance",
-     "description": "Ensures all Cisco devices run approved OS versions",
-     "conditions": { /* ... */ }
-   }
-   ```
-
-2. **Break complex conditions into logical groups**:
-   ```json
-   {
-     "name": "Network Security Check",
-     "conditions": {
-       "all": [
-         { 
-           "description": "Authentication check",
-           "any": [ /* authentication conditions */ ]
-         },
-         {
-           "description": "Encryption check",
-           "all": [ /* encryption conditions */ ]
-         }
-       ]
-     }
-   }
-   ```
-
-3. **Use comments for complex logic** (in supporting documentation):
-   ```
-   Rule: "Critical Device Check"
-   Purpose: Identifies devices that require immediate attention
-   Logic:
-   - Either a high-priority device with ANY warning
-   - OR ANY device with a critical error
-   ```
-
-4. **Standardize path references** by using consistent naming patterns:
-   ```json
-   // Consistent path structure
-   "path": "$.devices[*].interfaces[*].status"
-   "path": "$.devices[*].interfaces[*].bandwidth"
-   ```
-
-### Example Use Cases
-
-#### Network Device Compliance
+### Complex Rule Example
 
 ```json
 {
-  "name": "Network Device Compliance",
+  "name": "Network Security Compliance",
+  "entity_type": "device",
+  "description": "Comprehensive network device security check",
   "conditions": {
     "all": [
       {
         "any": [
-          {
-            "path": "$.devices[*].vendor",
-            "operator": "not_equal", 
-            "value": "Cisco Systems"
-          },
           {
             "all": [
               {
@@ -410,42 +489,52 @@ Categories allow you to:
                 "value": "Cisco Systems"
               },
               {
-                "any": [
-                  {
-                    "path": "$.devices[*].osVersion",
-                    "operator": "equal",
-                    "value": "17.3.6"
-                  },
-                  {
-                    "path": "$.devices[*].osVersion",
-                    "operator": "equal",
-                    "value": "16.12.4"
-                  }
-                ]
+                "path": "$.devices[*].osVersion",
+                "operator": "match",
+                "value": "^17\\.[3-9]\\."
+              }
+            ]
+          },
+          {
+            "all": [
+              {
+                "path": "$.devices[*].vendor",
+                "operator": "equal",
+                "value": "Juniper"
               },
               {
-                "path": "$.devices[*].securityPatchLevel",
+                "path": "$.devices[*].securityLevel",
                 "operator": "greater_than_equal",
-                "value": "2023.06"
+                "value": 8
               }
             ]
           }
         ]
       },
       {
-        "path": "$.devices[*].lastComplianceCheck",
+        "path": "$.devices[*].lastSecurityAudit",
         "operator": "exists",
         "value": true
+      },
+      {
+        "none": [
+          {
+            "path": "$.devices[*].vulnerabilities",
+            "operator": "contains",
+            "value": "critical"
+          },
+          {
+            "path": "$.devices[*].patchStatus",
+            "operator": "equal",
+            "value": "outdated"
+          }
+        ]
       }
     ]
   }
 }
 ```
 
-This complex rule checks that:
-- Either the device is not Cisco, OR
-- If it is Cisco, it runs an approved OS version (17.3.6 or 16.12.4) AND has security patches from June 2023 or newer
-- AND all devices have a compliance check record
 
 ## Extending the Engine
 
@@ -460,73 +549,125 @@ This complex rule checks that:
 2. Implement the required methods: `evaluate`, `to_dict`, and `from_dict`
 3. Register the condition type in the `ConditionFactory.create_condition` method
 
+### Rule Engine Workflow
+![Diagrama](docs/d2.svg)
 
 ### Rule Engine in Microservices Architecture
 ![Diagrama](docs/d2.svg)
 
 ## Testing
 
-The rule engine includes comprehensive test coverage to ensure all components work correctly. The tests are organized into several categories:
+The project includes comprehensive test coverage using pytest:
 
-### Simple Rule Tests
+### Test Categories
 
-Tests the engine with basic rules using single operators:
-- Validation of 'equal' and 'not_equal' operators with passing and failing scenarios
-- Testing rule evaluation across multiple entities
-- Verification that failing elements are correctly identified
+#### API Tests (`test_api_endpoints.py`)
+- Endpoint functionality testing
+- Request/response validation
+- Error handling
+- Rule overwrite functionality
+- Category management
 
-### Complex Rule Tests
+#### Service Tests (`test_rule_service.py`)
+- Rule validation logic
+- Storage operations
+- Category add/remove operations
+- Exception handling
 
-Tests more sophisticated rules with combined conditions:
-- Rules with nested logical operators (AND, OR)
-- Conditions that check for specific criteria across different entity properties
-- Rules for device validation (e.g., "Device must be Cisco with version 17.x OR non-Cisco with version above 10.0")
-- Testing mixed passing and failing scenarios within the same data set
+#### Engine Tests
+- **Simple Rules** (`test_simple_rules.py`): Basic operator testing
+- **Complex Rules** (`test_complex_rules.py`): Nested logical operators
+- **Nested Rules** (`test_nested_rules.py`): Deep nesting scenarios
+- **Operators** (`test_operators.py`): Individual operator validation
+- **Path Utils** (`test_path_utils.py`): JSONPath handling
+- **Role Device** (`test_role_device_operator.py`): Special operator testing
 
-### Nested Rule Tests
+### Running Tests
 
-Tests deeply nested rule structures with multiple levels of logical operations:
-- Complex conditions combining all available logical operators (AND, OR, NOT, NONE)
-- Rules requiring multiple conditions to be satisfied (e.g., "Config must be firewall OR router with high security level AND must not be deprecated OR unchecked for compliance")
-- Verification of the evaluation order in nested conditions
-- Testing boundary conditions and edge cases
+```bash
+# Run all tests
+pytest
 
-### Operator Tests
+# Run with coverage
+pytest --cov=app --cov=rule_engine
 
-Individual tests for each supported operator to verify correct implementation:
-- Equality operators: equal, not_equal
-- Comparison operators: greater_than, less_than, greater_than_equal, less_than_equal
-- Existence operators: exists, not_empty
-- String operators: match (regex), contains
-- Testing of both positive and negative cases for each operator
+# Run specific test file
+pytest tests/test_api_endpoints.py
 
-### Path Utility Tests
+# Run with verbose output
+pytest -v
 
-Tests for the JSON path utilities that extract values from entities:
-- Simplification of JSONPath expressions
-- Extraction of values from nested objects and arrays
-- Handling of array indices and nested paths
-- Proper extraction of entity lists from different formats
+# Run specific test
+pytest tests/test_api_endpoints.py::test_validate_rule_endpoint
+```
 
-### List Operation Tests
+### Test Structure
 
-Tests rule evaluation with list operations:
-- Testing "contains" operator to check if a string contains a substring
-- Testing for membership in a list (e.g., checking if a value like 'SEC' is in a list like ['SEC', 'SIP'])
-- Validating array properties with different operators
-- Testing list operations in combination with other operators in complex rule structures
+```
+tests/
+├── integration/
+│   └── test_api_endpoints.py
+├── unit/
+│   ├── test_rule_service.py
+│   ├── test_response_formatter.py
+│   └── test_rule_service_util.py
+└── rule_engine/
+    ├── test_simple_rules.py
+    ├── test_complex_rules.py
+    ├── test_nested_rules.py
+    ├── test_operators.py
+    ├── test_path_utils.py
+    └── test_role_device_operator.py
+```
 
-The rule engine supports checking if a value exists in a predefined list, which is useful for validating enumerated values, tags, categories, and other classification systems. This can be particularly helpful when building rules for:
-- Security classifications (e.g., is the classification in ['PUBLIC', 'INTERNAL', 'CONFIDENTIAL', 'SECRET'])
-- Protocol validations (e.g., is the protocol in ['HTTP', 'HTTPS', 'FTP', 'SFTP'])
-- Status checks (e.g., is the status in ['ACTIVE', 'PENDING', 'ARCHIVED'])
+## Performance Considerations
 
-These tests ensure the rule engine correctly evaluates both simple and complex rules, properly identifies failing elements, and handles all operators and path expressions according to specification.
+- **Singleton Pattern**: Rule Engine uses singleton pattern to maintain a single instance
+- **In-Memory Storage**: Current implementation stores rules in memory (suitable for moderate rule sets)
+- **Lazy Evaluation**: Conditions are evaluated lazily, stopping at first failure in AND operations
+- **Path Caching**: Consider implementing path result caching for repeated evaluations
 
+## Future Enhancements
 
-
+1. **Persistence Layer**: Add database support for rule storage
+2. **Rule Versioning**: Track rule changes over time
+3. **Async Evaluation**: Support for asynchronous rule evaluation
+4. **Rule Templates**: Pre-defined rule templates for common scenarios
+5. **Performance Metrics**: Add detailed performance tracking
+6. **WebSocket Support**: Real-time rule evaluation updates
+7. **Rule Import/Export**: Support for various formats (YAML, XML)
+8. **Authentication**: Add API authentication and authorization
 
 ## Contributing
 
 For Contributions please add the story: example: story/7424522-add-new-operator by AT
 
+### Development Guidelines
+
+1. Follow PEP 8 style guide
+2. Add type hints to all functions
+3. Write comprehensive tests for new features
+4. Update API documentation
+5. Use meaningful commit messages
+6. Create feature branches from main
+
+### Code Structure
+
+```
+NDCv4-rules-ms/
+├── app/
+│   ├── api/
+│   │   ├── models/         # Pydantic models
+│   │   └── routes/         # FastAPI routes
+│   ├── core/              # Core configuration
+│   ├── services/          # Business logic
+│   ├── helpers/           # Utility functions
+│   └── utilities/         # Logging and helpers
+├── rule_engine/
+│   ├── conditions/        # Condition implementations
+│   ├── core/             # Core engine logic
+│   └── utils/            # Engine utilities
+├── tests/                # Test files
+├── main.py              # Application entry point
+└── requirements.txt     # Dependencies
+```
